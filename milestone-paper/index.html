@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>里程碑论文阅读笔记</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+    background: #f5faf6;
+    color: #2d3a31;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, #1a3a2a 0%, #2d5a44 100%);
+    color: #fff;
+    padding: 48px 24px 40px;
+    text-align: center;
+  }
+  header h1 {
+    font-size: 2em;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  header p {
+    margin-top: 10px;
+    font-size: 0.95em;
+    opacity: 0.8;
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  header .count {
+    margin-top: 8px;
+    font-size: 0.8em;
+    opacity: 0.6;
+  }
+
+  /* ── Layout ── */
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+  }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 36px;
+  }
+  .section-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #1a3a2a;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #c3dbcc;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .badge {
+    font-size: 0.65em;
+    font-weight: 500;
+    background: #c3dbcc;
+    color: #1a3a2a;
+    padding: 2px 10px;
+    border-radius: 10px;
+    margin-left: 4px;
+  }
+  .section-desc {
+    font-size: 0.88em;
+    color: #5a7a6a;
+    margin-bottom: 14px;
+    margin-top: 2px;
+  }
+
+  /* ── Paper Card ── */
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    transition: box-shadow 0.15s;
+  }
+  .card:hover {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .card-title {
+    font-size: 1.02em;
+    font-weight: 600;
+    color: #1a3a2a;
+  }
+  .card-title .tag {
+    display: inline-block;
+    font-size: 0.72em;
+    font-weight: 500;
+    background: #c3dbcc;
+    color: #1a3a2a;
+    padding: 1px 8px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .card-meta {
+    font-size: 0.82em;
+    color: #5a7a6a;
+    margin: 2px 0 8px;
+  }
+  .card-body {
+    font-size: 0.9em;
+    color: #2d3a31;
+    line-height: 1.65;
+  }
+  .card-body strong {
+    color: #1a3a2a;
+  }
+  .card-body .hl {
+    display: inline-block;
+    background: #d4e8da;
+    padding: 0 4px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+
+  /* ── Relationships ── */
+  .relationships {
+    background: #e8f5ec;
+    border: 1px dashed #8bbaa0;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-top: 32px;
+  }
+  .relationships h3 {
+    font-size: 1.02em;
+    color: #1a3a2a;
+    margin-bottom: 8px;
+  }
+  .relationships ol {
+    list-style: none;
+    counter-reset: rel-counter;
+    font-size: 0.88em;
+    color: #2d3a31;
+  }
+  .relationships li {
+    counter-increment: rel-counter;
+    margin: 5px 0;
+    padding-left: 22px;
+    position: relative;
+  }
+  .relationships li::before {
+    content: counter(rel-counter);
+    position: absolute;
+    left: 0;
+    top: 1px;
+    background: #c3dbcc;
+    color: #1a3a2a;
+    font-size: 0.72em;
+    font-weight: 600;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    font-size: 0.78em;
+    color: #8bbaa0;
+    padding: 24px;
+    border-top: 1px solid #e0efe4;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📄 里程碑论文阅读笔记</h1>
+  <p>从深度学习基础架构到预训练范式、对齐技术、推理能力与强化学习<br>梳理大模型发展史中的核心突破</p>
+  <div class="count">共 21 篇论文，6 大方向</div>
+</header>
+
+<div class="container">
+
+  <!-- ============================================================ -->
+  <!-- 1. 基础架构 -->
+  <!-- ============================================================ -->
+  <div class="section">
+    <div class="section-title">
+      🏗 基础架构革命
+      <span class="badge">4 篇</span>
+    </div>
+    <div class="section-desc">
+      让深度学习与 Transformer 成为可能的架构创新。
+    </div>
+
+    <div class="card">
+      <div class="card-title">Deep Residual Learning for Image Recognition <span class="tag">ResNet</span></div>
+      <div class="card-meta">He 等 · Microsoft · 2015 · CVPR / TPAMI</div>
+      <div class="card-body">
+        提出了 <span class="hl">残差连接</span>（Skip Connection），让训练超过 100 层的深度网络成为可能，解决了网络退化问题。这一思想深刻影响了后续几乎所有深度架构——Transformer 中的 Residual Add & Layer Norm 也能追溯到 ResNet。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Attention Is All You Need <span class="tag">Transformer</span></div>
+      <div class="card-meta">Vaswani 等 · Google · 2017 · NeurIPS</div>
+      <div class="card-body">
+        提出了 <span class="hl">自注意力机制</span>（Self-Attention），完全抛弃了此前主流的 RNN / LSTM 结构。Transformer 实现了高度并行的计算，使模型能够处理超长上下文，为后续算力和参数规模的"暴力美学"扩展奠定了基础。至今几乎所有大模型都基于此架构。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">BERT: Pre-training of Deep Bidirectional Transformers <span class="tag">BERT</span></div>
+      <div class="card-meta">Devlin 等 · Google · 2018 · NAACL</div>
+      <div class="card-body">
+        提出了 <span class="hl">双向预训练 + Masked LM</span> 范式。与 GPT 的自回归（从左到右单向预测）不同，BERT 通过随机遮盖部分 token 让模型同时利用上下文信息。在 11 项 NLP 任务上刷新 SOTA，是 GPT 路线之外的另一条核心主线。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Mamba: Linear-Time Sequence Modeling with Selective State Spaces <span class="tag">Mamba</span></div>
+      <div class="card-meta">Gu & Dao · 2023</div>
+      <div class="card-body">
+        提出 <span class="hl">选择性状态空间模型</span>（Selective SSM），实现了线性复杂度的序列建模。在长序列任务上可与 Transformer 媲美甚至超越，挑战了 Transformer 在长上下文场景下的统治地位，引发了对"后 Transformer 架构"的广泛探索。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 2. 预训练与缩放定律 -->
+  <!-- ============================================================ -->
+  <div class="section">
+    <div class="section-title">
+      📈 预训练与缩放定律
+      <span class="badge">5 篇</span>
+    </div>
+    <div class="section-desc">
+      预训练范式的确立，以及"规模到底能带来什么"的理论与实践。
+    </div>
+
+    <div class="card">
+      <div class="card-title">Improving Language Understanding by Generative Pre-Training <span class="tag">GPT</span></div>
+      <div class="card-meta">Radford 等 · OpenAI · 2018</div>
+      <div class="card-body">
+        确立了 <span class="hl">"大规模无监督预训练 + 下游任务微调/提示"</span> 的经典范式。证明了在巨量文本上预训练的语言模型可以通过少量标注数据迁移到各类 NLP 任务，奠定了 GPT 系列的发展路线。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Scaling Laws for Neural Language Models</div>
+      <div class="card-meta">Kaplan 等 · OpenAI · 2020</div>
+      <div class="card-body">
+        首次用严谨的实验证明了"大力出奇迹"的数学依据——模型性能与 <span class="hl">计算量、参数量、数据量</span> 之间存在可预测的幂律关系（Power Law）。给了科技巨头们豪赌千卡、万卡集群的理论底气。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Language Models are Few-Shot Learners <span class="tag">GPT-3</span></div>
+      <div class="card-meta">Brown 等 · OpenAI · 2020 · NeurIPS</div>
+      <div class="card-body">
+        首次向世界展示了 <span class="hl">"涌现能力"</span>（Emergent Abilities）和 <span class="hl">少样本学习</span>（Few-Shot Learning）。1750 亿参数下，模型仅靠提示词（Prompt）就能完成翻译、写代码、问答等任务，不需要更新参数。让人们第一次认识到——"大力"真的可以"出奇迹"。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Training Compute-Optimal Large Language Models <span class="tag">Chinchilla</span></div>
+      <div class="card-meta">Hoffmann 等 · DeepMind · 2022</div>
+      <div class="card-body">
+        纠正了 OpenAI 早期定律中的偏差，提出 <span class="hl">参数量和高质量训练数据必须同比例增长</span>。直接改变了行业风向——不再盲目追求万亿参数，转而疯狂清洗和挖掘高质量数据。DeepMind 据此训练了 70B 的 Chinchilla，优于更大的 GPT-3。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">LLaMA: Open and Efficient Foundation Language Models <span class="tag">LLaMA</span></div>
+      <div class="card-meta">Touvron 等 · Meta · 2023</div>
+      <div class="card-body">
+        验证了 Chinchilla 定律——<span class="hl">在更多数据上训练较小的模型</span>可以匹敌甚至超越更大的模型。LLaMA-13B 在多数基准上超越 GPT-3-175B。更关键的是，Meta 将其<span class="hl">开源</span>，引爆了开源大模型生态的革命，Llama 2/3 系列至今仍是开源领域的标杆。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 3. 对齐技术 -->
+  <!-- ============================================================ -->
+  <div class="section">
+    <div class="section-title">
+      🎯 对齐技术
+      <span class="badge">3 篇</span>
+    </div>
+    <div class="section-desc">
+      让模型从"盲目的续写机器"进化为"懂礼貌、有逻辑、能助人的对话助手"的关键技术路线。
+    </div>
+
+    <div class="card">
+      <div class="card-title">Proximal Policy Optimization Algorithms <span class="tag">PPO</span></div>
+      <div class="card-meta">Schulman 等 · OpenAI · 2017</div>
+      <div class="card-body">
+        虽早于大模型爆发，PPO 是 RLHF 的<span class="hl">底层核心算法</span>。它通过裁剪（Clipping）约束策略更新幅度，在训练稳定性与计算效率之间找到了极佳的平衡。至今仍是 RLHF 管线中最常用的强化学习算法，ChatGPT 得以成功的"幕后英雄"。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Training Language Models to Follow Instructions with Human Feedback <span class="tag">InstructGPT</span></div>
+      <div class="card-meta">Ouyang 等 · OpenAI · 2022 · NeurIPS</div>
+      <div class="card-body">
+        详细阐述了如何使用 <span class="hl">RLHF</span>（基于人类反馈的强化学习）对模型进行微调，使其输出与人类价值观和意图对齐（Alignment）。这是 ChatGPT 诞生的<strong>前置关键技术</strong>。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Direct Preference Optimization <span class="tag">DPO</span></div>
+      <div class="card-meta">Rafailov 等 · Stanford · 2023 · NeurIPS</div>
+      <div class="card-body">
+        传统 RLHF 需要训练奖励模型 + 用 PPO 做强化学习，极其复杂。DPO 提出了一种 <span class="hl">优雅的数学变换</span>，将偏好对齐直接转化为简单的二元分类损失，绕过了强化学习框架。极大地降低了对齐门槛，成为开源模型（Llama 3、Qwen 等）的标配方法。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 4. 效率优化 -->
+  <!-- ============================================================ -->
+  <div class="section">
+    <div class="section-title">
+      ⚡ 效率优化
+      <span class="badge">2 篇</span>
+    </div>
+    <div class="section-desc">
+      解决"大模型太贵"的关键工程创新——让训练和推理更快、更省。
+    </div>
+
+    <div class="card">
+      <div class="card-title">LoRA: Low-Rank Adaptation of Large Language Models <span class="tag">LoRA</span></div>
+      <div class="card-meta">Hu 等 · Microsoft · 2021 · ICLR</div>
+      <div class="card-body">
+        提出冻结原模型权重，注入少量可训练的<span class="hl">低秩矩阵</span>来实现高效微调。将单次微调的参数量从百亿级降到百万级，显存占用降低 3 倍。如今是 LLM 个性化定制和模型服务的标准方法，奠定了"模型即服务"生态的重要技术基础。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness <span class="tag">FlashAttention</span></div>
+      <div class="card-meta">Dao 等 · Stanford · 2022 · NeurIPS</div>
+      <div class="card-body">
+        IO-aware 的 <span class="hl">精确注意力算法</span>，通过分块（Tiling）和重计算（Recomputation）大幅减少 GPU 显存读写，加速 2-4 倍。使长上下文训练和推理变得实际，如今已内化到 PyTorch 和几乎所有 LLM 框架中。每个使用长上下文的人，都在受益于这篇论文。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 5. 推理、Agent 与 Test-Time Scaling -->
+  <!-- ============================================================ -->
+  <div class="section">
+    <div class="section-title">
+      🧠 推理、Agent 与 Test-Time Scaling
+      <span class="badge">4 篇</span>
+    </div>
+    <div class="section-desc">
+      从"预测下一个词"到"真正地思考"——让大模型具备推理、规划和使用工具的能力。
+    </div>
+
+    <div class="card">
+      <div class="card-title">Chain-of-Thought Prompting Elicits Reasoning in Large Language Models <span class="tag">CoT</span></div>
+      <div class="card-meta">Wei 等 · Google · 2022 · NeurIPS</div>
+      <div class="card-body">
+        发现简单地要求模型 <span class="hl">"逐步思考"</span>（Let's think step by step）就能显著提升数学、逻辑等推理任务的准确性。揭示了 LLM 具有隐式的推理能力可以被简单的提示技巧激发，是推理增强研究的开创性工作。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">ReAct: Synergizing Reasoning and Acting in Language Models <span class="tag">ReAct</span></div>
+      <div class="card-meta">Yao 等 · Princeton & Google · 2022 · ICLR</div>
+      <div class="card-body">
+        提出 <span class="hl">推理（Reasoning）+ 行动（Acting）协同</span>的 Agent 范式。模型可以边思考边调用外部工具（搜索、计算等），文本推理轨迹和工具调用相互促进。LLM Agent 方向的奠基论文，影响了后来的 Toolformer、AutoGPT、GPTs 等一系列工作。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Tree of Thoughts: Deliberate Problem Solving with Large Language Models <span class="tag">ToT</span></div>
+      <div class="card-meta">Yao 等 · Princeton & Google · 2023 · NeurIPS</div>
+      <div class="card-body">
+        将推理过程从 <span class="hl">单链条扩展为树搜索</span>——在每个步骤分叉多条候选路径，使用 BFS/DFS 搜索最佳推理链，必要时可以回溯。融合了传统 AI 搜索算法和大模型的语言理解能力，在需要规划和探索的任务上显著优于 CoT。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning</div>
+      <div class="card-meta">DeepSeek · 2025</div>
+      <div class="card-body">
+        <strong>纯 RL 的奇迹：</strong>即使不依赖人类精标数据（SFT），仅靠 <span class="hl">GRPO 算法</span>和基于规则的奖励，模型就能"自我顿悟"，自动进化出强大的数学和编程推理能力。<br><br>
+        同时开启了 <span class="hl">Test-Time Scaling</span> 新范式——给模型更多的思考时间，它就能输出更高质量的答案。打破了预训练 Scaling Law 趋于饱和的焦虑，为大模型通往 AGI 指明了新路径。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 6. 强化学习基础 -->
+  <!-- ============================================================ -->
+  <div class="section">
+    <div class="section-title">
+      🎮 强化学习里程碑
+      <span class="badge">3 篇</span>
+    </div>
+    <div class="section-desc">
+      推动深度强化学习发展的核心里程碑。
+    </div>
+
+    <div class="card">
+      <div class="card-title">Playing Atari with Deep Reinforcement Learning <span class="tag">DQN</span></div>
+      <div class="card-meta">Mnih 等 · DeepMind · 2013</div>
+      <div class="card-body">
+        首次将深度神经网络与 Q-Learning 结合，在 Atari 游戏上达到甚至超越人类水平。提出了 <span class="hl">经验回放</span>（Experience Replay）和 <span class="hl">目标网络</span>（Target Network）两项关键技巧，解决了深度 RL 训练不稳定的核心问题。是深度强化学习（Deep RL）时代的真正开端。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Mastering the Game of Go with Deep Neural Networks and Tree Search <span class="tag">AlphaGo</span></div>
+      <div class="card-meta">Silver 等 · DeepMind · 2016 · Nature</div>
+      <div class="card-body">
+        首次在围棋——这个曾被公认为"人类智慧最后堡垒"的游戏中击败人类世界冠军。结合深度神经网络 + 蒙特卡洛树搜索（MCTS）+ 强化学习自对弈，是 <span class="hl">深度强化学习最具代表性的里程碑</span>。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm <span class="tag">AlphaZero</span></div>
+      <div class="card-meta">Silver 等 · DeepMind · 2017 · Science</div>
+      <div class="card-body">
+        在 AlphaGo 基础上更进一步——<span class="hl">完全从零开始（Tabula Rasa）</span>，不依赖人类棋谱，仅通过自对弈强化学习就掌握了围棋、国际象棋、将棋。证明了纯 RL 方法可以在缺乏人类先验知识的领域发现超越人类的策略。为 DeepSeek-R1 的"纯 RL"思路提供了哲学和方法论先驱。
+      </div>
+    </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 论文关系图谱 -->
+  <!-- ============================================================ -->
+  <div class="relationships">
+    <h3>🔗 论文关系图谱</h3>
+    <ol>
+      <li><strong>ResNet</strong> 的残差连接 → <strong>Transformer</strong> 继承并推广 → <strong>BERT / Mamba</strong> 在各自领域发扬光大</li>
+      <li><strong>GPT</strong> 确立了预训练范式 → <strong>Scaling Laws</strong> 从理论上解释规模红利 → <strong>GPT-3</strong> 用 1750 亿参数震撼业界 → <strong>Chinchilla</strong> 修正方向强调数据 → <strong>LLaMA</strong> 验证并开源了该路线</li>
+      <li><strong>GPT-3</strong> 能力强但难以控制 → <strong>InstructGPT</strong> 用 RLHF 对齐 → <strong>PPO</strong> 是 RLHF 的训练引擎 → <strong>DPO</strong> 简化了整个流程</li>
+      <li>对齐需要高效迭代 → <strong>LoRA</strong> 让微调不再昂贵，<strong>FlashAttention</strong> 让长上下文成为现实</li>
+      <li><strong>CoT</strong> 发现"逐步思考"有效 → <strong>ToT</strong> 扩展到树搜索 → <strong>ReAct</strong> 加入外部工具 → <strong>DeepSeek-R1</strong> 用纯 RL + Test-Time Scaling 实现了质的飞跃</li>
+      <li><strong>DQN</strong> 开创了深度 RL 时代 → <strong>AlphaGo → AlphaZero</strong> 证明了纯 RL 自对弈的潜力 → <strong>PPO</strong> 将 RL 方法适配到 LLM 训练 → <strong>DeepSeek-R1</strong> 实现"自我顿悟"</li>
+    </ol>
+  </div>
+
+</div>
+
+<footer>
+  持续更新中 · 阅读笔记整理 · 共 21 篇
+</footer>
+
+</body>
+</html>
