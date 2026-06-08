@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIT-MAS-S60 How2AI 课程笔记</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 28px 20px;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  /* headings */
+  h1 { font-size: 1.35em; margin: 18px 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+  h2 { font-size: 1.2em; margin: 16px 0 8px; color: #1f4a2e; }
+  h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+
+  p { margin: 6px 0; }
+
+  /* lists */
+  ul, ol { padding-left: 20px; margin: 4px 0; }
+  li { margin: 2px 0; }
+
+  /* panels / cards */
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card.warm {
+    background: #fdf6ec;
+    border-color: #e6d5b8;
+  }
+
+  /* highlight boxes */
+  .highlight {
+    background: #e8f5ec;
+    border-left: 4px solid #2a8f4f;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #1a4a2a;
+  }
+  .highlight.accent {
+    border-left-color: #d97706;
+    background: #fef7e6;
+    color: #7c5200;
+  }
+
+  /* key-point accent */
+  .key {
+    color: #d97706;
+    font-weight: 600;
+  }
+
+  strong { color: #1a4a2a; }
+  em { color: #3d6a4f; }
+
+  code {
+    font-size: 0.88em;
+    background: #e2efe5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4a2a;
+  }
+  pre {
+    font-size: 0.8em;
+    background: #e2efe5;
+    border: 1px solid #c3dbcc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+
+  /* divider */
+  hr {
+    border: none;
+    border-top: 1px solid #c3dbcc;
+    margin: 18px 0;
+  }
+
+  /* quote */
+  blockquote {
+    border-left: 3px solid #c3dbcc;
+    padding: 4px 12px;
+    margin: 8px 0;
+    color: #4a6b55;
+    background: #edf6f0;
+    border-radius: 0 6px 6px 0;
+  }
+
+  /* summary / takeaway */
+  .takeaway {
+    background: #e8f5ec;
+    border: 1px solid #2a8f4f;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 0.95em;
+  }
+  .takeaway-title {
+    font-weight: 700;
+    color: #1a4a2a;
+    margin-bottom: 4px;
+  }
+
+  /* section wrapper for three-layer structure */
+  .section-overview { margin-bottom: 4px; }
+  .section-detail { margin: 6px 0; }
+  .section-conclusion { margin-top: 8px; }
+
+  /* inline tags */
+  .tag {
+    display: inline-block;
+    background: #d4e8db;
+    color: #1a4a2a;
+    font-size: 0.85em;
+    padding: 0 8px;
+    border-radius: 10px;
+    margin: 2px 2px;
+  }
+
+  /* lec header */
+  .lec-header {
+    background: linear-gradient(135deg, #1a4a2a, #2a7a4a);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin: 20px 0 10px;
+    font-weight: 700;
+    font-size: 1.1em;
+  }
+
+  /* responsive */
+  @media (max-width: 600px) {
+    body { padding: 16px 12px; }
+    ul, ol { padding-left: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>MIT-MAS-S60 — How2AI 课程笔记</h1>
+
+<!-- ============ OVERVIEW ============ -->
+<div class="section-overview">
+<div class="card">
+  <h2 style="margin:0 0 6px;color:#1a4a2a;">课程总览</h2>
+  <p>AI 的真正价值不在于复制人类能力，而在于<strong>扩展人类体验</strong>。当 AI 可以作用于"任何数据模态"时，核心问题变为：如何将现实世界问题转化为 <strong>"数据 + 结构 + 反馈"</strong> 的形式。</p>
+  <p>课程核心观点：<span class="key">真正的门槛在于如何理解问题</span>，而非技术细节。即使不了解模型底层原理，也可以通过对数据和任务的思考来解决问题。</p>
+  <ul>
+    <li>思考数据 → 收集数据 → 设计架构 → 快速实验 → 评估结果 → 部署系统</li>
+    <li>教导对于不同的数据，<strong>神经网络结构为什么是那样的</strong>，有什么必要</li>
+    <li>怎么根据数据和问题，定制模型并使用</li>
+  </ul>
+</div>
+</div>
+
+<!-- ============ LEC 2 ============ -->
+<div class="lec-header">📖 第 2 讲 · 数据为中心</div>
+
+<div class="section-overview">
+<div class="card">
+  <p><strong>核心主题：</strong>探讨各种形式的数据，分析其独特属性，并了解如何根据数据特性设计合适的建模架构。涵盖所有存在的数据类型，以及学习这些针对特定任务有用的抽象的正确方法。</p>
+  <p>关键问题：给你一堆数据集，要处理某个任务，那么<strong>提取数据集的什么信号</strong>？怎么表示？</p>
+  <p>常见数据模态：视觉、语音、语言、传感/机器人、表格与时间序列（医疗）、图数据、集合数据。</p>
+</div>
+</div>
+
+<div class="section-detail">
+
+<h3>模态剖析</h3>
+<p>理解每个模态独有的品质和结构。</p>
+
+<h3>从数据中学习</h3>
+<ul>
+  <li><strong>监督学习：</strong>原始数据 + 标签 → 预测目标</li>
+  <li><strong>无监督学习：</strong>仅有数据，无标签。可学习数据分布、生成新数据</li>
+  <li><strong>强化学习：</strong>关键作用不是"更聪明"，而是<strong>更符合人类期望</strong></li>
+</ul>
+
+<h3>更现实的组合</h3>
+<ul>
+  <li>多模态学习（视觉+语言）</li>
+  <li>多任务学习</li>
+  <li>主动学习</li>
+  <li>Human-in-the-loop</li>
+</ul>
+
+<div class="highlight">我们真正想要的，不是训练效果，而是<strong>泛化能力</strong>。</div>
+
+<h3>How To Data</h3>
+<ul>
+  <li>决定收集/标记多少数据——这是超级关键的</li>
+  <li>清理和规范化数据</li>
+  <li>从数据中移除异常值</li>
+  <li>可视化数据以理解标签与数据以及标签之间的关系</li>
+</ul>
+
+</div>
+
+<div class="section-conclusion">
+<div class="takeaway">
+  <div class="takeaway-title">💡 核心结论</div>
+  <p><strong>AI 的上限从来不是模型决定的，而是数据决定的。</strong>真正的分水岭不是你会不会用 Transformer，而是你有没有能力"读懂数据"。</p>
+</div>
+</div>
+
+<hr>
+
+<!-- ============ LEC 3 ============ -->
+<div class="lec-header">📖 第 3 讲 · 模型架构与数据适配</div>
+
+<div class="section-overview">
+<div class="card">
+  <p><strong>核心主题：</strong>什么样的数据应该用什么样的模型？如何学习特征？如何聚合特征？统一框架指导：<span class="key">给定某个 task，应该怎么直观地使用 building block 来构建神经网络</span>。</p>
+  <p>好的神经网络架构能以更少的数据达到更好的效果。</p>
+</div>
+</div>
+
+<div class="section-detail">
+
+<h3>六大维度剖析数据</h3>
+<div class="card">
+  <p>任何一种数据，你都可以用六个维度去理解它——<strong>这不是理论，是决策工具</strong>：</p>
+  <ol>
+    <li><strong>表示：</strong>离散 vs 连续</li>
+    <li><strong>粒度：</strong>采样频率、分辨率</li>
+    <li><strong>结构：</strong>序列、空间、层次</li>
+    <li><strong>信息：</strong>密度与熵</li>
+    <li><strong>噪声：</strong>不确定性、缺失</li>
+    <li><strong>相关性：</strong>和任务的关系</li>
+  </ol>
+  <p>当你把数据在这六个维度想清楚，其实模型已经选了一半。</p>
+</div>
+
+<h3>神经网络的核心：两个任务</h3>
+<div class="card">
+  <p><strong>表征学习（Representation Learning）</strong> + <strong>信息聚合（Information Aggregation）</strong></p>
+  <ul>
+    <li>表征学习的 building block：全连接、ReLU ...</li>
+    <li>信息聚合的 building block：concat、add ...</li>
+  </ul>
+  <p>任何现代 AI 模型都是这些块的某种组合（可能简单，可能复杂）。</p>
+</div>
+
+<h3>构建原则：以集合数据为例</h3>
+<div class="card warm">
+  <p><strong>原则 1：参数共享</strong> — 每个集合元素使用相同的特征提取器（相同参数）。否则，相同集合顺序改变会导致不同结果。</p>
+  <p><strong>原则 2：置换不变聚合</strong> — 使用加法等置换不变的函数来聚合个体表征。如果用 concat（对顺序敏感），则需要 5! = 120 倍的训练数据。</p>
+  <div class="highlight accent">如果您仔细设计模型架构，您将需要比不仔细设计时少得多的样本。</div>
+</div>
+
+<h3>核心概念：不变性与等变性</h3>
+<div class="card">
+  <p><strong>不变性（Invariance）：</strong>数据变换后标签/结果不应改变。例如图像平移、旋转、灰度化后分类结果应为相同标签。</p>
+  <p><strong>等变性（Equivariance）：</strong>数据变换后输出应相应变换。例如图像平移 2px，语义分割图也应平移 2px。</p>
+  <div class="highlight accent">给定数据，设计定制架构时，考虑不变性与等变性可以<strong>大幅降低所需样本量</strong>，提高效率。</div>
+</div>
+
+<h3>NLP 序列模型</h3>
+<ul>
+  <li><strong>对时间不变：</strong>序列向前/向后移动一步，不影响模型</li>
+  <li><strong>对顺序等变：</strong>"狐狸跳过" vs "狗跳过"——改变单词顺序，模型应极其敏感</li>
+  <li><strong>跨时间步的参数共享</strong> + <strong>跨时间聚合信息</strong>（循环思想）</li>
+</ul>
+<div class="highlight">序列数据，任何用于序列数据的模型必须<strong>尊重时间的不变性</strong>，但<strong>对单词顺序的等变性</strong>。</div>
+
+<h3>卷积与视觉 Transformer</h3>
+<ul>
+  <li>直接展开图像为全连接 → <strong>坏主意</strong>：参数爆炸 + 对空间位移敏感</li>
+  <li>正确做法：稀疏连接 + 滤波器（局部感受野）+ 参数共享</li>
+  <li>根据任务决定：<strong>分类 → 空间不变</strong>；<strong>分割 → 空间等变</strong></li>
+  <li>池化 → 聚合局部信息，降低维度</li>
+</ul>
+
+<h3>实际处理</h3>
+<ul>
+  <li>重大决策：微调通用模型 vs 构建领域特定模型（架构 + 训练目标）</li>
+  <li>基本元素和表示：将复杂数据分解为单个元素（序列、空间、集合、图）</li>
+  <li>弄清数据不变性与等变性——否则可能<strong>爆炸性增加所需样本量</strong></li>
+</ul>
+
+</div>
+
+<div class="section-conclusion">
+<div class="takeaway">
+  <div class="takeaway-title">💡 核心结论</div>
+  <p>模型的架构设计本质上是<strong>对数据结构的编码</strong>。理解数据的六个维度（表示、粒度、结构、信息、噪声、相关性），正确应用不变性与等变性，选择合适的表征学习和信息聚合方式——<span class="key">这些决策远比选择一个"更强的模型"更重要</span>。</p>
+</div>
+</div>
+
+<hr>
+
+<div style="text-align:center;color:#6a8f7a;font-size:0.9em;margin-top:20px;">
+  MIT-MAS-S60 How2AI · 课程笔记整理
+</div>
+
+</body>
+</html>
