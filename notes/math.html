@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>线性代数读书笔记</title>
+<style>
+:root {
+  --bg: #f5faf6;
+  --card: #e8f5ec;
+  --border: #c3dbcc;
+  --text: #2d3a31;
+  --accent: #3a7a4d;
+  --accent-light: #5ead6e;
+  --highlight: #d4942b;
+  --highlight-bg: #fdf6e3;
+  --code-bg: #dceee2;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+h1 { font-size: 1.35em; color: var(--accent); margin: 20px 0 8px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+h2 { font-size: 1.2em; color: var(--accent); margin: 18px 0 6px; }
+h3 { font-size: 1.02em; color: var(--accent); margin: 14px 0 4px; }
+h4 { font-size: 0.95em; color: var(--accent); margin: 10px 0 4px; }
+p { margin: 6px 0; }
+ul, ol { margin: 4px 0; padding-left: 20px; }
+li { margin: 2px 0; }
+code { font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+pre { font-size: 0.8em; background: var(--card); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); overflow-x: auto; margin: 8px 0; }
+table { font-size: 0.9em; border-collapse: collapse; width: 100%; margin: 8px 0; }
+th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+th { background: var(--accent); color: #fff; font-weight: 600; }
+tr:nth-child(even) { background: var(--card); }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
+.summary { background: var(--highlight-bg); border-left: 4px solid var(--highlight); border-radius: 4px; padding: 12px 16px; margin: 14px 0; }
+.summary strong { color: var(--highlight); }
+.highlight { background: var(--highlight-bg); border-left: 3px solid var(--highlight); padding: 8px 12px; margin: 8px 0; border-radius: 0 4px 4px 0; }
+.tag { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8em; padding: 1px 8px; border-radius: 10px; font-weight: 500; }
+.keyword { color: var(--accent); font-weight: 600; }
+.warm { background: #fdf6e3; border: 1px solid #eedca5; }
+</style>
+</head>
+<body>
+
+<div class="card" style="text-align:center; margin-bottom:20px;">
+  <h1 style="border:none; margin:4px 0;">📐 线性代数</h1>
+  <p style="color:var(--accent); margin:2px 0;">MIT 18.06 · 3Blue1Brown 线性代数的本质</p>
+</div>
+
+<!-- ============ OVERVIEW ============ -->
+<h2>一、线性代数是为了解决什么问题？</h2>
+
+<div class="summary">
+<strong>线性代数是为了解决高维空间并发问题而诞生的数学语言。</strong> 它让我们能用高度简洁的符号体系，去操作和求解超越三维直觉的复杂系统。
+</div>
+
+<p>人类大脑只擅长处理<strong>单变量</strong>问题——一个未知数 x，列一个方程，解一个答案。但真实世界从来不是单变量的：气象预报要处理温度、湿度、气压、风向等千万个变量；跨海大桥要计算几万个钢梁交接点的形变；短视频推荐要考虑用户历史、停留时间、点赞倾向等几百个特征。当变量成百上千时，传统代数方程彻底失效。</p>
+
+<div class="card">
+<p><strong>核心思想：</strong>无论系统里有三个变量还是三百万个变量，线性代数都可以把它们打包成一个简单的方程式：</p>
+<div style="text-align:center; font-size:1.3em; margin:8px 0; font-weight:bold; color:var(--accent);">Ax = b</div>
+<ul>
+  <li><strong>x</strong> — 不再是单一数字，而是包含所有未知数的<strong>状态向量</strong></li>
+  <li><strong>A</strong> — 包含所有相互作用关系的<strong>规则矩阵</strong></li>
+  <li><strong>b</strong> — 已知的结果</li>
+</ul>
+</div>
+
+<!-- ============ GEOMETRIC INTUITION ============ -->
+<h2>二、几何直觉：理解线性代数的关键</h2>
+
+<div class="summary">
+<strong>要想真正学懂线性代数，你必须建立几何直觉。</strong> 不要把矩阵看成数字表格，不要把向量看成一列数字。
+</div>
+
+<h3>2.1 向量是什么？</h3>
+<p><span class="keyword">向量</span> = 空间中的一个固定坐标或有向线段。它代表事物在当前空间下的<strong>一个状态</strong>。</p>
+
+<h3>2.2 矩阵是什么？</h3>
+<p><span class="keyword">矩阵</span> = 对空间进行操作的动作。它代表一种<strong>变换规则</strong>。</p>
+
+<div class="card">
+<p><strong>矩阵乘法 Ax 的几何意义：</strong>矩阵 A 对向量 x 施加一种<strong>空间变换</strong>——可能是拉伸、旋转或剪切。</p>
+<p><strong>"线性"的两个死要求：</strong></p>
+<ul>
+  <li>✔ 原点保持固定，不能乱跑</li>
+  <li>✔ 所有直线在变换后依然是直线，平行线依然平行</li>
+</ul>
+<p style="margin-top:6px;">→ 空间不能被扭曲成麻花。</p>
+</div>
+
+<h3>2.3 矩阵乘法 AB 的意义</h3>
+<div class="highlight">
+<strong>AB</strong> = 先对空间施加 B 变换，再施加 A 变换。不是复杂的数字游戏，而是<strong>变换的复合</strong>。
+</div>
+
+<h3>2.4 秩</h3>
+<p><span class="keyword">秩</span> = 变换后空间保留下来的<strong>真实维度</strong>。</p>
+
+<!-- ============ GEOMETRY VS COMPUTATION ============ -->
+<h2>三、几何直觉 vs 数值计算</h2>
+
+<table>
+  <tr><th>角色</th><th>作用</th></tr>
+  <tr><td><span class="keyword">几何直觉</span></td><td>解决"用什么样的工具"的问题——建模</td></tr>
+  <tr><td><span class="keyword">数值计算</span></td><td>负责求解——计算机可以直接代劳</td></tr>
+</table>
+
+<div class="card warm" style="margin-top:12px; text-align:center;">
+  <p style="font-size:0.9em; color:#8a7a3a;">学线性代数，重点在<strong>几何直觉</strong>（理解变换），而非数值计算（计算机替你算）。</p>
+</div>
+
+<!-- ============ RESOURCES ============ -->
+<h2>四、推荐资源</h2>
+<ul>
+  <li><a href="https://www.zhihu.com/question/358244660/answer/2016914765264462940" target="_blank">知乎：线性代数到底是为了解决什么问题被发明的？</a></li>
+  <li>MIT 18.06 线性代数课程</li>
+  <li>3Blue1Brown B站「线性代数的本质」视频系列</li>
+</ul>
+
+</body>
+</html>
