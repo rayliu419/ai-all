@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多个向量的可视化 — 箭头 vs 散点</title>
+<style>
+:root { --bg: #f5faf6; --border: #c3dbcc; --text: #2d3a31; --accent: #3a7a4d; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 16px;
+  max-width: 540px;
+  margin: 0 auto;
+}
+h3 { font-size: 1.02em; color: var(--accent); margin-bottom: 4px; }
+p.desc { font-size: 0.88em; color: #555; margin-bottom: 8px; }
+.canvas-wrap { text-align: center; }
+canvas { border: 1px solid var(--border); border-radius: 4px; background: #fff; max-width: 100%; }
+.controls { display: flex; align-items: center; gap: 12px; margin: 10px 0 4px; flex-wrap: wrap; }
+.controls label { font-size: 0.92em; }
+.controls input[type="range"] { flex: 1; min-width: 80px; }
+.controls .count { font-family: monospace; font-size: 0.92em; min-width: 24px; }
+.btn-group { display: flex; gap: 4px; }
+.btn-group button {
+  padding: 5px 12px; border: 1px solid var(--border); background: #fff;
+  color: var(--text); cursor: pointer; font-size: 0.88em; border-radius: 3px;
+}
+.btn-group button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.info-display { font-size: 0.9em; margin-top: 6px; color: #555; }
+</style>
+</head>
+<body>
+<h3>多个向量的可视化</h3>
+<p class="desc">当向量数量增多时，用箭头全画出来会很花，改用终点（散点）表示更清晰。</p>
+<div class="canvas-wrap">
+  <canvas id="canvas" width="480" height="460"></canvas>
+</div>
+<div class="controls">
+  <div class="btn-group">
+    <button id="modeArrow" class="active">箭头模式</button>
+    <button id="modePoint">散点模式</button>
+  </div>
+  <label>数量</label>
+  <input type="range" id="countSlider" min="3" max="40" step="1" value="8">
+  <span class="count" id="countVal">8</span>
+</div>
+<div class="info-display" id="infoMsg">箭头模式：每个向量画一条有向线段</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const MARGIN = 34;
+  const RANGE = 5;
+  const sx = (W - 2 * MARGIN) / (2 * RANGE), sy = (H - 2 * MARGIN) / (2 * RANGE);
+
+  function toCanvas(wx, wy) {
+    return [MARGIN + (wx + RANGE) * sx, MARGIN + (RANGE - wy) * sy];
+  }
+
+  // Generate interesting vectors — clusters and outliers for visual variety
+  function generateVectors(count) {
+    const vecs = [];
+    const rng = (lo, hi) => lo + Math.random() * (hi - lo);
+    for (let i = 0; i < count; i++) {
+      let x, y;
+      if (i < 4) {
+        // First few: structured
+        const angle = (i / 4) * Math.PI * 2;
+        const mag = 1 + Math.random() * 1.5;
+        x = mag * Math.cos(angle);
+        y = mag * Math.sin(angle);
+      } else {
+        x = rng(-3.8, 3.8);
+        y = rng(-3.8, 3.8);
+      }
+      vecs.push([x, y]);
+    }
+    return vecs;
+  }
+
+  let mode = 'arrow';
+  let vectors = generateVectors(8);
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, W, H);
+    const [ox, oy] = toCanvas(0, 0);
+
+    // Grid
+    ctx.strokeStyle = '#e0e8e2'; ctx.lineWidth = 0.5;
+    for (let i = -RANGE; i <= RANGE; i++) {
+      if (i === 0) continue;
+      const [x1, y1] = toCanvas(i, -RANGE), [x2, y2] = toCanvas(i, RANGE);
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      const [x3, y3] = toCanvas(-RANGE, i), [x4, y4] = toCanvas(RANGE, i);
+      ctx.beginPath(); ctx.moveTo(x3, y3); ctx.lineTo(x4, y4); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#b0b8b2'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(MARGIN, oy); ctx.lineTo(W - MARGIN, oy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox, MARGIN); ctx.lineTo(ox, H - MARGIN); ctx.stroke();
+    ctx.fillStyle = '#888'; ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (let i = -RANGE + 1; i < RANGE; i++) {
+      if (i === 0) continue;
+      const [px, py] = toCanvas(i, 0); ctx.fillText(i, px, py + 3);
+      const [px2, py2] = toCanvas(0, i); ctx.fillText(i, px2 + 4, py2);
+    }
+    ctx.fillStyle = '#555';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillText('x', W - MARGIN + 4, oy);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText('y', ox + 4, MARGIN - 12);
+
+    if (mode === 'arrow') {
+      // Draw each vector as a full arrow
+      for (const [x, y] of vectors) {
+        const len = Math.hypot(x, y);
+        if (len < 0.01) continue;
+        const hue = (Math.atan2(y, x) / Math.PI + 1) * 180;
+        const color = `hsl(${hue}, 60%, 50%)`;
+        const [cx, cy] = toCanvas(0, 0);
+        const [tx, ty] = toCanvas(x, y);
+        ctx.save();
+        ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tx, ty); ctx.stroke();
+        const angle = Math.atan2(y, x);
+        const headLen = Math.min(10, len * 0.35 * sx);
+        ctx.beginPath();
+        ctx.moveTo(tx, ty);
+        ctx.lineTo(tx - headLen * Math.cos(angle - 0.4), ty - headLen * Math.sin(angle - 0.4));
+        ctx.lineTo(tx - headLen * Math.cos(angle + 0.4), ty - headLen * Math.sin(angle + 0.4));
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+      ctx.beginPath(); ctx.arc(ox, oy, 3, 0, Math.PI * 2); ctx.fillStyle = '#333'; ctx.fill();
+    } else {
+      // Draw each vector as a point (endpoint only)
+      for (const [x, y] of vectors) {
+        const [px, py] = toCanvas(x, y);
+        const hue = (Math.atan2(y, x) / Math.PI + 1) * 180;
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fillStyle = `hsl(${hue}, 60%, 50%)`;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+      // Indicate label
+      ctx.fillStyle = '#999'; ctx.font = '11px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText('(每个点 = 一个向量的终点)', W / 2, H - 6);
+    }
+  }
+
+  const countSlider = document.getElementById('countSlider');
+  const countVal = document.getElementById('countVal');
+  const modeArrow = document.getElementById('modeArrow');
+  const modePoint = document.getElementById('modePoint');
+  const infoMsg = document.getElementById('infoMsg');
+
+  function update() {
+    const n = parseInt(countSlider.value);
+    countVal.textContent = n;
+    vectors = generateVectors(n);
+    draw();
+    infoMsg.textContent = mode === 'arrow'
+      ? '箭头模式：每个向量画一条有向线段 — 数量多时看起来杂乱'
+      : '散点模式：只用终点表示向量 — 清晰看出分布';
+  }
+
+  countSlider.addEventListener('input', update);
+
+  modeArrow.addEventListener('click', function() {
+    this.classList.add('active'); modePoint.classList.remove('active');
+    mode = 'arrow'; draw();
+    infoMsg.textContent = '箭头模式：每个向量画一条有向线段 — 数量多时看起来杂乱';
+  });
+  modePoint.addEventListener('click', function() {
+    this.classList.add('active'); modeArrow.classList.remove('active');
+    mode = 'point'; draw();
+    infoMsg.textContent = '散点模式：只用终点表示向量 — 清晰看出分布';
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>

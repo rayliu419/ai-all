@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>矩阵乘法满足结合律 — (AB)C = A(BC)</title>
+<style>
+:root { --bg: #f5faf6; --border: #c3dbcc; --text: #2d3a31; --accent: #3a7a4d; --highlight: #d4942b; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding: 14px 16px; max-width: 760px; margin: 0 auto;
+}
+h3 { font-size: 1.02em; color: var(--accent); margin-bottom: 2px; }
+h4 { font-size: 0.88em; color: var(--accent); margin-bottom: 2px; }
+p.desc { font-size: 0.88em; color: #555; margin-bottom: 6px; }
+
+.legend { display: flex; gap: 14px; font-size: 0.82em; margin-bottom: 6px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 3px; }
+.dot { width: 14px; height: 3px; border-radius: 1px; display: inline-block; }
+
+.row { display: flex; gap: 14px; flex-wrap: wrap; }
+.col-canvas { text-align: center; }
+canvas { border: 1px solid var(--border); border-radius: 4px; background: #fff; max-width: 100%; }
+
+.col-panel { flex: 0 0 190px; }
+.panel { background: #e8f5ec; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin-bottom: 5px; }
+.panel h4 { font-size: 0.85em; color: var(--accent); margin-bottom: 2px; }
+
+.mblk { display: inline-flex; align-items: center; vertical-align: middle; margin: 0 1px; }
+.mblk .mb { font-size: 2em; font-weight: 100; color: #555; line-height: 0.8; font-family: serif; user-select: none; }
+.mblk .mg { display: inline-grid; text-align: center; font-family: 'SF Mono', monospace; font-size: 0.9em; }
+.mblk .mg.c2 { grid-template-columns: 1fr 1fr; gap: 1px 8px; }
+.mb-center { text-align: center; margin: 2px 0; }
+.mb-eq { font-size: 1em; margin: 0 2px; color: #555; }
+.mb-label { font-size: 0.8em; color: #888; text-align: center; margin: 1px 0; }
+.mb-eq-big { font-size: 1.1em; font-weight: bold; color: var(--accent); text-align: center; margin: 2px 0; }
+
+.ctrl-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; flex-wrap: wrap; }
+.ctrl-row label { font-size: 0.82em; }
+.btn-group { display: flex; gap: 3px; }
+.btn-group button {
+  padding: 3px 9px; border: 1px solid var(--border); background: #fff;
+  color: var(--text); cursor: pointer; font-size: 0.8em; border-radius: 3px;
+}
+.btn-group button.active { background: var(--accent); color: #fff; }
+.btn-group button:disabled { opacity: 0.4; cursor: default; }
+.play-btn {
+  padding: 6px 18px; border: 1px solid var(--accent); background: var(--accent);
+  color: #fff; cursor: pointer; font-size: 0.85em; border-radius: 4px; font-weight: 600;
+}
+.play-btn:disabled { opacity: 0.5; cursor: default; }
+
+.result-box { background: var(--highlight-bg); border: 1px solid #eedca5; border-radius: 4px; padding: 6px 10px; margin-top: 6px; font-size: 0.85em; }
+.result-box strong { color: var(--highlight); }
+
+/* Matrix grid for showing associativity */
+.mgrid { display: inline-grid; grid-template-columns: auto auto; gap: 5px 10px; align-items: center; }
+.mgrid .row-label { font-size: 0.8em; color: #888; text-align: right; }
+.mgrid .row-val { text-align: left; }
+
+.equal-sign { display: inline-block; font-size: 1.4em; color: var(--accent); font-weight: bold; margin: 0 4px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<h3>矩阵乘法满足结合律 — (A·B)·C = A·(B·C)</h3>
+<p class="desc">三个变换按顺序施加到空间：先 C（缩放 x 方向）→ 再 B（剪切）→ 再 A（旋转 90°）。括号只改变矩阵的组合顺序，不改变最终结果。</p>
+
+<div class="legend">
+  <span class="legend-item"><span class="dot" style="background:#e8b831"></span> 原始网格（参考）</span>
+  <span class="legend-item"><span class="dot" style="background:#2d3a31"></span> 变换结果</span>
+  <span class="legend-item"><span class="dot" style="background:#d12"></span> î'</span>
+  <span class="legend-item"><span class="dot" style="background:#1b8a1b"></span> ĵ'</span>
+</div>
+
+<div class="row">
+  <div class="col-canvas">
+    <canvas id="assocCanvas" width="400" height="400"></canvas>
+  </div>
+  <div class="col-panel">
+    <div class="panel" style="text-align:center;">
+      <h4 style="text-align:left;">三个变换</h4>
+      <div id="matricesDisplay"></div>
+    </div>
+    <div class="panel" style="text-align:center;">
+      <h4 style="text-align:left;">组合结果</h4>
+      <div id="composeDisplay" style="font-size:0.85em;"></div>
+    </div>
+    <div class="panel">
+      <h4>变换顺序</h4>
+      <div id="orderText" style="font-size:0.85em;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="ctrl-row">
+  <label>分组方式</label>
+  <div class="btn-group">
+    <button id="modeAB_C" class="active">(A·B)·C</button>
+    <button id="modeA_BC">A·(B·C)</button>
+  </div>
+</div>
+<div class="ctrl-row">
+  <button id="playBtn" class="play-btn">▶ 开始演示</button>
+  <span id="animStatus" style="font-size:0.85em;color:#888;"></span>
+</div>
+
+<div class="result-box" id="resultBox">
+  因为矩阵乘法本质是<strong>函数复合</strong>，而函数复合天然满足结合律：(f∘g)∘h = f∘(g∘h)。括号改变的是"先计算哪两个矩阵的乘积"，不改变"变换施加的顺序"。
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('assocCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const MARGIN = 30, RANGE = 5;
+  const sx = (W - 2 * MARGIN) / (2 * RANGE), sy = (H - 2 * MARGIN) / (2 * RANGE);
+  const ID = [1, 0, 0, 1];
+
+  function tw(wx, wy) { return [MARGIN + (wx + RANGE) * sx, MARGIN + (RANGE - wy) * sy]; }
+  function fmt(v) { return parseFloat(v.toFixed(2)).toString(); }
+  function ease(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
+
+  // Three fixed transforms
+  // C = scale x by 0.5
+  const C = [0.5, 0, 0, 1];
+  // B = shear(0.8)
+  const B = [1, 0.8, 0, 1];
+  // A = rotate 90°
+  const A = [0, -1, 1, 0];
+
+  let grouping = 'AB_C'; // 'AB_C' or 'A_BC'
+
+  // Animation state
+  let isAnimating = false;
+  let animStart = 0;
+  const ANIM_MS = 3600;
+
+  function matMulVec(a, b, c, d, x, y) {
+    return [a * x + b * y, c * x + d * y];
+  }
+  function applyM(M, x, y) { return matMulVec(M[0], M[1], M[2], M[3], x, y); }
+
+  function compose(M1, M2) {
+    return [
+      M1[0]*M2[0] + M1[1]*M2[2], M1[0]*M2[1] + M1[1]*M2[3],
+      M1[2]*M2[0] + M1[3]*M2[2], M1[2]*M2[1] + M1[3]*M2[3]
+    ];
+  }
+
+  function matEqual(M1, M2) {
+    return M1[0] === M2[0] && M1[1] === M2[1] && M1[2] === M2[2] && M1[3] === M2[3];
+  }
+
+  // Pre-compute the intermediate and final matrices for both groupings
+  // (AB)C path: first compose AB = A·B, then (AB)·C
+  const AB = compose(A, B);
+  const ABC_AB = compose(AB, C);  // (AB)C
+  // A(BC) path: first compose BC = B·C, then A·(BC)
+  const BC = compose(B, C);
+  const ABC_A = compose(A, BC);   // A(BC)
+
+  // Get the intermediate and final matrices for current grouping
+  function getGroupingMatrices() {
+    if (grouping === 'AB_C') {
+      return {
+        intermediate: AB,
+        intermediateLabel: 'A·B',
+        final: ABC_AB,
+        finalLabel: '(A·B)·C',
+        steps: ['C', 'B', 'A']
+      };
+    } else {
+      return {
+        intermediate: BC,
+        intermediateLabel: 'B·C',
+        final: ABC_A,
+        finalLabel: 'A·(B·C)',
+        steps: ['C', 'B', 'A']
+      };
+    }
+  }
+
+  function getAnimState() {
+    if (!isAnimating) {
+      return { M: ABC_AB, alpha: 1, label: '' };
+    }
+
+    const dt = performance.now() - animStart;
+    const raw = Math.min(1, dt / ANIM_MS);
+    const t = ease(raw);
+    const third = t * 3;
+
+    if (t < 1/3) {
+      const p = third;
+      const s = 1 - p * 0.5; // 1 → 0.5
+      return { M: [s, 0, 0, 1], alpha: 0.4 + p * 0.6, label: '缩放 x 方向 (C)…' };
+    }
+    if (t < 2/3) {
+      const p = third - 1;
+      const kk = p * 0.8;
+      return { M: compose([1, kk, 0, 1], [0.5, 0, 0, 1]), alpha: 1, label: '剪切 (B)…' };
+    }
+    const p = third - 2;
+    const theta = p * 90;
+    const rad = theta * Math.PI / 180;
+    const c = Math.cos(rad), s = Math.sin(rad);
+    const R = [c, -s, s, c];
+    return { M: compose(R, compose([1, 0.8, 0, 1], [0.5, 0, 0, 1])), alpha: 1, label: '旋转 (A)…' };
+  }
+
+  function drawGrid(M, style, alpha) {
+    ctx.save(); ctx.globalAlpha = alpha || 1;
+    ctx.strokeStyle = style; ctx.lineWidth = 0.7;
+    for (let y = -RANGE; y <= RANGE; y++) {
+      ctx.beginPath();
+      for (let x = -RANGE, first = true; x <= RANGE; x += 0.08) {
+        const [tx, ty] = applyM(M, x, y);
+        const [px, py] = tw(tx, ty);
+        if (first) { ctx.moveTo(px, py); first = false; } else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+    for (let x = -RANGE; x <= RANGE; x++) {
+      ctx.beginPath();
+      for (let y = -RANGE, first = true; y <= RANGE; y += 0.08) {
+        const [tx, ty] = applyM(M, x, y);
+        const [px, py] = tw(tx, ty);
+        if (first) { ctx.moveTo(px, py); first = false; } else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawArrow(x1, y1, x2, y2, color, lw, alpha) {
+    const [cx1, cy1] = tw(x1, y1), [cx2, cy2] = tw(x2, y2);
+    const dx = cx2 - cx1, dy = cy2 - cy1, len = Math.hypot(dx, dy);
+    if (len < 2) return;
+    ctx.save(); ctx.globalAlpha = alpha || 1;
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw || 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx1, cy1); ctx.lineTo(cx2, cy2); ctx.stroke();
+    const a = Math.atan2(dy, dx), hl = Math.min(10, len * 0.25);
+    ctx.beginPath(); ctx.moveTo(cx2, cy2);
+    ctx.lineTo(cx2 - hl * Math.cos(a - 0.35), cy2 - hl * Math.sin(a - 0.35));
+    ctx.lineTo(cx2 - hl * Math.cos(a + 0.35), cy2 - hl * Math.sin(a + 0.35));
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+
+  function renderMatrix(m) {
+    return '<span class="mblk"><span class="mb">[</span><span class="mg c2"><span>' + fmt(m[0]) + '</span><span>' + fmt(m[1]) + '</span><span>' + fmt(m[2]) + '</span><span>' + fmt(m[3]) + '</span></span><span class="mb">]</span></span>';
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+    const [ox, oy] = tw(0, 0);
+
+    const state = getAnimState();
+    const grp = getGroupingMatrices();
+    const a = state.alpha;
+
+    // Original grid (yellow)
+    drawGrid(ID, '#e8b831', 0.5);
+
+    // Current state — single progressive result
+    drawGrid(state.M, '#2d3a31', a * 0.85);
+    const [ix, iy] = applyM(state.M, 1, 0);
+    const [jx, jy] = applyM(state.M, 0, 1);
+    drawArrow(0, 0, ix, iy, '#d12', 3.5, a);
+    drawArrow(0, 0, jx, jy, '#1b8a1b', 3.5, a);
+    ctx.save(); ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.globalAlpha = a;
+    const [lx, ly] = tw(ix, iy); ctx.fillStyle = '#d12'; ctx.fillText("î'", lx + 14, ly);
+    const [mx, my] = tw(jx, jy); ctx.fillStyle = '#1b8a1b'; ctx.fillText("ĵ'", mx + 14, my);
+    ctx.restore();
+
+    // Origin & axes
+    ctx.beginPath(); ctx.arc(ox, oy, 3, 0, Math.PI * 2); ctx.fillStyle = '#333'; ctx.fill();
+    ctx.strokeStyle = '#b0b8b2'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(MARGIN, oy); ctx.lineTo(W - MARGIN, oy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox, MARGIN); ctx.lineTo(ox, H - MARGIN); ctx.stroke();
+
+    // === Update panels ===
+    document.getElementById('matricesDisplay').innerHTML =
+      '<div class="mb-label">A = 旋转 90°</div>' + renderMatrix(A) +
+      '<div class="mb-label">B = 剪切 k=0.8</div>' + renderMatrix(B) +
+      '<div class="mb-label">C = 缩放 x 0.5</div>' + renderMatrix(C);
+
+    document.getElementById('composeDisplay').innerHTML =
+      '<div class="mb-label">中间：' + grp.intermediateLabel + '</div>' +
+      renderMatrix(grp.intermediate) +
+      '<div class="mb-label">最终：' + grp.finalLabel + '</div>' +
+      renderMatrix(grp.final);
+
+    document.getElementById('orderText').innerHTML =
+      '③ A 旋转 90°<br>② B 剪切<br>① C 缩放 x 0.5<br><br>' +
+      '<span class="mb-eq">结果相同：<br>' + grp.finalLabel + '</span>';
+
+    document.getElementById('animStatus').textContent = state.label;
+
+    const box = document.getElementById('resultBox');
+    box.innerHTML = '<strong>(A·B)·C = A·(B·C)</strong> ✔ 两种分组得到的矩阵完全相同 [' +
+      fmt(ABC_AB[0]) + ', ' + fmt(ABC_AB[1]) + '; ' + fmt(ABC_AB[2]) + ', ' + fmt(ABC_AB[3]) + ']。' +
+      '因为矩阵乘法本质是<strong>函数复合</strong>：先 C 再 B 再 A，括号只改变"先算哪两个矩阵的乘积"，不影响变换的施加顺序。';
+  }
+
+  function startAnim() {
+    if (isAnimating) return;
+    isAnimating = true;
+    animStart = performance.now();
+    document.getElementById('playBtn').disabled = true;
+    document.querySelectorAll('#modeAB_C, #modeA_BC').forEach(el => el.disabled = true);
+    requestAnimationFrame(animLoop);
+  }
+
+  function animLoop(now) {
+    draw();
+    if (now - animStart >= ANIM_MS) {
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+      document.querySelectorAll('#modeAB_C, #modeA_BC').forEach(el => el.disabled = false);
+      draw();
+      return;
+    }
+    requestAnimationFrame(animLoop);
+  }
+
+  // === Controls ===
+  document.getElementById('playBtn').addEventListener('click', startAnim);
+
+  document.getElementById('modeAB_C').addEventListener('click', function() {
+    if (isAnimating) return;
+    document.querySelectorAll('#modeAB_C, #modeA_BC').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    grouping = 'AB_C';
+    draw();
+  });
+  document.getElementById('modeA_BC').addEventListener('click', function() {
+    if (isAnimating) return;
+    document.querySelectorAll('#modeAB_C, #modeA_BC').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    grouping = 'A_BC';
+    draw();
+  });
+
+  draw();
+})();
+</script>
+</body>
+</html>

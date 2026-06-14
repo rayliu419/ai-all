@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2D 线性组合可视化</title>
+<style>
+:root {
+  --bg: #f5faf6;
+  --card: #e8f5ec;
+  --border: #c3dbcc;
+  --text: #2d3a31;
+  --blue: #3a6b9f;
+  --red: #c0392b;
+  --green: #27ae60;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 16px;
+  max-width: 540px;
+  margin: 0 auto;
+}
+h3 { font-size: 1.02em; color: #3a7a4d; margin-bottom: 8px; }
+.canvas-wrap { text-align: center; }
+canvas { border: 1px solid var(--border); border-radius: 4px; background: #fff; max-width: 100%; }
+.controls { margin: 10px 0 4px; }
+.control-row { display: flex; align-items: center; gap: 10px; margin: 4px 0; flex-wrap: wrap; }
+.control-row label { min-width: 18px; font-weight: 600; font-size: 0.92em; }
+.control-row input[type="range"] { flex: 1; min-width: 80px; }
+.control-row .val { min-width: 32px; font-family: monospace; font-size: 0.92em; text-align: right; }
+.info-display { font-family: monospace; font-size: 0.92em; margin: 8px 0; padding: 8px 10px; background: #fff; border: 1px solid var(--border); border-radius: 4px; }
+.legend { display: flex; gap: 16px; font-size: 0.88em; margin-bottom: 8px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot { width: 12px; height: 3px; border-radius: 1px; display: inline-block; }
+</style>
+</head>
+<body>
+<h3>二维线性组合</h3>
+<div class="legend">
+  <span class="legend-item"><span class="legend-dot" style="background:var(--blue);"></span> v₁ = (2, 1)</span>
+  <span class="legend-item"><span class="legend-dot" style="background:var(--red);"></span> v₂ = (1, 2)</span>
+  <span class="legend-item"><span class="legend-dot" style="background:var(--green);"></span> v = a·v₁ + b·v₂</span>
+</div>
+<div class="canvas-wrap">
+  <canvas id="canvas2d" width="480" height="480"></canvas>
+</div>
+<div class="controls">
+  <div class="control-row">
+    <label style="color:var(--blue);">a</label>
+    <input type="range" id="sliderA" min="-3" max="3" step="0.05" value="1.0">
+    <span class="val" id="valA" style="color:var(--blue);">1.00</span>
+  </div>
+  <div class="control-row">
+    <label style="color:var(--red);">b</label>
+    <input type="range" id="sliderB" min="-3" max="3" step="0.05" value="1.0">
+    <span class="val" id="valB" style="color:var(--red);">1.00</span>
+  </div>
+</div>
+<div class="info-display" id="info2d">v = 1.00·v₁ + 1.00·v₂ = (3.00, 3.00)</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('canvas2d');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const MARGIN = 36;
+  const drawW = W - 2 * MARGIN, drawH = H - 2 * MARGIN;
+  const RANGE = 5;
+  const sx = drawW / (2 * RANGE), sy = drawH / (2 * RANGE);
+
+  function toCanvas(wx, wy) {
+    return [MARGIN + (wx + RANGE) * sx, MARGIN + (RANGE - wy) * sy];
+  }
+
+  function drawArrow(x1, y1, x2, y2, color, lineW, label) {
+    const [cx1, cy1] = toCanvas(x1, y1);
+    const [cx2, cy2] = toCanvas(x2, y2);
+    const dx = cx2 - cx1, dy = cy2 - cy1;
+    const len = Math.hypot(dx, dy);
+    if (len < 2) return;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = lineW || 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx1, cy1); ctx.lineTo(cx2, cy2); ctx.stroke();
+    const angle = Math.atan2(dy, dx);
+    const headLen = Math.min(12, len * 0.3);
+    ctx.beginPath();
+    ctx.moveTo(cx2, cy2);
+    ctx.lineTo(cx2 - headLen * Math.cos(angle - 0.4), cy2 - headLen * Math.sin(angle - 0.4));
+    ctx.lineTo(cx2 - headLen * Math.cos(angle + 0.4), cy2 - headLen * Math.sin(angle + 0.4));
+    ctx.closePath(); ctx.fill();
+    if (label) {
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(label, cx2 + 10 * Math.cos(angle), cy2 - 10 * Math.sin(angle) - 12);
+    }
+    ctx.restore();
+  }
+
+  const v1 = [2, 1], v2 = [1, 2];
+
+  function draw2D(a, b) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#e0e8e2'; ctx.lineWidth = 0.5;
+    for (let i = -RANGE; i <= RANGE; i++) {
+      if (i === 0) continue;
+      const [x1, y1] = toCanvas(i, -RANGE), [x2, y2] = toCanvas(i, RANGE);
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      const [x3, y3] = toCanvas(-RANGE, i), [x4, y4] = toCanvas(RANGE, i);
+      ctx.beginPath(); ctx.moveTo(x3, y3); ctx.lineTo(x4, y4); ctx.stroke();
+    }
+    // Axes
+    ctx.strokeStyle = '#b0b8b2'; ctx.lineWidth = 1.5;
+    const [ox, oy] = toCanvas(0, 0);
+    ctx.beginPath(); ctx.moveTo(MARGIN, oy); ctx.lineTo(W - MARGIN, oy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox, MARGIN); ctx.lineTo(ox, H - MARGIN); ctx.stroke();
+    ctx.fillStyle = '#888'; ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (let i = -RANGE + 1; i < RANGE; i++) {
+      if (i === 0) continue;
+      const [px, py] = toCanvas(i, 0); ctx.fillText(i, px, py + 3);
+      const [px2, py2] = toCanvas(0, i); ctx.fillText(i, px2 + 4, py2);
+    }
+    ctx.fillStyle = '#555';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillText('x', W - MARGIN + 4, oy);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText('y', ox + 4, MARGIN - 12);
+
+    // Result
+    const rx = a * v1[0] + b * v2[0], ry = a * v1[1] + b * v2[1];
+
+    // Parallelogram
+    if (a !== 0 && b !== 0) {
+      const [p1x, p1y] = toCanvas(a * v1[0], a * v1[1]);
+      const [p2x, p2y] = toCanvas(b * v2[0], b * v2[1]);
+      const [rxc, ryc] = toCanvas(rx, ry);
+      ctx.save(); ctx.strokeStyle = 'rgba(39,174,96,0.25)'; ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(p1x, p1y); ctx.lineTo(rxc, ryc); ctx.lineTo(p2x, p2y); ctx.stroke();
+      ctx.restore();
+    }
+
+    drawArrow(0, 0, a * v1[0], a * v1[1], '#3a6b9f', a === 0 ? 0 : 3, 'a·v₁');
+    drawArrow(0, 0, b * v2[0], b * v2[1], '#c0392b', b === 0 ? 0 : 3, 'b·v₂');
+    if (a !== 0 || b !== 0) drawArrow(0, 0, rx, ry, '#27ae60', 3.5, 'v');
+
+    ctx.beginPath(); ctx.arc(ox, oy, 3.5, 0, Math.PI * 2); ctx.fillStyle = '#333'; ctx.fill();
+  }
+
+  const sliderA = document.getElementById('sliderA');
+  const sliderB = document.getElementById('sliderB');
+  const valA = document.getElementById('valA');
+  const valB = document.getElementById('valB');
+  const info2d = document.getElementById('info2d');
+
+  function update() {
+    const a = parseFloat(sliderA.value), b = parseFloat(sliderB.value);
+    valA.textContent = a.toFixed(2);
+    valB.textContent = b.toFixed(2);
+    const rx = a * v1[0] + b * v2[0], ry = a * v1[1] + b * v2[1];
+    info2d.textContent = `v = ${a.toFixed(2)}·v₁ + ${b.toFixed(2)}·v₂ = (${rx.toFixed(2)}, ${ry.toFixed(2)})`;
+    draw2D(a, b);
+  }
+
+  sliderA.addEventListener('input', update);
+  sliderB.addEventListener('input', update);
+  update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>矩阵乘法不满足交换律 — 复合变换几何视角</title>
+<style>
+:root { --bg: #f5faf6; --border: #c3dbcc; --text: #2d3a31; --accent: #3a7a4d; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding: 14px 16px; max-width: 760px; margin: 0 auto;
+}
+h3 { font-size: 1.02em; color: var(--accent); margin-bottom: 2px; }
+p.desc { font-size: 0.88em; color: #555; margin-bottom: 6px; }
+
+.legend { display: flex; gap: 14px; font-size: 0.82em; margin-bottom: 6px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 3px; }
+.dot { width: 14px; height: 3px; border-radius: 1px; display: inline-block; }
+
+.row { display: flex; gap: 14px; flex-wrap: wrap; }
+.col-canvas { text-align: center; }
+canvas { border: 1px solid var(--border); border-radius: 4px; background: #fff; max-width: 100%; }
+
+.col-panel { flex: 0 0 170px; }
+.panel { background: #e8f5ec; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin-bottom: 5px; }
+.panel h4 { font-size: 0.85em; color: var(--accent); margin-bottom: 2px; }
+
+.mblk { display: inline-flex; align-items: center; vertical-align: middle; margin: 0 1px; }
+.mblk .mb { font-size: 2em; font-weight: 100; color: #555; line-height: 0.8; font-family: serif; user-select: none; }
+.mblk .mg { display: inline-grid; text-align: center; font-family: 'SF Mono', monospace; font-size: 0.9em; }
+.mblk .mg.c2 { grid-template-columns: 1fr 1fr; gap: 1px 8px; }
+.mblk .mg.c1 { grid-template-columns: 1fr; gap: 1px; }
+.mb-center { text-align: center; margin: 2px 0; }
+.mb-eq { font-size: 1em; margin: 0 2px; color: #555; }
+
+.ctrl-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; flex-wrap: wrap; }
+.ctrl-row label { font-size: 0.82em; }
+.btn-group { display: flex; gap: 3px; }
+.btn-group button {
+  padding: 3px 9px; border: 1px solid var(--border); background: #fff;
+  color: var(--text); cursor: pointer; font-size: 0.8em; border-radius: 3px;
+}
+.btn-group button.active { background: var(--accent); color: #fff; }
+.btn-group button:disabled { opacity: 0.4; cursor: default; }
+.play-btn {
+  padding: 6px 18px; border: 1px solid var(--accent); background: var(--accent);
+  color: #fff; cursor: pointer; font-size: 0.85em; border-radius: 4px; font-weight: 600;
+}
+.play-btn:disabled { opacity: 0.5; cursor: default; }
+
+.result-box { background: var(--highlight-bg); border: 1px solid #eedca5; border-radius: 4px; padding: 6px 10px; margin-top: 6px; font-size: 0.85em; }
+.result-box strong { color: var(--highlight); }
+</style>
+</head>
+<body>
+<h3>矩阵乘法不满足交换律 — A·B ≠ B·A</h3>
+<p class="desc">用旋转和剪切演示顺序不同 → 结果不同。先旋转再剪切 ≠ 先剪切再旋转。</p>
+
+<div class="legend">
+  <span class="legend-item"><span class="dot" style="background:#e8b831"></span> 原始网格（参考）</span>
+  <span class="legend-item"><span class="dot" style="background:#888"></span> 第一步后</span>
+  <span class="legend-item"><span class="dot" style="background:#2d3a31"></span> 最终结果</span>
+  <span class="legend-item"><span class="dot" style="background:#d12"></span> î'</span>
+  <span class="legend-item"><span class="dot" style="background:#1b8a1b"></span> ĵ'</span>
+</div>
+
+<div class="row">
+  <div class="col-canvas">
+    <canvas id="compCanvas" width="400" height="400"></canvas>
+  </div>
+  <div class="col-panel">
+    <div class="panel">
+      <div style="text-align:center;" id="matPanel"></div>
+    </div>
+    <div class="panel">
+      <h4>变换顺序</h4>
+      <div id="orderText" style="font-size:0.85em;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="ctrl-row">
+  <label>顺序</label>
+  <div class="btn-group">
+    <button id="modeAB" class="active">A·B（先旋转再剪切）</button>
+    <button id="modeBA">B·A（先剪切再旋转）</button>
+  </div>
+</div>
+<div class="ctrl-row">
+  <button id="playBtn" class="play-btn">▶ 开始演示</button>
+  <span id="animStatus" style="font-size:0.85em;color:#888;"></span>
+</div>
+
+<div class="ctrl-row">
+  <label>剪切因子 k</label>
+  <input type="range" id="kSlider" min="0.1" max="2" step="0.05" value="0.8">
+  <span id="kVal" style="font-family:monospace;font-size:0.85em;">0.80</span>
+</div>
+
+<div class="result-box" id="resultBox">
+  A·B ≠ B·A，因为第二步是在第一步的结果上做的，中间形状不同。
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('compCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const MARGIN = 30, RANGE = 5;
+  const sx = (W - 2 * MARGIN) / (2 * RANGE), sy = (H - 2 * MARGIN) / (2 * RANGE);
+  const ID = [1, 0, 0, 1];
+
+  function tw(wx, wy) { return [MARGIN + (wx + RANGE) * sx, MARGIN + (RANGE - wy) * sy]; }
+  function fmt(v) { return parseFloat(v.toFixed(2)).toString(); }
+  function ease(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
+
+  let mode = 'AB';
+  let k = 0.8;     // target shear
+
+  // Animation state
+  let isAnimating = false;
+  let animStart = 0;
+  const ANIM_MS = 3200;
+
+  // Rotation matrix
+  function rot(theta) {
+    const t = theta * Math.PI / 180;
+    return [Math.cos(t), -Math.sin(t), Math.sin(t), Math.cos(t)];
+  }
+  // Shear matrix
+  function shear(kk) { return [1, kk, 0, 1]; }
+
+  function matMulVec(a, b, c, d, x, y) {
+    return [a * x + b * y, c * x + d * y];
+  }
+  function applyM(M, x, y) { return matMulVec(M[0], M[1], M[2], M[3], x, y); }
+
+  function compose(A, B) {
+    return [
+      A[0]*B[0] + A[1]*B[2], A[0]*B[1] + A[1]*B[3],
+      A[2]*B[0] + A[3]*B[2], A[2]*B[1] + A[3]*B[3]
+    ];
+  }
+
+  function getAnimState() {
+    if (!isAnimating) {
+      const B = rot(90);
+      const A = shear(k);
+      const M1 = mode === 'AB' ? B : A;
+      const res = mode === 'AB' ? compose(A, B) : compose(B, A);
+      return { M1, res, M1_alpha: 1, res_alpha: 1, label: '' };
+    }
+
+    const dt = performance.now() - animStart;
+    const raw = Math.min(1, dt / ANIM_MS);
+    const t = ease(raw);
+    const half = t * 2;
+
+    if (mode === 'AB') {
+      if (t < 0.5) {
+        const p = half;
+        const B_cur = rot(p * 90);
+        return { M1: B_cur, res: null, M1_alpha: 0.3 + p * 0.7, res_alpha: 0, label: '旋转中…' };
+      }
+      const p = half - 1;
+      const B_full = rot(90);
+      const A_cur = shear(p * k);
+      return { M1: B_full, res: compose(A_cur, B_full), M1_alpha: 1, res_alpha: p, label: '剪切中…' };
+    }
+
+    if (t < 0.5) {
+      const p = half;
+      const A_cur = shear(p * k);
+      return { M1: A_cur, res: null, M1_alpha: 0.3 + p * 0.7, res_alpha: 0, label: '剪切中…' };
+    }
+    const p = half - 1;
+    const A_full = shear(k);
+    const B_cur = rot(p * 90);
+    return { M1: A_full, res: compose(B_cur, A_full), M1_alpha: 1, res_alpha: p, label: '旋转中…' };
+  }
+
+  function drawGrid(M, style, alpha) {
+    ctx.save(); ctx.globalAlpha = alpha || 1;
+    ctx.strokeStyle = style; ctx.lineWidth = 0.7;
+    for (let y = -RANGE; y <= RANGE; y++) {
+      ctx.beginPath();
+      for (let x = -RANGE, first = true; x <= RANGE; x += 0.08) {
+        const [tx, ty] = applyM(M, x, y);
+        const [px, py] = tw(tx, ty);
+        if (first) { ctx.moveTo(px, py); first = false; } else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+    for (let x = -RANGE; x <= RANGE; x++) {
+      ctx.beginPath();
+      for (let y = -RANGE, first = true; y <= RANGE; y += 0.08) {
+        const [tx, ty] = applyM(M, x, y);
+        const [px, py] = tw(tx, ty);
+        if (first) { ctx.moveTo(px, py); first = false; } else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawArrow(x1, y1, x2, y2, color, lw, alpha) {
+    const [cx1, cy1] = tw(x1, y1), [cx2, cy2] = tw(x2, y2);
+    const dx = cx2 - cx1, dy = cy2 - cy1, len = Math.hypot(dx, dy);
+    if (len < 2) return;
+    ctx.save(); ctx.globalAlpha = alpha || 1;
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw || 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx1, cy1); ctx.lineTo(cx2, cy2); ctx.stroke();
+    const a = Math.atan2(dy, dx), hl = Math.min(10, len * 0.25);
+    ctx.beginPath(); ctx.moveTo(cx2, cy2);
+    ctx.lineTo(cx2 - hl * Math.cos(a - 0.35), cy2 - hl * Math.sin(a - 0.35));
+    ctx.lineTo(cx2 - hl * Math.cos(a + 0.35), cy2 - hl * Math.sin(a + 0.35));
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+    const [ox, oy] = tw(0, 0);
+
+    const state = getAnimState();
+
+    // Layer 0: Original grid (light yellow)
+    drawGrid(ID, '#e8b831', 0.5);
+
+    // Layer 1: After first transform
+    if (state.M1_alpha > 0.01) {
+      drawGrid(state.M1, '#888', state.M1_alpha * 0.45);
+      const [i1x, i1y] = applyM(state.M1, 1, 0);
+      const [j1x, j1y] = applyM(state.M1, 0, 1);
+      drawArrow(0, 0, i1x, i1y, '#d12', 2, state.M1_alpha * 0.5);
+      drawArrow(0, 0, j1x, j1y, '#1b8a1b', 2, state.M1_alpha * 0.5);
+    }
+
+    // Layer 2: Final result
+    if (state.res && state.res_alpha > 0.01) {
+      drawGrid(state.res, '#2d3a31', state.res_alpha * 0.85);
+      const [i2x, i2y] = applyM(state.res, 1, 0);
+      const [j2x, j2y] = applyM(state.res, 0, 1);
+      const a2 = state.res_alpha;
+      drawArrow(0, 0, i2x, i2y, '#d12', 3.5, a2);
+      drawArrow(0, 0, j2x, j2y, '#1b8a1b', 3.5, a2);
+      ctx.save(); ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.globalAlpha = a2;
+      const [ix, iy] = tw(i2x, i2y); ctx.fillStyle = '#d12'; ctx.fillText("î'", ix + 14, iy);
+      const [jx, jy] = tw(j2x, j2y); ctx.fillStyle = '#1b8a1b'; ctx.fillText("ĵ'", jx + 14, jy);
+      ctx.restore();
+    }
+
+    ctx.beginPath(); ctx.arc(ox, oy, 3, 0, Math.PI * 2); ctx.fillStyle = '#333'; ctx.fill();
+    ctx.strokeStyle = '#b0b8b2'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(MARGIN, oy); ctx.lineTo(W - MARGIN, oy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox, MARGIN); ctx.lineTo(ox, H - MARGIN); ctx.stroke();
+
+    function m2(a, b, c2, d) {
+      return '<span class="mblk"><span class="mb">[</span><span class="mg c2"><span>' + fmt(a) + '</span><span>' + fmt(b) + '</span><span>' + fmt(c2) + '</span><span>' + fmt(d) + '</span></span><span class="mb">]</span></span>';
+    }
+    const B_target = rot(90);
+    const aMat = m2(1, k, 0, 1);
+    const bMat = m2(B_target[0], B_target[1], B_target[2], B_target[3]);
+    const res_target = mode === 'AB' ? compose(shear(k), B_target) : compose(B_target, shear(k));
+    const resMat = m2(res_target[0], res_target[1], res_target[2], res_target[3]);
+
+    document.getElementById('matPanel').innerHTML =
+      (mode === 'AB'
+        ? '<h4>A = 剪切</h4>' + aMat + '<br><h4>B = 旋转90°</h4>' + bMat + '<br><h4>A·B</h4>' + resMat
+        : '<h4>A = 剪切</h4>' + aMat + '<br><h4>B = 旋转90°</h4>' + bMat + '<br><h4>B·A</h4>' + resMat);
+
+    document.getElementById('orderText').innerHTML =
+      mode === 'AB'
+        ? '① B 旋转90°<br>② A 剪切<br>= A·B'
+        : '① A 剪切<br>② B 旋转90°<br>= B·A';
+
+    document.getElementById('animStatus').textContent = state.label;
+
+    const box = document.getElementById('resultBox');
+    box.innerHTML = mode === 'AB'
+      ? '<strong>A·B ≠ B·A</strong> — 先旋转再剪切，结果与先剪切再旋转完全不同。因为第二步是在第一步的“变形”基础上做的，中间形状不同，最终结果自然不同。'
+      : '<strong>A·B ≠ B·A</strong> — 先剪切再旋转，结果与先旋转再剪切完全不同。虽然用了同样的两个变换，但顺序交换后中间形状不同，最终结果不同。';
+  }
+
+  function startAnim() {
+    if (isAnimating) return;
+    isAnimating = true;
+    animStart = performance.now();
+    document.getElementById('playBtn').disabled = true;
+    document.querySelectorAll('#modeAB, #modeBA, #kSlider').forEach(el => el.disabled = true);
+    requestAnimationFrame(animLoop);
+  }
+
+  function animLoop(now) {
+    draw();
+    if (now - animStart >= ANIM_MS) {
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+      document.querySelectorAll('#modeAB, #modeBA, #kSlider').forEach(el => el.disabled = false);
+      draw();
+      return;
+    }
+    requestAnimationFrame(animLoop);
+  }
+
+  document.getElementById('playBtn').addEventListener('click', startAnim);
+
+  document.getElementById('modeAB').addEventListener('click', function() {
+    if (isAnimating) return;
+    document.querySelectorAll('#modeAB, #modeBA').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    mode = 'AB';
+    draw();
+  });
+  document.getElementById('modeBA').addEventListener('click', function() {
+    if (isAnimating) return;
+    document.querySelectorAll('#modeAB, #modeBA').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    mode = 'BA';
+    draw();
+  });
+
+  document.getElementById('kSlider').addEventListener('input', function() {
+    k = parseFloat(this.value);
+    document.getElementById('kVal').textContent = k.toFixed(2);
+    if (!isAnimating) draw();
+  });
+
+  draw();
+})();
+</script>
+</body>
+</html>

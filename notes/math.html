@@ -46,6 +46,10 @@ tr:nth-child(even) { background: var(--card); }
 .tag { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8em; padding: 1px 8px; border-radius: 10px; font-weight: 500; }
 .keyword { color: var(--accent); font-weight: 600; }
 .warm { background: #fdf6e3; border: 1px solid #eedca5; }
+
+/* ---- Demo iframe containers ---- */
+.demo-frame-wrap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 12px 0; background: var(--bg); }
+.demo-frame-wrap iframe { display: block; width: 100%; border: none; }
 </style>
 </head>
 <body>
@@ -55,7 +59,7 @@ tr:nth-child(even) { background: var(--card); }
   <p style="color:var(--accent); margin:2px 0;">MIT 18.06 · 3Blue1Brown 线性代数的本质</p>
 </div>
 
-<!-- ============ OVERVIEW ============ -->
+<!-- ============ SECTION 1 ============ -->
 <h2>一、线性代数是为了解决什么问题？</h2>
 
 <div class="summary">
@@ -74,7 +78,7 @@ tr:nth-child(even) { background: var(--card); }
 </ul>
 </div>
 
-<!-- ============ GEOMETRIC INTUITION ============ -->
+<!-- ============ SECTION 2 ============ -->
 <h2>二、几何直觉：理解线性代数的关键</h2>
 
 <div class="summary">
@@ -92,9 +96,9 @@ tr:nth-child(even) { background: var(--card); }
 <p><strong>"线性"的两个死要求：</strong></p>
 <ul>
   <li>✔ 原点保持固定，不能乱跑</li>
-  <li>✔ 所有直线在变换后依然是直线，平行线依然平行</li>
+  <li>✔ 变换后的网格线依然<strong>平行</strong>，且<strong>等距分布</strong></li>
 </ul>
-<p style="margin-top:6px;">→ 空间不能被扭曲成麻花。</p>
+<p style="margin-top:6px;">→ 空间不能被扭曲成麻花。你可以把变换前的空间也想象成由平行等距的网格线构成。</p>
 </div>
 
 <h3>2.3 矩阵乘法 AB 的意义</h3>
@@ -105,7 +109,7 @@ tr:nth-child(even) { background: var(--card); }
 <h3>2.4 秩</h3>
 <p><span class="keyword">秩</span> = 变换后空间保留下来的<strong>真实维度</strong>。</p>
 
-<!-- ============ GEOMETRY VS COMPUTATION ============ -->
+<!-- ============ SECTION 3 ============ -->
 <h2>三、几何直觉 vs 数值计算</h2>
 
 <table>
@@ -118,8 +122,142 @@ tr:nth-child(even) { background: var(--card); }
   <p style="font-size:0.9em; color:#8a7a3a;">学线性代数，重点在<strong>几何直觉</strong>（理解变换），而非数值计算（计算机替你算）。</p>
 </div>
 
-<!-- ============ RESOURCES ============ -->
-<h2>四、推荐资源</h2>
+<!-- ============ SECTION 4 ============ -->
+<h2>四、向量</h2>
+
+<p>看待向量有两种不同的视角，取决于你是在学数学还是在编程：</p>
+
+<div class="card">
+<h3 style="margin-top:0;">物理视角</h3>
+<p>向量是<span class="keyword">有方向的线段</span>——有大小、有方向。这是学习线性代数时应该使用的几何直觉。</p>
+</div>
+
+<div class="card">
+<h3 style="margin-top:0;">计算机视角</h3>
+<p>向量是<span class="keyword">有序的数字列表</span>——比如 <code>[特征1, 特征2, ..., 特征n]</code>。每个维度代表一个特征，向量的长度就是特征数。在处理计算机问题时（机器学习、数据分析），用这个视角。</p>
+</div>
+
+<h3>4.1 多个向量的可视化</h3>
+<p>单个向量可以画成一个有向线段。但向量数量多了以后，全都画成带箭头的线会非常杂乱——此时用<strong>终点（散点）</strong>来表示每个向量，清晰得多。</p>
+
+<div class="demo-frame-wrap">
+  <iframe src="math-demos/vector-scatter.html" style="height:560px;" title="多个向量的可视化"></iframe>
+</div>
+
+<!-- ============ SECTION 5 ============ -->
+<h2>五、基与线性相关</h2>
+
+<h3>5.1 线性组合与线性空间</h3>
+<p>取两个向量 v₁, v₂，则它们的<strong>线性组合</strong> <code>a·v₁ + b·v₂</code>（a, b 为任意实数）可以生成的<strong>所有</strong>向量的集合，构成一个<strong>线性空间</strong>。</p>
+
+<h3>5.2 基</h3>
+<p>如果一组向量能通过线性组合生成整个空间，且它们之间<strong>线性无关</strong>（谁也"不能由其他向量生成"），它们就是这个空间的一组<span class="keyword">基</span>。</p>
+
+<p>通俗理解：基就是你在一个空间中能用来"指路"的<strong>最小单位方向</strong>。每个方向都不能被其他方向替代。</p>
+
+<div class="summary">
+<strong>增加一个新向量：</strong>如果它落在已有向量张成的空间中（线性相关），空间不变。如果它指向一个全新的方向（线性无关），空间维度就扩大了。
+</div>
+
+<h3>5.3 二维线性组合交互演示</h3>
+<p>拖动滑块调节两个系数的比例，观察向量 <code>v = a·v₁ + b·v₂</code> 如何变化。</p>
+<div class="demo-frame-wrap">
+  <iframe src="math-demos/2d-linear-combination.html" style="height:560px;" title="二维线性组合"></iframe>
+</div>
+
+<h3>5.4 三维线性相关性交互演示</h3>
+<p>三维空间中，观察两个向量 v₁, v₂ 张成的平面。第三个向量 w 是"待在平面内"（线性相关），还是"指向新方向"（线性无关）？</p>
+<div class="demo-frame-wrap">
+  <iframe src="math-demos/3d-linear-independence.html" style="height:510px;" title="三维线性相关性"></iframe>
+</div>
+
+<!-- ============ SECTION 6 ============ -->
+<h2>六、矩阵与线性变换</h2>
+
+<div class="summary">
+<strong>不要把矩阵乘法看作是枯燥的"行乘列"公式，而要将其视为发生的几何变换。</strong> 线性变换的关键在于跟踪基向量 <strong>î</strong> 和 <strong>ĵ</strong> 的去向。
+</div>
+
+<h3>6.1 理解线性变换</h3>
+<ul>
+  <li>线性变换是将一个向量变成另外一个向量，类似于函数 <code>y = f(x)</code> 的变换</li>
+  <li>变换后必须满足：网格线依然<strong>平行</strong>，且<strong>等距分布</strong></li>
+  <li>原点不能动</li>
+</ul>
+
+<h3>6.2 关键：跟踪基向量的去向</h3>
+<div class="card">
+<p><strong>只要知道复合变换后基向量最终落在哪里，就能写出最终的矩阵。</strong></p>
+<p>对于任意向量 <strong>v = (x, y)</strong>：</p>
+<div style="text-align:center; font-size:1.15em; margin:8px 0; font-weight:bold; color:var(--accent);">v' = x·î' + y·ĵ'</div>
+<p>假设要计算矩阵 M，只需要计算 <strong>î</strong>, <strong>ĵ</strong> 变化后的终点，分别作为 M 的<strong>第一列和第二列</strong>。</p>
+<p style="margin-top:6px;">例如旋转 90°：</p>
+<ul>
+  <li>î = (1,0) → î' = (0,1) → M 第一列</li>
+  <li>ĵ = (0,1) → ĵ' = (-1,0) → M 第二列</li>
+  <li>矩阵 M = [[0, -1], [1, 0]]</li>
+</ul>
+</div>
+
+<h3>6.3 从矩阵读回变换</h3>
+<p>拿到一个矩阵 <code>M = [[1, k], [0, 1]]</code>，查看 <strong>î'</strong> 和 <strong>ĵ'</strong> 就能知道空间发生了什么——这就是<strong>剪切</strong>（Shear）。拖动滑块观察：变换后的网格依然平行、等距。</p>
+<div class="demo-frame-wrap">
+  <iframe src="math-demos/shear-matrix.html" style="height:560px;" title="剪切矩阵可视化"></iframe>
+</div>
+
+<h3>6.4 矩阵×向量：列组合视角</h3>
+<p>拖动角度滑块或拖拽向量 v 的顶点，观察基向量的去向如何构成矩阵，以及 M·v = x·î' + y·ĵ' 的计算过程。</p>
+<div class="demo-frame-wrap">
+  <iframe src="math-demos/matrix-transform.html" style="height:700px;" title="矩阵线性变换"></iframe>
+</div>
+
+<!-- ============ SECTION 7 ============ -->
+<h2>七、矩阵乘法与线性变换复合关系</h2>
+
+<div class="summary">
+<strong>A·B 有两种几何视角：列组合视角（每列分别变换）、变换复合视角（先 B 再 A）。</strong>
+</div>
+
+<h3>7.1 列组合视角</h3>
+<div class="card">
+<p><strong>A·B = [A·b₁  A·b₂  ...  A·bₚ]</strong></p>
+<p>把 B 的每一列看作一个向量，A·B 就是<strong>对每个列向量分别应用变换 A</strong>。</p>
+<p>结果矩阵的第 j 列 = A·bⱼ = (b₁ⱼ)·col₁(A) + (b₂ⱼ)·col₂(A)。这就是"列组合"——用 B 的列元素作为系数，组合 A 的列。</p>
+</div>
+
+<h3>7.2 变换复合视角</h3>
+<div class="card">
+<p><strong>AB</strong> = 先对空间施加 <strong>B</strong> 变换，再施加 <strong>A</strong> 变换。</p>
+<p>这类似于复合函数 <code>f(g(x))</code>——<strong>从右往左读</strong>：</p>
+<div style="text-align:center; font-size:1.15em; margin:8px 0; font-weight:bold; color:var(--accent);">(A·B)·v = A·(B·v)</div>
+<p>先对 v 做 B 变换，再对结果做 A 变换。</p>
+</div>
+
+<h3>7.3 复合变换交互演示</h3>
+<p>切换 A·B / B·A 两种顺序，用步骤按钮观察每一步的变化。同样的旋转和剪切，顺序不同 → 结果不同 → 直观理解为什么矩阵乘法<strong>不满足交换律</strong>。</p>
+<div class="demo-frame-wrap">
+  <iframe src="math-demos/composite-transform.html" style="height:580px;" title="复合变换与交换律"></iframe>
+</div>
+
+<h3>7.4 结合律交互演示</h3>
+<p>三个变换按相同顺序（C → B → A）施加到空间，无论怎么加括号，最终结果都相同。因为矩阵乘法对应<strong>函数复合</strong>，而函数复合天然满足结合律。</p>
+
+<div class="card">
+<p><strong>几何视角：</strong></p>
+<ul>
+  <li><strong>(A·B)·C</strong> — 先对向量施加 C 变换，然后将结果施加 (A·B) 变换。而 (A·B) 是"先 B 再 A"的复合，所以整体 = <strong>C → B → A</strong>。</li>
+  <li><strong>A·(B·C)</strong> — 先对向量施加 (B·C) 变换（即"先 C 再 B"），再对结果施加 A 变换。整体 = <strong>C → B → A</strong>。</li>
+</ul>
+<p>两者都表示"先 C、再 B、再 A"的<strong>同一串连续变换</strong>——括号只是标明了先计算哪两个矩阵的乘积，没有改变变换的顺序和内容，所以必然相等：</p>
+<div style="text-align:center; font-size:1.1em; margin:8px 0; font-weight:bold; color:var(--accent);">(A·B)·C = A·(B·C) = 先 C 再 B 再 A</div>
+</div>
+
+<div class="demo-frame-wrap">
+  <iframe src="math-demos/associative-property.html" style="height:590px;" title="矩阵乘法结合律"></iframe>
+</div>
+
+<!-- ============ SECTION 8 ============ -->
+<h2>八、推荐资源</h2>
 <ul>
   <li><a href="https://www.zhihu.com/question/358244660/answer/2016914765264462940" target="_blank">知乎：线性代数到底是为了解决什么问题被发明的？</a></li>
   <li>MIT 18.06 线性代数课程</li>
