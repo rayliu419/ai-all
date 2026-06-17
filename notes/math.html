@@ -50,6 +50,13 @@ tr:nth-child(even) { background: var(--card); }
 /* ---- Demo iframe containers ---- */
 .demo-frame-wrap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 12px 0; background: var(--bg); }
 .demo-frame-wrap iframe { display: block; width: 100%; border: none; }
+
+/* ---- Table of contents ---- */
+.toc { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
+.toc-title { font-weight: 600; color: var(--accent); font-size: 1em; margin-bottom: 6px; }
+.toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+.toc-grid a { color: var(--text); text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
+.toc-grid a:hover { background: var(--bg); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -59,8 +66,24 @@ tr:nth-child(even) { background: var(--card); }
   <p style="color:var(--accent); margin:2px 0;">MIT 18.06 · 3Blue1Brown 线性代数的本质</p>
 </div>
 
+<div class="toc">
+  <div class="toc-title">📖 目录</div>
+  <div class="toc-grid">
+    <a href="#sec1">一、线性代数是为了解决什么问题？</a>
+    <a href="#sec5">五、基与线性相关</a>
+    <a href="#sec2">二、几何直觉：理解线性代数的关键</a>
+    <a href="#sec6">六、矩阵与线性变换</a>
+    <a href="#sec3">三、几何直觉 vs 数值计算</a>
+    <a href="#sec7">七、矩阵乘法与线性变换复合关系</a>
+    <a href="#sec4">四、向量</a>
+    <a href="#sec8">八、三维空间</a>
+    <a href="#sec9">九、行列式</a>
+    <a href="#sec10">十、推荐资源</a>
+  </div>
+</div>
+
 <!-- ============ SECTION 1 ============ -->
-<h2>一、线性代数是为了解决什么问题？</h2>
+<h2 id="sec1">一、线性代数是为了解决什么问题？</h2>
 
 <div class="summary">
 <strong>线性代数是为了解决高维空间并发问题而诞生的数学语言。</strong> 它让我们能用高度简洁的符号体系，去操作和求解超越三维直觉的复杂系统。
@@ -79,7 +102,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 2 ============ -->
-<h2>二、几何直觉：理解线性代数的关键</h2>
+<h2 id="sec2">二、几何直觉：理解线性代数的关键</h2>
 
 <div class="summary">
 <strong>要想真正学懂线性代数，你必须建立几何直觉。</strong> 不要把矩阵看成数字表格，不要把向量看成一列数字。
@@ -109,8 +132,29 @@ tr:nth-child(even) { background: var(--card); }
 <h3>2.4 秩</h3>
 <p><span class="keyword">秩</span> = 变换后空间保留下来的<strong>真实维度</strong>。</p>
 
+<h3>2.5 常见线性变换一览</h3>
+<table>
+  <tr><th>变换</th><th>矩阵（2D）</th><th>几何效果</th><th>det</th></tr>
+  <tr><td><strong>恒等</strong></td><td><code>[[1,0],[0,1]]</code></td><td>什么都不变</td><td>1</td></tr>
+  <tr><td><strong>缩放</strong></td><td><code>[[k,0],[0,k]]</code></td><td>均匀拉伸/压缩</td><td>k²</td></tr>
+  <tr><td><strong>拉伸</strong></td><td><code>[[a,0],[0,b]]</code></td><td>各轴独立缩放</td><td>a·b</td></tr>
+  <tr><td><strong>旋转</strong></td><td><code>[[cosθ,-sinθ],[sinθ,cosθ]]</code></td><td>绕原点旋转 θ</td><td>1</td></tr>
+  <tr><td><strong>反射</strong></td><td><code>[[1,0],[0,-1]]</code></td><td>沿某轴翻转</td><td>-1</td></tr>
+  <tr><td><strong>剪切</strong></td><td><code>[[1,k],[0,1]]</code></td><td>一面不动，一面平移</td><td>1</td></tr>
+  <tr><td><strong>投影</strong></td><td><code>[[1,0],[0,0]]</code></td><td>压到一条线/一个面</td><td>0</td></tr>
+  <tr><td><strong>零变换</strong></td><td><code>[[0,0],[0,0]]</code></td><td>压到原点</td><td>0</td></tr>
+</table>
+<div class="card warm">
+<p><strong>关键规律：</strong>行列式 (det) 告诉你变换的本质：</p>
+<ul>
+  <li><strong>det = 1</strong> → 保持面积（旋转、剪切、恒等），不放大不缩小</li>
+  <li><strong>det = -1</strong> → 保持面积但翻转了定向（反射）</li>
+  <li><strong>det = 0</strong> → 降维了，信息丢失，其矩阵不可逆（投影、零变换）</li>
+</ul>
+</div>
+
 <!-- ============ SECTION 3 ============ -->
-<h2>三、几何直觉 vs 数值计算</h2>
+<h2 id="sec3">三、几何直觉 vs 数值计算</h2>
 
 <table>
   <tr><th>角色</th><th>作用</th></tr>
@@ -123,7 +167,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 4 ============ -->
-<h2>四、向量</h2>
+<h2 id="sec4">四、向量</h2>
 
 <p>看待向量有两种不同的视角，取决于你是在学数学还是在编程：</p>
 
@@ -145,7 +189,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 5 ============ -->
-<h2>五、基与线性相关</h2>
+<h2 id="sec5">五、基与线性相关</h2>
 
 <h3>5.1 线性组合与线性空间</h3>
 <p>取两个向量 v₁, v₂，则它们的<strong>线性组合</strong> <code>a·v₁ + b·v₂</code>（a, b 为任意实数）可以生成的<strong>所有</strong>向量的集合，构成一个<strong>线性空间</strong>。</p>
@@ -172,7 +216,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 6 ============ -->
-<h2>六、矩阵与线性变换</h2>
+<h2 id="sec6">六、矩阵与线性变换</h2>
 
 <div class="summary">
 <strong>不要把矩阵乘法看作是枯燥的"行乘列"公式，而要将其视为发生的几何变换。</strong> 线性变换的关键在于跟踪基向量 <strong>î</strong> 和 <strong>ĵ</strong> 的去向。
@@ -212,7 +256,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 7 ============ -->
-<h2>七、矩阵乘法与线性变换复合关系</h2>
+<h2 id="sec7">七、矩阵乘法与线性变换复合关系</h2>
 
 <div class="summary">
 <strong>A·B 有两种几何视角：列组合视角（每列分别变换）、变换复合视角（先 B 再 A）。</strong>
@@ -227,7 +271,7 @@ tr:nth-child(even) { background: var(--card); }
 
 <h3>7.2 变换复合视角</h3>
 <div class="card">
-<p><strong>AB</strong> = 先对空间施加 <strong>B</strong> 变换，再施加 <strong>A</strong> 变换。</p>
+<p><strong>AB</strong> = 先对空间施加 <strong>B</strong> 变换，再施加 <strong>A</strong> 变换。<strong>这是更常见的视角，后续的很多概念也围绕这个思想展开。</strong></p>
 <p>这类似于复合函数 <code>f(g(x))</code>——<strong>从右往左读</strong>：</p>
 <div style="text-align:center; font-size:1.15em; margin:8px 0; font-weight:bold; color:var(--accent);">(A·B)·v = A·(B·v)</div>
 <p>先对 v 做 B 变换，再对结果做 A 变换。</p>
@@ -256,8 +300,78 @@ tr:nth-child(even) { background: var(--card); }
   <iframe src="math-demos/associative-property.html" style="height:590px;" title="矩阵乘法结合律"></iframe>
 </div>
 
+<h3>7.5 使用复合线性变换的角度推导矩阵乘法的计算方法</h3>
+<div class="card" style="text-align:center;">
+  <p>3Blue1Brown「线性代数的本质」— 矩阵乘法与复合变换（<strong>3:11 – 7:20</strong>）</p>
+  <div class="demo-frame-wrap">
+    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=5&t=191" style="height:480px;" title="3Blue1Brown 线性代数的本质 - 矩阵乘法" allowfullscreen></iframe>
+  </div>
+</div>
+
 <!-- ============ SECTION 8 ============ -->
-<h2>八、推荐资源</h2>
+<h2 id="sec8">八、三维空间</h2>
+
+<p>以上二维空间的变换和几何视角，同样适用于<strong>三维空间</strong>。基向量从 î, ĵ 变为 î, ĵ, <strong>k̂</strong>，矩阵从 2×2 变为 3×3，但核心思想完全一致：</p>
+
+<div class="card">
+<ul>
+  <li>矩阵的每一列 = 变换后的基向量</li>
+  <li>矩阵乘法 = 复合变换</li>
+  <li>行列式 = 体积缩放因子</li>
+  <li>秩 = 变换后空间的维度</li>
+</ul>
+</div>
+
+<!-- ============ SECTION 9 ============ -->
+<h2 id="sec9">九、行列式</h2>
+
+<div class="summary">
+<strong>行列式描述了一个线性变换对空间拉伸或压缩的尺度。</strong> 对二维来说就是面积缩放因子，对三维来说就是体积缩放因子。
+</div>
+
+<h3>9.1 面积缩放因子</h3>
+<p>在做线性变换时，会对空间进行拉伸或挤压。关键特性：<strong>无论选哪个区域的面积</strong>，其缩放比例都是相同的（均匀缩放）。</p>
+
+<div class="card">
+<p style="margin-bottom:6px;"><strong>具体例子：</strong></p>
+<ul>
+  <li>行列式的值为 <strong>3</strong> → 对应矩阵变换将<strong>任意面积</strong>变成原来的 <strong>3 倍</strong></li>
+  <li>行列式为 <strong>0</strong> → 面积变成 0，说明变换将二维平面压缩成一条线或一个点（<strong>降维</strong>，矩阵不可逆）</li>
+</ul>
+</div>
+
+<h3>9.2 行列式的负值</h3>
+<div class="card">
+<p><strong>负值的含义——空间定向的翻转（Orientation Flip）。</strong></p>
+<p>如果把二维平面看成一张纸，行列式为负相当于变换把纸<strong>翻了一个面</strong>。</p>
+<p>以基向量 î, ĵ 判断：如果变换后 ĵ 相对于 î 的相对左右关系<strong>反了</strong>（原本在左侧，变换后到了右侧），行列式就是负值。</p>
+<p style="margin-top:6px;">行列式的<strong>绝对值</strong>依然表示缩放比例，负号仅代表方向翻转。</p>
+</div>
+
+<h3>9.3 三维空间的行列式</h3>
+<p>三维行列式 = <strong>体积的缩放因子</strong>。负值在三维中代表<strong>手性翻转</strong>（左手系 ↔ 右手系）。</p>
+
+<div class="card">
+<p><strong>关键规律总结：</strong></p>
+<ul>
+  <li><strong>|det| > 1</strong> → 空间被放大</li>
+  <li><strong>|det| = 1</strong> → 面积/体积不变（旋转、剪切）</li>
+  <li><strong>0 < |det| < 1</strong> → 空间被压缩</li>
+  <li><strong>det = 0</strong> → 降维了，信息丢失，矩阵不可逆</li>
+  <li><strong>det < 0</strong> → 空间定向翻转，绝对值仍表示缩放比例</li>
+</ul>
+</div>
+
+<h3>9.4 推荐视频</h3>
+<div class="card" style="text-align:center;">
+  <p>3Blue1Brown「线性代数的本质」— 行列式</p>
+  <div class="demo-frame-wrap">
+    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=6" style="height:480px;" title="3Blue1Brown 线性代数 - 行列式" allowfullscreen></iframe>
+  </div>
+</div>
+
+<!-- ============ SECTION 10 ============ -->
+<h2 id="sec10">十、推荐资源</h2>
 <ul>
   <li><a href="https://www.zhihu.com/question/358244660/answer/2016914765264462940" target="_blank">知乎：线性代数到底是为了解决什么问题被发明的？</a></li>
   <li>MIT 18.06 线性代数课程</li>
