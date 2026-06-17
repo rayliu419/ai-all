@@ -78,7 +78,8 @@ tr:nth-child(even) { background: var(--card); }
     <a href="#sec4">四、向量</a>
     <a href="#sec8">八、三维空间</a>
     <a href="#sec9">九、行列式</a>
-    <a href="#sec10">十、推荐资源</a>
+    <a href="#sec10">十、非方阵</a>
+    <a href="#sec11">十一、推荐资源</a>
   </div>
 </div>
 
@@ -371,7 +372,47 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 10 ============ -->
-<h2 id="sec10">十、推荐资源</h2>
+<h2 id="sec10">十、非方阵</h2>
+
+<p>前面讨论的都是方阵（二维→二维，三维→三维）。非方阵的几何含义是什么？</p>
+
+<h3>10.1 3行2列的矩阵（2D → 3D）</h3>
+<div class="card">
+<ul>
+  <li>矩阵有 <strong>2列</strong>，代表有 <strong>2个基向量</strong>（原始空间是二维）</li>
+  <li>矩阵有 <strong>3行</strong>，表示每个基向量都有 <strong>3个独立坐标</strong>来描述</li>
+  <li>这是 <strong>二维空间到三维空间</strong>的变换</li>
+  <li><strong>举例：</strong>将二维平面上的点 (x, y) 映射到三维空间中的 (ax + by, cx + dy, ex + fy)</li>
+</ul>
+</div>
+
+<h3>10.2 2行3列的矩阵（3D → 2D）</h3>
+<div class="card">
+<ul>
+  <li>矩阵有 <strong>3列</strong>，代表有 <strong>3个基向量</strong>（原始空间是三维）</li>
+  <li>矩阵有 <strong>2行</strong>，表示每个基向量都有 <strong>2个独立坐标</strong>来描述（变换后由2个坐标描述）</li>
+  <li>这是 <strong>三维空间到二维空间</strong>的变换</li>
+  <li><strong>举例：</strong>将三维空间中的点 (x, y, z) 投影到二维平面的 (ax + by + cz, dx + ey + fz)</li>
+</ul>
+</div>
+
+<h3>10.3 理解 A·x 的几何意义（线性变换的导航视角）</h3>
+<div class="card">
+<p><strong>变换前：</strong>向量 x = (x₁, x₂) 是一组<strong>导航指令</strong>——沿着标准基 î 走 x₁ 步，再沿着 ĵ 走 x₂ 步，到达终点。</p>
+<p><strong>变换 A：</strong>将基向量 î, ĵ 移动到新的位置 î', ĵ'（即矩阵 A 的第一列和第二列）。</p>
+<p><strong>变换后：</strong>同样的系数 x₁, x₂ 变成沿着<strong>新基向量</strong> î', ĵ' 导航——x₁ 步沿 î'，x₂ 步沿 ĵ'，到达终点 A·x。</p>
+<div class="highlight" style="margin-top:8px;">
+<strong>核心直觉：</strong>x 的分量没变，变的是它们导航所依赖的<strong>"地图"（基）</strong>。
+</div>
+<p style="margin-top:10px;"><strong>注意：</strong>输出用几个坐标描述（行数），不等于有效维度（秩）。例如 3行2列矩阵的列向量可能只张成一个平面，秩=2 &lt; 行数=3，"空维度"永远到不了。</p>
+</div>
+
+<div class="summary">
+<strong>关键规律：</strong>矩阵的列数 = 原始空间的维度（基向量个数），行数 = 变换后空间的维度（每个基向量的坐标数）。
+</div>
+
+<!-- ============ SECTION 11 ============ -->
+<h2 id="sec11">十一、推荐资源</h2>
 <ul>
   <li><a href="https://www.zhihu.com/question/358244660/answer/2016914765264462940" target="_blank">知乎：线性代数到底是为了解决什么问题被发明的？</a></li>
   <li>MIT 18.06 线性代数课程</li>
