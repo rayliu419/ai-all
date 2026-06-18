@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>线性代数的几何视角和机器学习</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #f5faf6;
+  color: #2d3a31;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 24px 16px;
+  max-width: 820px;
+  margin: 0 auto;
+}
+h1 { font-size: 1.35em; color: #1a6b3a; border-left: 4px solid #2d8f4e; padding-left: 12px; margin: 18px 0 8px; }
+h2 { font-size: 1.2em; color: #1f7a42; border-bottom: 1px solid #c3dbcc; padding-bottom: 4px; margin: 20px 0 10px; }
+h3 { font-size: 1.02em; color: #256f3e; margin: 14px 0 6px; }
+h4 { font-size: 0.95em; color: #2d6b3a; margin: 10px 0 4px; }
+p { margin: 6px 0; }
+ul, ol { margin: 4px 0; padding-left: 22px; }
+li { margin: 2px 0; }
+strong { color: #b45a1c; } /* warm accent for key points */
+em { color: #3d7a42; }
+code {
+  font-size: 0.88em;
+  background: #e0f0e4;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+}
+pre {
+  font-size: 0.8em;
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 6px;
+  padding: 10px 14px;
+  overflow-x: auto;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+table {
+  font-size: 0.9em;
+  border-collapse: collapse;
+  margin: 10px 0;
+  width: 100%;
+}
+th, td {
+  border: 1px solid #c3dbcc;
+  padding: 5px 10px;
+  text-align: left;
+}
+th { background: #dcedd4; color: #1f5a2e; font-weight: 600; }
+td { background: #f5faf6; }
+tr:nth-child(even) td { background: #edf5ee; }
+blockquote {
+  border-left: 3px solid #2d8f4e;
+  background: #e8f5ec;
+  padding: 6px 12px;
+  margin: 8px 0;
+  border-radius: 0 4px 4px 0;
+  color: #2a4f33;
+}
+
+.card {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 12px 0;
+}
+.card-title {
+  font-weight: 600;
+  color: #1a6b3a;
+  font-size: 0.95em;
+  margin-bottom: 6px;
+}
+
+.summary-box {
+  background: #dcedd4;
+  border: 1px solid #aacbbc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+.summary-box h3 { margin: 0 0 6px; color: #15552e; }
+
+.divider {
+  border: none;
+  border-top: 1px solid #c3dbcc;
+  margin: 18px 0;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.8em;
+  background: #dcedd4;
+  color: #15552e;
+  padding: 1px 8px;
+  border-radius: 10px;
+  margin-right: 4px;
+}
+
+/* insight callout */
+.insight {
+  background: #f9f0dc;
+  border: 1px solid #e0cc8a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 8px 0;
+  font-size: 0.95em;
+}
+.insight strong { color: #8a6e1c; }
+
+kbd {
+  font-size: 0.85em;
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+</style>
+</head>
+<body>
+
+<h1>线性代数的几何视角和机器学习</h1>
+
+<p style="margin-bottom:12px;">
+<span class="tag">几何直觉</span>
+<span class="tag">深度学习</span>
+<span class="tag">可视化</span>
+<span class="tag">模型诊断</span>
+</p>
+
+<blockquote>
+<strong>一句话总结：</strong>机器学习的核心操作，几乎都能从"空间变换"的几何视角来理解。线性层在旋转/拉伸空间，激活函数在折叠/扭曲空间，优化算法在高维地形中找谷底，而可视化则是我们观察这一切的眼睛。
+</blockquote>
+
+<!-- ============ 第一部分 ============ -->
+<h2>1. 线性变换：神经网络如何理解空间</h2>
+
+<div class="summary-box">
+<h3>核心思想</h3>
+<p>神经网络每一层的权重矩阵 $W$，在几何上是一个<strong>空间变换器</strong>——它把输入数据所在的整个空间进行旋转、缩放、拉伸，甚至改变维度。深度学习的目标，就是通过多层变换，把原始数据映射到一个"更好分类"的新空间。</p>
+</div>
+
+<h3>1.1 权重矩阵 = 空间的线性变换</h3>
+<ul>
+  <li>代数视角：$y = Wx$ 是矩阵乘法。</li>
+  <li><strong>几何视角</strong>：矩阵 $W$ 是一个<strong>空间变换器</strong>。</li>
+  <li><strong>旋转与缩放</strong>：矩阵乘法会将输入的特征空间进行旋转、拉伸或压缩。</li>
+  <li><strong>降维与升维</strong>：如果 $W$ 是非方阵（如 $100$ 维 → $10$ 维），几何上就是把一个高维物体投影到低维子空间中。</li>
+</ul>
+
+<div class="insight">
+<strong>对深度学习的启发：</strong> 神经网络的每一层，都在试图把输入数据变换到一个"更方便分类或回归"的新空间里。
+</div>
+
+<h3>1.2 激活函数 = 打破线性，扭曲空间</h3>
+<ul>
+  <li><strong>问题</strong>：如果两类数据在空间中是"环环相扣"（线性不可分）的，无论怎么旋转拉伸，都无法用线性超平面将它们切开。</li>
+  <li><strong>几何作用</strong>：ReLU、Sigmoid 等非线性激活函数，本质上是在<strong>弯曲、折叠或扭曲空间</strong>。</li>
+</ul>
+
+<div class="insight">
+<strong>对深度学习的启发：</strong> ReLU 相当于在空间中折出一道道"褶皱"。多层网络通过"线性变换 + 空间折叠"，把原本复杂缠绕的数据解开，使最后一层可以用一记简单的"直刀"（线性分类器）完美切分。
+</div>
+
+<h3>1.3 特征表示（Embedding）= 空间中的邻居</h3>
+<ul>
+  <li><strong>几何视角</strong>：Embedding 是高维几何空间中的一个<strong>点</strong>。</li>
+  <li>两个向量的内积（Dot Product）或余弦相似度，在几何上就是衡量它们的方向是否一致、距离是否接近。</li>
+  <li><strong>注意力机制（Attention）</strong>：本质上是计算一个查询向量（Query）在空间中离哪些键向量（Key）最近，然后根据距离分配注意力。</li>
+</ul>
+
+<h3>1.4 大模型微调——LoRA 的几何直觉</h3>
+<ul>
+  <li>LoRA 的核心假设：权重更新矩阵 $\Delta W$ 是<strong>低秩（Low-Rank）</strong>的。</li>
+  <li><strong>几何意义</strong>：大模型在更新时，真正起作用的空间维度非常低。我们只需训练两个极小的低秩矩阵，就能模拟高维空间的变化。</li>
+</ul>
+
+<hr class="divider">
+
+<!-- ============ 第二部分 ============ -->
+<h2>2. 经典算法的几何解释</h2>
+
+<div class="summary-box">
+<h3>核心思想</h3>
+<p>PCA、梯度下降这些经典方法，在几何上都有非常直观的含义——PCA 是旋转坐标轴找主要方向，梯度下降是在高维地形中找谷底。理解这些几何图像，能帮你把握算法的本质，而不是死记公式。</p>
+</div>
+
+<h3>2.1 PCA / 白化（Whitening）</h3>
+<ul>
+  <li>通过<strong>旋转坐标轴</strong>，找出数据方差最大的几何方向，实现无损或低损降维。</li>
+  <li>PCA 是纯粹的、彻头彻尾的<strong>线性变换</strong>。</li>
+</ul>
+
+<h3>2.2 梯度下降 = 高维地形中找谷底</h3>
+<ul>
+  <li><strong>几何视角</strong>：损失函数（Loss）构成一个高维的"山谷地形"（Loss Landscape）。</li>
+  <li>梯度是一个向量，指向当前位置<strong>最陡峭的上山方向</strong>。负梯度 $-\nabla L$ 就是最快的下山方向。</li>
+  <li><strong>鞍点 vs 局部极小值</strong>：在低维空间中，我们容易迷失在局部极小值（碗状地形）。但在高维空间中，更常见的是<strong>鞍点</strong>（在一个方向是谷底，在另一个方向是山脊）。</li>
+</ul>
+
+<div class="insight">
+<strong>对深度学习的启发：</strong> 高维空间存在"维度灾难"——绝大多数地方都是"空"的。这解释了为什么 Adam 的动量机制能帮助模型冲出鞍点，以及为什么残差连接（ResNet）能让 Loss Landscape 变得更平滑。
+</div>
+
+<hr class="divider">
+
+<!-- ============ 第三部分 ============ -->
+<h2>3. 数据可视化：机器学习全流程的"眼睛"</h2>
+
+<div class="summary-box">
+<h3>核心思想</h3>
+<p>可视化不是可有可无的锦上添花，而是贯穿整个 ML 流程的核心操作。从认识数据到诊断模型，每个阶段都有对应的可视化手段。会画图的人，调参效率比不会画图的人高一倍。</p>
+</div>
+
+<h3>3.1 探索性数据分析（EDA）——"认识你的数据"</h3>
+
+<div class="card">
+<div class="card-title">📊 数据分布 → 直方图 / 箱线图</div>
+<ul>
+  <li>看数据符合正态分布还是极度偏斜？有没有离群点？</li>
+  <li>例：房价数据严重右偏（极少数豪宅拉高了均值），可能需要<strong>对数变换（Log Transform）</strong>。</li>
+</ul>
+</div>
+
+<div class="card">
+<div class="card-title">🔗 特征关联度 → 散点图 / 热力图</div>
+<ul>
+  <li>哪些特征和目标标签有强相关性？特征之间有没有多重共线性？</li>
+  <li>画相关性热力图，如果发现"房间数"和"房屋面积"高度相关（颜色极深），某些线性模型中需要删掉一个，防止过拟合。</li>
+</ul>
+</div>
+
+<h3>3.2 数据预处理 —— "检查清洗效果"</h3>
+<ul>
+  <li>高维数据（几十上百维）人脑无法想象。用 <strong>PCA</strong> 或 <strong>t-SNE</strong> 降到 2D/3D 观察。</li>
+  <li><strong>t-SNE</strong>（t-Distributed Stochastic Neighbor Embedding）：一种在机器学习中极其著名的<strong>非线性降维算法</strong>。</li>
+  <li>在处理复杂、非线性的真实世界数据（图像、文本特征、基因数据）时，t-SNE 的可视化效果通常远远超过 PCA。</li>
+</ul>
+
+<h3>3.3 模型训练与调优 —— "诊断模型生了什么病"</h3>
+<ul>
+  <li><strong>看训练曲线（折线图）</strong>：画出 Train Loss 和 Validation Loss 随迭代次数的变化。</li>
+  <li>过拟合判断：Train Loss 持续下降，Validation Loss 开始上升。</li>
+</ul>
+
+<h3>3.4 模型评估与汇报 —— "量化模型能力"</h3>
+<table>
+  <tr><th>问题类型</th><th>可视化方法</th><th>看什么</th></tr>
+  <tr><td>分类</td><td>ROC-AUC 曲线 / 混淆矩阵</td><td>真假阳性率、误分类模式</td></tr>
+  <tr><td>回归</td><td>残差图（Residual Plot）</td><td>预测值与真实值的偏差是否随机分布</td></tr>
+</table>
+
+<hr class="divider">
+
+<!-- ============ 总结 ============ -->
+<h2>总结</h2>
+
+<div class="summary-box">
+<h3>三条核心线索</h3>
+<ol>
+  <li><strong>空间变换</strong>：权重矩阵旋转拉伸空间，激活函数折叠扭曲空间——神经网络的本质是一系列空间操作的组合。</li>
+  <li><strong>几何直觉</strong>：PCA 是坐标旋转，梯度下降是爬山，Embedding 是找邻居——所有算法都有对应的几何图像。</li>
+  <li><strong>可视化</strong>：从 EDA 到模型诊断，画图是理解数据和模型行为最直接的方式。PCA 是线性投影，t-SNE 是非线性展开，各有所长。</li>
+</ol>
+<p style="margin-top:10px;"><strong>一句话：</strong>机器学习 = 在合适的高维空间中找到合适的数据表示。几何视角让你"看到"模型在做什么，而不是盲调参数。</p>
+</div>
+
+</body>
+</html>

@@ -81,7 +81,9 @@ tr:nth-child(even) { background: var(--card); }
     <a href="#sec10">十、非方阵</a>
     <a href="#sec11">十一、点积与对偶性</a>
     <a href="#sec12">十二、基变换</a>
-    <a href="#sec13">十三、推荐资源</a>
+    <a href="#sec13">十三、特征向量和特征值</a>
+    <a href="#sec14">十四、抽象向量空间</a>
+    <a href="#sec15">十五、推荐资源</a>
   </div>
 </div>
 
@@ -188,7 +190,7 @@ tr:nth-child(even) { background: var(--card); }
 <p>单个向量可以画成一个有向线段。但向量数量多了以后，全都画成带箭头的线会非常杂乱——此时用<strong>终点（散点）</strong>来表示每个向量，清晰得多。</p>
 
 <div class="demo-frame-wrap">
-  <iframe src="math-demos/vector-scatter.html" style="height:560px;" title="多个向量的可视化"></iframe>
+  <iframe src="demos/vector-scatter.html" style="height:560px;" title="多个向量的可视化"></iframe>
 </div>
 
 <!-- ============ SECTION 5 ============ -->
@@ -209,13 +211,13 @@ tr:nth-child(even) { background: var(--card); }
 <h3>5.3 二维线性组合交互演示</h3>
 <p>拖动滑块调节两个系数的比例，观察向量 <code>v = a·v₁ + b·v₂</code> 如何变化。</p>
 <div class="demo-frame-wrap">
-  <iframe src="math-demos/2d-linear-combination.html" style="height:560px;" title="二维线性组合"></iframe>
+  <iframe src="demos/2d-linear-combination.html" style="height:560px;" title="二维线性组合"></iframe>
 </div>
 
 <h3>5.4 三维线性相关性交互演示</h3>
 <p>三维空间中，观察两个向量 v₁, v₂ 张成的平面。第三个向量 w 是"待在平面内"（线性相关），还是"指向新方向"（线性无关）？</p>
 <div class="demo-frame-wrap">
-  <iframe src="math-demos/3d-linear-independence.html" style="height:510px;" title="三维线性相关性"></iframe>
+  <iframe src="demos/3d-linear-independence.html" style="height:510px;" title="三维线性相关性"></iframe>
 </div>
 
 <!-- ============ SECTION 6 ============ -->
@@ -249,13 +251,13 @@ tr:nth-child(even) { background: var(--card); }
 <h3>6.3 从矩阵读回变换</h3>
 <p>拿到一个矩阵 <code>M = [[1, k], [0, 1]]</code>，查看 <strong>î'</strong> 和 <strong>ĵ'</strong> 就能知道空间发生了什么——这就是<strong>剪切</strong>（Shear）。拖动滑块观察：变换后的网格依然平行、等距。</p>
 <div class="demo-frame-wrap">
-  <iframe src="math-demos/shear-matrix.html" style="height:560px;" title="剪切矩阵可视化"></iframe>
+  <iframe src="demos/shear-matrix.html" style="height:560px;" title="剪切矩阵可视化"></iframe>
 </div>
 
 <h3>6.4 矩阵×向量：列组合视角</h3>
 <p>拖动角度滑块或拖拽向量 v 的顶点，观察基向量的去向如何构成矩阵，以及 M·v = x·î' + y·ĵ' 的计算过程。</p>
 <div class="demo-frame-wrap">
-  <iframe src="math-demos/matrix-transform.html" style="height:700px;" title="矩阵线性变换"></iframe>
+  <iframe src="demos/matrix-transform.html" style="height:700px;" title="矩阵线性变换"></iframe>
 </div>
 
 <!-- ============ SECTION 7 ============ -->
@@ -283,7 +285,7 @@ tr:nth-child(even) { background: var(--card); }
 <h3>7.3 复合变换交互演示</h3>
 <p>切换 A·B / B·A 两种顺序，用步骤按钮观察每一步的变化。同样的旋转和剪切，顺序不同 → 结果不同 → 直观理解为什么矩阵乘法<strong>不满足交换律</strong>。</p>
 <div class="demo-frame-wrap">
-  <iframe src="math-demos/composite-transform.html" style="height:580px;" title="复合变换与交换律"></iframe>
+  <iframe src="demos/composite-transform.html" style="height:580px;" title="复合变换与交换律"></iframe>
 </div>
 
 <h3>7.4 结合律交互演示</h3>
@@ -300,7 +302,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <div class="demo-frame-wrap">
-  <iframe src="math-demos/associative-property.html" style="height:590px;" title="矩阵乘法结合律"></iframe>
+  <iframe src="demos/associative-property.html" style="height:590px;" title="矩阵乘法结合律"></iframe>
 </div>
 
 <h3>7.5 使用复合线性变换的角度推导矩阵乘法的计算方法</h3>
@@ -641,12 +643,141 @@ tr:nth-child(even) { background: var(--card); }
 <p><strong>思考题：</strong></p>
 <ul>
   <li>如果小明想在他的坐标系中做"A 后再做 B"两个连续变换，对应的矩阵应该是什么？</li>
-  <li>相似对角化要找一个特殊的基，让变换矩阵变成对角矩阵——这个"特殊基"有什么几何意义？</li>
+  <li>相似对角化要找一个特殊的基，让变换矩阵变成对角矩阵——这个"特殊基"有什么几何意义？（见 <a href="#sec13">十三、特征向量和特征值</a>）</li>
 </ul>
 </div>
 
 <!-- ============ SECTION 13 ============ -->
-<h2 id="sec13">十三、推荐资源</h2>
+<h2 id="sec13">十三、特征向量和特征值</h2>
+
+<div class="summary">
+<strong>特征向量就是在矩阵变换后方向保持完全不变（或者恰好完全相反）的那些特殊向量。</strong> 特征值则描述了这些向量在变换中被拉伸或压缩的比例。
+</div>
+
+<div class="card">
+<h3>13.1 直觉：为什么会有"方向不变"的向量？</h3>
+<p>想象你桌上有一块印有网格的正方形橡皮桌布。现在你把双手放在它的左右两侧，用力往外水平拉伸它，使它的宽度变成原来的 2 倍，但垂直方向保持不变。</p>
+<ul>
+  <li><strong>水平方向的向量：</strong>它们的长度变成了原来的 2 倍，但方向完全没变。所以，所有水平方向的向量都是这个变换的<strong>特征向量</strong>，对应的<strong>特征值是 2</strong>。</li>
+  <li><strong>垂直方向的向量：</strong>它们的长度没变（缩放倍数是 1），方向也没变。所以，垂直方向的向量也是<strong>特征向量</strong>，对应的<strong>特征值是 1</strong>。</li>
+  <li><strong>斜对角方向的向量：</strong>在拉伸后，它们不仅变长了，角度也向水平方向倾斜了（方向改变了）。因此，斜对角方向的向量<strong>不是</strong>这个变换的特征向量。</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>13.2 核心公式</h3>
+<div style="text-align:center; font-size:1.2em; margin:8px 0; font-weight:bold; color:var(--accent);">
+  A<strong>v</strong> = &lambda;<strong>v</strong>
+</div>
+<ul>
+  <li><strong>A</strong>：线性变换（矩阵）</li>
+  <li><strong>v</strong>：特征向量（<strong>方向不变</strong>）</li>
+  <li><strong>&lambda;</strong>（lambda）：特征值（<strong>缩放倍数</strong>）</li>
+</ul>
+<p>在线性变换的过程中，绝大部分的向量都会改变长度和方向。然而，在整个空间被扭曲的过程中，总有一些特殊的向量非常固执——矩阵 <strong>A</strong> 乘以它们，仅仅是把它们拉长或缩短了 <strong>&lambda;</strong> 倍，方向纹丝不动。</p>
+</div>
+
+<div class="highlight">
+<strong>关键理解：</strong>特征向量告诉你变换的"主轴"在哪里，特征值告诉你沿着这些主轴的缩放力度。
+</div>
+
+<h3>13.3 并非所有变换都有特征向量</h3>
+<div class="card">
+<p>二维线性变换<strong>不一定</strong>有特征向量。</p>
+<p><strong>例子：旋转 90°</strong> —— 每个向量的长度虽然没变，但是<strong>方向都变了</strong>。没有任何一个向量能保持方向不变（或完全相反）。所以旋转 90° 的变换在实数域没有特征向量。</p>
+</div>
+
+<h3>13.4 特征基：当基向量恰好是特征向量</h3>
+<div class="card">
+<p>如果一个矩阵的所有基向量恰好都是特征向量，那么它的矩阵形式就是<strong>对角矩阵</strong>：</p>
+<div style="text-align:center; font-size:1.1em; margin:8px 0; color:var(--accent);">
+  <strong>D = [[&lambda;₁, 0], [0, &lambda;₂]]</strong>
+</div>
+<ul>
+  <li>对角线上的元素 <strong>&lambda;₁, &lambda;₂</strong> 就是对应的特征值</li>
+  <li>非对角线元素全是 0，意味着各轴之间<strong>没有耦合</strong>——每个轴独立缩放</li>
+  <li>对角矩阵的运算（乘法、幂、求逆）极其简单——只是对每个特征值分别操作</li>
+</ul>
+</div>
+
+<h3>13.5 特征基的力量：对角化</h3>
+<div class="card">
+<p>假设某个变换的特征向量足够多，使得它们的线性组合能<strong>张成整个空间</strong>（比如二维平面），那么就可以用这些特征向量作为<strong>新的基</strong>——即<strong>特征基</strong>。</p>
+<div style="text-align:center; font-size:1.1em; margin:10px 0; font-weight:bold; color:var(--accent);">
+  A = P · D · P<sup>-1</sup>
+</div>
+<ul>
+  <li><strong>P</strong>：特征向量作为列组成的过渡矩阵</li>
+  <li><strong>D</strong>：特征值组成的对角矩阵</li>
+  <li><strong>P<sup>-1</sup></strong>：把结果翻译回标准坐标系</li>
+</ul>
+<p><strong>为什么这是强大的？</strong>在标准坐标系中，很多操作（比如计算 A<sup>100</sup>）可能非常复杂。但如果把坐标系切换到特征基，变换变成了对角矩阵 D——幂次运算就只是对每个特征值分别求幂：</p>
+<div style="text-align:center; font-size:1.1em; margin:8px 0; color:var(--accent);">
+  A<sup>100</sup> = P · D<sup>100</sup> · P<sup>-1</sup>
+</div>
+<p>这与基变换章节中"标准系做操作 → 转去新坐标系运算 → 转回来"的思想完全一致。</p>
+</div>
+
+<div class="summary">
+<strong>总结：</strong>特征向量找到了变换中"方向不变"的骨架，特征基把复杂运算化简为对角矩阵上的独立运算。这就是<strong>相似对角化</strong>的几何本质——"转到对的坐标系，问题自然变简单"。
+</div>
+
+<h3>13.6 推荐视频</h3>
+<div class="card" style="text-align:center;">
+  <p>3Blue1Brown「线性代数的本质」— 特征向量与特征值</p>
+  <div class="demo-frame-wrap">
+    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=11&autoplay=0" style="height:480px;" title="3Blue1Brown 线性代数 - 特征向量与特征值" allowfullscreen></iframe>
+  </div>
+</div>
+
+<!-- ============ SECTION 14 ============ -->
+<h2 id="sec14">十四、抽象向量空间</h2>
+
+<div class="summary">
+<strong>抽象向量空间将"向量"的概念从几何箭头推广到了更广泛的数学对象上。</strong> 只要一个集合里的元素满足加法和数乘的规则，它们就可以被称为"向量"——无论它们长得像箭头、函数、矩阵、还是多项式。
+</div>
+
+<h3>14.1 到底什么是向量？</h3>
+<div class="card">
+<ul>
+  <li><strong>几何视角：</strong>平面（或高维空间）中的一组箭头？但 4 维以上难以想象。</li>
+  <li><strong>数值视角：</strong>实数组（坐标对）？高维可以用数字理解。</li>
+  <li><strong>抽象视角：</strong>在线性代数中，抽象向量空间是将熟悉的二维平面、三维空间中的"几何向量"概念，<strong>推广到更广泛、更普遍的对象</strong>上的一种数学结构。</li>
+</ul>
+</div>
+
+<h3>14.2 向量空间的公理</h3>
+<div class="card">
+<p>只要一个集合里的元素满足两套规则，它就是一个<strong>向量空间</strong>，里面的元素就都可以被称为"向量"：</p>
+
+<p style="margin-top:10px;"><strong>① 加法封闭性</strong></p>
+<p>任意两个元素相加，结果仍在集合内。加法满足交换律、结合律，存在零元素和相反元素。</p>
+
+<p><strong>② 数乘封闭性</strong></p>
+<p>任意元素乘以一个实数（标量），结果仍在集合内。数乘满足分配律和结合律。</p>
+
+<div class="highlight" style="margin-top:8px;">
+<strong>关键洞察：</strong>这些规则只涉及"加法"和"缩放"——与元素的具体形状无关。只要满足这两条，函数、矩阵、多项式、信号……都可以被视为"向量"。
+</div>
+</div>
+
+<h3>14.3 为什么需要抽象？</h3>
+<div class="card">
+<p>数学家发现 <strong>很多不同类型的东西</strong>——比如函数、矩阵、多项式、甚至信号——它们的"加法"和"缩放"操作，和普通的几何向量惊人地相似。例如：</p>
+<ul>
+  <li><strong>函数可以相加</strong>：f + g 定义为一个新函数 (f+g)(x) = f(x) + g(x)</li>
+  <li><strong>函数可以缩放</strong>：a·f 定义为一个新函数 (a·f)(x) = a·f(x)</li>
+  <li>矩阵和多项式同样有类似的加法和数乘规则</li>
+</ul>
+<p>为了不用对每种东西都单独写一套理论，数学家把这些对象的<strong>共同特征提取出来</strong>，建立了一个统一的"游戏规则"。</p>
+</div>
+
+<div class="summary">
+<strong>意义：</strong>抽象向量空间让你可以用线性代数的工具去处理任何满足"加法 + 缩放"规则的数学对象——从解微分方程到信号处理，从量子力学到机器学习，这套框架无处不在。
+</div>
+
+<!-- ============ SECTION 15 ============ -->
+<h2 id="sec15">十五、推荐资源</h2>
 <ul>
   <li><a href="https://www.zhihu.com/question/358244660/answer/2016914765264462940" target="_blank">知乎：线性代数到底是为了解决什么问题被发明的？</a></li>
   <li>MIT 18.06 线性代数课程</li>
