@@ -79,7 +79,9 @@ tr:nth-child(even) { background: var(--card); }
     <a href="#sec8">八、三维空间</a>
     <a href="#sec9">九、行列式</a>
     <a href="#sec10">十、非方阵</a>
-    <a href="#sec11">十一、推荐资源</a>
+    <a href="#sec11">十一、点积与对偶性</a>
+    <a href="#sec12">十二、基变换</a>
+    <a href="#sec13">十三、推荐资源</a>
   </div>
 </div>
 
@@ -305,7 +307,7 @@ tr:nth-child(even) { background: var(--card); }
 <div class="card" style="text-align:center;">
   <p>3Blue1Brown「线性代数的本质」— 矩阵乘法与复合变换（<strong>3:11 – 7:20</strong>）</p>
   <div class="demo-frame-wrap">
-    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=5&t=191" style="height:480px;" title="3Blue1Brown 线性代数的本质 - 矩阵乘法" allowfullscreen></iframe>
+    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=5&t=191&autoplay=0" style="height:480px;" title="3Blue1Brown 线性代数的本质 - 矩阵乘法" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -367,7 +369,7 @@ tr:nth-child(even) { background: var(--card); }
 <div class="card" style="text-align:center;">
   <p>3Blue1Brown「线性代数的本质」— 行列式</p>
   <div class="demo-frame-wrap">
-    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=6" style="height:480px;" title="3Blue1Brown 线性代数 - 行列式" allowfullscreen></iframe>
+    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=6&autoplay=0" style="height:480px;" title="3Blue1Brown 线性代数 - 行列式" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -412,7 +414,239 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 11 ============ -->
-<h2 id="sec11">十一、推荐资源</h2>
+<h2 id="sec11">十一、点积与对偶性</h2>
+
+<div class="summary">
+<strong>点积有两种等价的视角：投影几何与线性变换。</strong> 前者直观，后者则揭示了点积与线性代数核心概念的深刻联系——对偶性。
+</div>
+
+<h3>11.1 投影几何视角</h3>
+<div class="card">
+<p style="text-align:center; font-size:1.15em; margin:6px 0; font-weight:bold; color:var(--accent);">
+  <strong>v &middot; w = ||v|| &middot; ||w|| &middot; cos(&theta;)</strong>
+</p>
+<ul>
+  <li>将向量 <strong>v</strong> 垂直投影到向量 <strong>w</strong> 的方向上（或者反过来）</li>
+  <li>将投影得到的长度，乘以 <strong>w</strong> 本身的长度</li>
+</ul>
+</div>
+
+<h3>11.2 线性变换视角（对偶性）</h3>
+<div class="card">
+<p>假设有一个线性变换 f，它把一个高维空间中的向量映射到<strong>一维数轴</strong>上。也就是说，这个变换的输入是一个<strong>向量</strong>，输出是一个普通的<strong>数字（标量）</strong>。</p>
+<ul>
+  <li>线性变换的核心性质：保持空间的网格平行且等距。当一个高维空间被"压扁"到一条一维数轴上时，空间中原本等距的网格线，在一维数轴上依然会映射成等距的点。</li>
+  <li>既然 f 是一个线性变换，我们只需要看它对标准基（î 和 ĵ）做了什么，就能完全确定这个变换。</li>
+</ul>
+</div>
+
+<h3>11.3 关键推导</h3>
+<div class="card">
+<p>假设线性变换 f 把 î 映射到了数轴上的数字 a，把 ĵ 映射到了数字 b。那么，对于任意向量 <strong>v = (x, y)</strong>：</p>
+<div style="text-align:center; font-size:1.05em; margin:8px 0; font-weight:bold; color:var(--accent);">
+  f(v) = x &middot; f(î) + y &middot; f(ĵ) = <strong>ax + by</strong>
+</div>
+<p>细心观察这个结果：<strong>ax + by</strong>。这不就是向量 (a, b) 和向量 (x, y) 的<strong>点积</strong>吗？</p>
+</div>
+
+<div class="highlight">
+<strong>核心洞察：</strong>当你计算两个向量 w &middot; v 的点积时，在几何上，你可以将 w 视为一个<strong>将高维空间压扁到一维的线性变换</strong>。点积的结果，就是向量 v 在这个变换（投影并根据 w 的长度进行缩放）之下的输出值。
+</div>
+
+<h3>11.4 与矩阵的统一</h3>
+<div class="card">
+<p>这个视角把点积的运算也看成了<strong>线性变换</strong>——与前面"矩阵=变换"的主线完全自洽：</p>
+<ul>
+  <li>向量 w 对应的线性变换，其矩阵就是 w 的<strong>转置</strong>（1 &times; n 矩阵）</li>
+  <li>w &middot; v = w<sup>T</sup> &middot; v —— 一个 1 &times; n 的矩阵乘以一个 n &times; 1 的向量（矩阵乘法）</li>
+  <li>所有的数学运算（乘法、求逆、点积）都统一到了<strong>"变换"的几何视角</strong>下</li>
+</ul>
+</div>
+
+<h3>11.5 推荐视频</h3>
+<div class="card" style="text-align:center;">
+  <p>3Blue1Brown「线性代数的本质」— 点积与对偶性</p>
+  <div class="demo-frame-wrap">
+    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=9&autoplay=0" style="height:480px;" title="3Blue1Brown 线性代数 - 点积与对偶性" allowfullscreen></iframe>
+  </div>
+</div>
+
+<!-- ============ SECTION 12 ============ -->
+<h2 id="sec12">十二、基变换</h2>
+
+<div class="summary">
+<strong>基变换就是用不同的"镜头"（坐标系）来观察同一个几何对象（向量或线性变换）。</strong> 平面上的那个物理点就在那里，一动不动——改变的只是我们描述它的"数字"。
+</div>
+
+<h3>12.1 基与坐标系的多样性</h3>
+<div class="card">
+<p>我们最熟悉的直角坐标系，基向量是 <strong>î</strong> 和 <strong>ĵ</strong>。但这不是唯一的坐标系。</p>
+<p>想象"小明"选了两个倾斜的向量 <strong>b₁, b₂</strong> 作为他的基向量——在他的世界里，这两条线构成了他的"倾斜网格"，他同样认为自己用的是<strong>标准系</strong>。但原点重合。</p>
+<div class="highlight">
+<strong>核心几何事实：</strong>无论你用谁的网格，平面上的那一个物理点（向量）就在那里，一动不动。改变的只是我们描述它的"数字"。
+</div>
+</div>
+
+<h3>12.2 向量基变换：同一向量，不同语言</h3>
+<div class="card">
+<p>在你的标准坐标系里，向量表示为 <strong>(x, y)</strong>。在小明的倾斜坐标系里，它表示为 <strong>(x', y')</strong>。</p>
+<p><strong>问题：怎么把小明说的 (x', y') 翻译成你听得懂的 (x, y)？</strong></p>
+<p>需要问小明："你的基向量 <strong>b₁, b₂</strong> 在我的直角坐标系里长什么样？"</p>
+<ul>
+  <li>b₁ 在你看来是 <strong>(2, 1)</strong></li>
+  <li>b₂ 在你看来是 <strong>(-1, 1)</strong></li>
+</ul>
+<p>那么，小明眼中的 (x', y')（即 x'·b₁ + y'·b₂），在你眼里就是：</p>
+<div style="text-align:center; font-size:1.05em; margin:8px 0; font-weight:bold; color:var(--accent);">
+  x'·(2,1) + y'·(-1,1) = <strong>P · (x', y')</strong>
+</div>
+<p>其中 <span class="keyword">过渡矩阵</span> <strong>P = [b₁, b₂]</strong>，每一列就是新基在旧基下的坐标。</p>
+</div>
+
+<div class="summary">
+<strong>几何意义：</strong>矩阵 P 就像一个"向导"，把小明网格上的坐标，拉伸旋转，映射回你的标准直角网格上。反向翻译只需要求逆矩阵 <strong>P⁻¹</strong>。
+</div>
+
+<h3>12.3 核心变换关系</h3>
+<div class="card">
+<table>
+  <tr><th>场景</th><th>操作</th><th>数学表达</th></tr>
+  <tr>
+    <td>小明坐标 → 你的坐标</td>
+    <td>左乘过渡矩阵 P</td>
+    <td><strong>v<sub>你</sub> = P · v<sub>小明</sub></strong></td>
+  </tr>
+  <tr>
+    <td>你的坐标 → 小明坐标</td>
+    <td>左乘逆矩阵 P⁻¹</td>
+    <td><strong>v<sub>小明</sub> = P⁻¹ · v<sub>你</sub></strong></td>
+  </tr>
+</table>
+<div class="highlight" style="margin-top:8px;">
+<strong>关键洞察：</strong>向量的分量没变，变的是导航所依赖的"地图"（基）。这与非方阵部分提到的"导航视角"完全一致——变换矩阵的每一列就是新基在旧基下的坐标。
+</div>
+</div>
+
+<h3>12.4 线性变换的基变换：相似矩阵</h3>
+
+<div class="summary">
+<strong>同一线性变换，在不同基下对应不同的矩阵。</strong> 之前讨论的是"同一个向量在不同基下有不同的坐标"——现在更进一步：对于同一个<strong>几何动作</strong>（比如旋转90°），在不同坐标系中描述它的矩阵是不同的。
+</div>
+
+<div class="card">
+<p><strong>场景：</strong>在你的标准坐标系中，变换 A = [[0, -1], [1, 0]] 代表<strong>逆时针旋转 90°</strong>。小明想在自己倾斜的坐标系中也实现同样的旋转动作——他应该用什么矩阵？</p>
+<p>小明手上的向量 <strong>v<sub>小明</sub></strong> 在他的坐标系中描述。要想在你的世界里完成变换，他需要：</p>
+<ol>
+  <li><strong>翻译进来：</strong>v<sub>你</sub> = P · v<sub>小明</sub>（把小明坐标转为你的坐标）</li>
+  <li><strong>执行变换：</strong>A · v<sub>你</sub>（用你的变换矩阵做旋转）</li>
+  <li><strong>翻译回去：</strong>v<sub>小明</sub>' = P⁻¹ · (A · v<sub>你</sub>)（把结果转回小明的语言）</li>
+</ol>
+<div style="text-align:center; font-size:1.15em; margin:10px 0; font-weight:bold; color:var(--accent);">
+  v<sub>小明</sub>' = <strong>(P⁻¹ · A · P)</strong> · v<sub>小明</sub>
+</div>
+<p>所以小明用来描述"旋转90°"这个几何动作的矩阵是：<strong>M<sub>小明</sub> = P⁻¹ · A · P</strong>。</p>
+</div>
+
+<div class="highlight">
+<strong>核心公式：</strong>若 P 是过渡矩阵（新基在旧基下的坐标），则变换 A 在新基下的矩阵为 <strong>P⁻¹ · A · P</strong>。这就是<strong>相似变换 (Similarity Transformation)</strong>。
+</div>
+
+<h3>12.5 具体例子：用数字走一遍</h3>
+<div class="card">
+<p>沿用之前的设定：</p>
+<ul>
+  <li>过渡矩阵 <strong>P = [[2, -1], [1, 1]]</strong>（小明的基 b₁, b₂ 在你的坐标下的坐标）</li>
+  <li>你的变换 <strong>A = [[0, -1], [1, 0]]</strong>（逆时针旋转 90°）</li>
+  <li>小明有一个向量 <strong>v<sub>小明</sub> = (1, 0)</strong>（在他的世界里就是沿着 b₁ 方向走 1 步）</li>
+</ul>
+
+<table>
+  <tr><th>步骤</th><th>操作</th><th>矩阵 / 向量</th><th>结果</th><th>几何含义</th></tr>
+  <tr>
+    <td><strong>① 翻译</strong></td>
+    <td>P · v<sub>小明</sub></td>
+    <td><code>[[2,-1],[1,1]]·(1,0)</code></td>
+    <td><strong>(2, 1)</strong></td>
+    <td>小明说的 b₁ 方向，在你眼里是 (2, 1)——<strong>P 的第一列</strong></td>
+  </tr>
+  <tr>
+    <td><strong>② 旋转</strong></td>
+    <td>A · v<sub>你</sub></td>
+    <td><code>[[0,-1],[1,0]]·(2,1)</code></td>
+    <td><strong>(-1, 2)</strong></td>
+    <td>在你的坐标系中完成逆时针 90° 旋转</td>
+  </tr>
+  <tr>
+    <td><strong>③ 翻译回</strong></td>
+    <td>P⁻¹ · (-1, 2)</td>
+    <td><code>[[1/3,1/3],[-1/3,2/3]]·(-1,2)</code></td>
+    <td><strong>(1/3, 5/3)</strong></td>
+    <td>把旋转后的结果告诉小明——用他的语言描述</td>
+  </tr>
+</table>
+
+<div style="margin-top:10px;">
+<p><strong>验证：</strong>直接用小明的矩阵 M<sub>小明</sub> = P⁻¹AP 计算：</p>
+<div style="text-align:center; font-size:1em; margin:6px 0;">
+  M<sub>小明</sub> = P⁻¹ · A · P = <strong>[[1/3, -2/3], [5/3, -1/3]]</strong>
+</div>
+<p>M<sub>小明</sub> · v<sub>小明</sub> = (1/3, 5/3) ✓ 结果与三步法一致。</p>
+</div>
+</div>
+
+<h3>12.6 三大操作的矩阵一览</h3>
+<div class="card">
+<table>
+  <tr><th>操作</th><th>矩阵</th><th>几何含义</th></tr>
+  <tr>
+    <td><strong>过渡矩阵 P</strong></td>
+    <td><code>[[b₁, b₂]]</code></td>
+    <td>新基在旧基下的坐标。把"新语言"翻译成"旧语言"。</td>
+  </tr>
+  <tr>
+    <td><strong>逆矩阵 P⁻¹</strong></td>
+    <td><code>[[b₁, b₂]]⁻¹</code></td>
+    <td>把"旧语言"翻译回"新语言"。</td>
+  </tr>
+  <tr>
+    <td><strong>相似矩阵 P⁻¹AP</strong></td>
+    <td><code>P⁻¹ · A · P</code></td>
+    <td>同一个线性变换 A 在新基下的矩阵表示。</td>
+  </tr>
+</table>
+<div class="highlight" style="margin-top:10px;">
+<strong>关键理解：</strong>不是换了基向量后变换本身变了——<strong>变换（几何动作）始终是同一个</strong>（旋转 90°），只是在不同的坐标系中，描述这个动作的"数字"（矩阵）不同了。这就是"相似矩阵"的几何本质。
+</div>
+</div>
+
+<h3>12.7 总结与思考</h3>
+<div class="card">
+<ul>
+  <li><strong>同一个向量</strong>，在不同的基下有不同的坐标表示</li>
+  <li><strong>过渡矩阵 P</strong> 的列 = 新基在旧基下的坐标</li>
+  <li><strong>基变换 = 换语言</strong>，对象本身没变</li>
+  <li><strong>逆矩阵 P⁻¹</strong> 做反向翻译</li>
+</ul>
+</div>
+
+<h3>12.8 推荐视频</h3>
+<div class="card" style="text-align:center;">
+  <p>3Blue1Brown「线性代数的本质」— 基变换</p>
+  <div class="demo-frame-wrap">
+    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=10&autoplay=0" style="height:480px;" title="3Blue1Brown 线性代数 - 基变换" allowfullscreen></iframe>
+  </div>
+</div>
+
+<div class="card warm">
+<p><strong>思考题：</strong></p>
+<ul>
+  <li>如果小明想在他的坐标系中做"A 后再做 B"两个连续变换，对应的矩阵应该是什么？</li>
+  <li>相似对角化要找一个特殊的基，让变换矩阵变成对角矩阵——这个"特殊基"有什么几何意义？</li>
+</ul>
+</div>
+
+<!-- ============ SECTION 13 ============ -->
+<h2 id="sec13">十三、推荐资源</h2>
 <ul>
   <li><a href="https://www.zhihu.com/question/358244660/answer/2016914765264462940" target="_blank">知乎：线性代数到底是为了解决什么问题被发明的？</a></li>
   <li>MIT 18.06 线性代数课程</li>
