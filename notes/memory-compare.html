@@ -38,6 +38,30 @@
     border-color: #e6d5b8;
   }
 
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .toc ol {
+    margin: 0;
+    padding-left: 20px;
+  }
+  .toc li {
+    margin: 3px 0;
+  }
+  .toc a {
+    color: #1f4a2e;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .toc a:hover {
+    text-decoration: underline;
+    color: #2a8f4f;
+  }
+
   .highlight {
     background: #e8f5ec;
     border-left: 4px solid #2a8f4f;
@@ -164,20 +188,89 @@
 </div>
 </div>
 
+<!-- ============ TABLE OF CONTENTS ============ -->
+<div class="section-detail">
+
+<h2>目录</h2>
+
+<div class="toc">
+  <ol>
+    <li><a href="#why-memory">为什么需要 Memory</a></li>
+    <li><a href="#difficulties">Memory 系统的难点</a></li>
+    <li><a href="#design-patterns">当前的主要设计模式</a></li>
+    <li><a href="#schemes">各方案详解</a></li>
+    <li><a href="#comparison">各方案横向对比</a></li>
+    <li><a href="#cache-conflict">动态 Memory 与 Cache 的冲突</a></li>
+  </ol>
+</div>
+
+</div>
+
+<hr>
+
 <!-- ============ WHY MEMORY ============ -->
 <div class="section-detail">
 
-<h2>为什么需要 Memory</h2>
+<h2 id="why-memory">为什么需要 Memory</h2>
 
 <div class="card">
   <p>大模型的运作模式是每次对话独立计算，需要将前面所有的历史一起发送。新的 Session 不包含以前的内容，因此老的 Session 中的背景知识，新 Session 完全不知道。</p>
 </div>
 
-<h3>Memory 系统的难点</h3>
+<ul>
+  <li><strong>跨会话记忆：</strong>记忆能让 Agent 跨越时间和 Session（对话阶段），记住关于你的核心信息。</li>
+  <li><strong>提高对话效率：</strong>无需重复介绍背景。</li>
+  <li><strong>支撑复杂任务流：</strong>现实世界中的任务很少能通过"一问一答"解决，往往需要拆解成几小时甚至几天的工作流。例如执行自动化爬虫并分析数据时，Agent 需要记住第一步拿到了哪些 URL，第二步报错了需要重试哪一部分，第三步该合并哪个表格。</li>
+  <li><strong>驱动反思与成长：</strong>人类通过复盘来成长，Agent 也需要通过记忆完成反思（Reflection）。没有记忆，Agent 就会陷入在同一个坑里反复跌倒的死循环。</li>
+</ul>
+
+</div>
+
+<!-- ============ DIFFICULTIES ============ -->
+<div class="section-detail">
+
+<h2 id="difficulties">Memory 系统的难点</h2>
 
 <div class="card warm">
   <p>核心难点在于：在开始做某个任务之前，<strong>如何把以前相关的知识准确获取出来</strong>，以更好地完成新的任务。</p>
 </div>
+
+<ol>
+  <li><strong>检索的精准度与高噪音（Retrieval Precision vs. Noise）</strong>——向量相似度（如余弦相似度）只管"长得像"，不管"对不对"。检索出来的历史碎片可能包含大量无关信息，严重污染 LLM 的上下文，导致智能体判断失误。</li>
+  <li><strong>上下文窗口的"能放下"≠"能用好"</strong>——虽然 Gemini 等模型的上下文窗口已扩展到非常大，但大窗口不等于高效使用。</li>
+  <li><strong>记忆更新极难平衡</strong>——哪些需要永久固化（如用户的名字、核心偏好），哪些应随时间淡化？缺乏科学的衰减算法（Decay Mechanism）会导致记忆库无限膨胀。</li>
+  <li><strong>原始日志不足以支撑智慧</strong>——如果仅仅是把聊天记录原封不动地存下来，Agent 的智商会非常受限。</li>
+</ol>
+
+</div>
+
+<!-- ============ DESIGN PATTERNS ============ -->
+<div class="section-detail">
+
+<h2 id="design-patterns">当前的主要设计模式</h2>
+
+<div class="card">
+  <p><strong>混合检索：向量 + 关键词 + 知识图谱</strong></p>
+</div>
+
+<ul>
+  <li><strong>向量检索</strong>看语义相似度——让 Agent 知道哪些词"经常在一起出现"（相关性）。</li>
+  <li><strong>关键词检索（FTS5）</strong>看精准匹配——找到包含特定函数名或术语的历史。</li>
+  <li><strong>知识图谱</strong>看因果和实体关系——让 Agent 明白"什么是原因，什么是结果"（因果性），从而具备真正的逻辑推理与反思能力。</li>
+  <li>散落的聊天记录只是信息噪音；提炼为点与线、实体与关系的图谱后，记忆才凝聚成高密度、可随时检索的"知识网络"。向量记忆带来了感性的"直觉"，知识图谱注入了理性的"骨架"。</li>
+</ul>
+
+<div class="card warm">
+  <p><strong>知识图谱的更多优势</strong></p>
+</div>
+
+<ul>
+  <li><strong>多跳推理（Multi-hop Reasoning）：</strong>向量数据库无法遍历关系链。例如"哪些供应商同时给A公司和B公司的竞争对手供货？"——向量搜索从结构上就不可能完成这种查询。知识图谱通过显式的实体-关系边，支持确定性的多跳遍历。</li>
+  <li><strong>时序理解（Temporal Reasoning）：</strong>知识图谱支持双时间模型（bi-temporal），事实不会被删除而是标记为"过期"，实现完整的时光回溯查询。Zep/Graphiti 在时序推理任务上比纯向量方案高出 <span class="key">18.5%</span> 的准确率。</li>
+  <li><strong>可解释性（Explainability）：</strong>向量检索的相似度分数是黑盒的，无法解释"为什么像"；知识图谱的每个答案都可以追溯到具体的节点和边路径，满足审计合规要求。</li>
+  <li><strong>冲突事实处理：</strong>向量数据库将每次输入视为不可变事实；当事实改变时，旧文本仍然存在，检索到冲突信息会混淆 LLM。知识图谱可以将旧事实标记为 <code>invalid_at</code>，在保留历史的同时保持当前事实清晰。</li>
+  <li><strong>全局整体理解（Global Query）：</strong>在跨数据集的整体性问题（如"这个语料库的核心主题是什么？"）上，标准向量 RAG 在某些基准测试中准确率为 0%，而 GraphRAG 通过社区检测和层次化摘要大幅领先。</li>
+</ul>
 
 </div>
 
@@ -185,7 +278,7 @@
 
 <!-- ============ DETAILED ============ -->
 <div class="section-overview">
-<h2>各方案详解</h2>
+<h2 id="schemes">各方案详解</h2>
 </div>
 
 <div class="section-detail">
@@ -294,7 +387,7 @@
 
 <!-- ============ COMPARISON ============ -->
 <div class="section-overview">
-<h2>各方案横向对比</h2>
+<h2 id="comparison">各方案横向对比</h2>
 </div>
 
 <div class="section-detail">
@@ -351,13 +444,13 @@
 <!-- ============ CACHE PROBLEM ============ -->
 <div class="section-detail">
 
-<h2>动态 Memory 与 Cache 的冲突</h2>
+<h2 id="cache-conflict">动态 Memory 与 Cache 的冲突</h2>
 
 <div class="card warm">
-  <p>动态 Memory 会在对话中插入 Token。如果设计不当，动态更新的 Memory 会高频触发 <strong>Cache Miss</strong>（缓存未命中），导致 API 费用暴涨、首字延迟飙升。</p>
+  <p>动态 Memory 会在对话中插入 Token（相当于在对话中动态插入了额外内容）。如果设计不当，动态更新的 Memory 会高频触发 <strong>Cache Miss</strong>（缓存未命中），导致 API 费用暴涨、首字延迟飙升。</p>
 </div>
 
-<h3>解决方案：Static-to-Dynamic Layout</h3>
+<h3>如何让 Memory 与 Cache 完美共存：Static-to-Dynamic Layout</h3>
 <p>严格控制 Prompt 拓扑结构，将最不容易变动的内容放在最前面，将最高频变动的内容放在最后面：</p>
 
 <pre>
