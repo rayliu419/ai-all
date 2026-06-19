@@ -160,28 +160,133 @@
 
 <div class="section-overview">
 <div class="card">
-  <p>对比分析不同 Agent 系统的 Memory 运作方式，重点关注缓存效率、存储架构、检索机制等关键维度。</p>
+  <p>对比分析不同 Agent 系统的 Memory 运作方式，重点关注存储架构、检索机制、缓存效率等关键维度。</p>
 </div>
 </div>
 
-<!-- ============ PROBLEM ============ -->
+<!-- ============ WHY MEMORY ============ -->
 <div class="section-detail">
 
-<h2>核心问题：动态 Memory 与 Cache 的冲突</h2>
+<h2>为什么需要 Memory</h2>
 
-<div class="card warm">
-  <p>动态 Memory 会在对话中插入 Token，如果设计不当，会高频触发 <strong>Cache Miss</strong>（缓存未命中），导致 API 费用暴涨、首字延迟飙升。</p>
+<div class="card">
+  <p>大模型的运作模式是每次对话独立计算，需要将前面所有的历史一起发送。新的 Session 不包含以前的内容，因此老的 Session 中的背景知识，新 Session 完全不知道。</p>
 </div>
 
-<h3>解决方案：Static-to-Dynamic Layout</h3>
-<p>严格控制 Prompt 拓扑结构，将最不容易变动的内容放在最前面，将最高频变动的内容放在最后面：</p>
+<h3>Memory 系统的难点</h3>
 
-<pre>
-Prompt =
-  System Prompt + Tool Schemas   {绝对固定 (100% Hit)
-  Chat History (Append Only)     线性增长 (自动续期缓存)
-  Dynamic Memory / Timestamp     置于末尾 (仅此处 Miss)
-</pre>
+<div class="card warm">
+  <p>核心难点在于：在开始做某个任务之前，<strong>如何把以前相关的知识准确获取出来</strong>，以更好地完成新的任务。</p>
+</div>
+
+</div>
+
+<hr>
+
+<!-- ============ DETAILED ============ -->
+<div class="section-overview">
+<h2>各方案详解</h2>
+</div>
+
+<div class="section-detail">
+
+<!-- claude-mem -->
+<div class="agent-card">
+  <h3>claude-mem <span class="tag">旁路观察</span><span class="tag warn">全自动</span></h3>
+  <p><a href="https://github.com/thedotmack/claude-mem" target="_blank">github.com/thedotmack/claude-mem</a></p>
+
+  <h4>架构</h4>
+  <p>Worker Service（HTTP server on port 37777）+ SQLite 数据库 + AI 观察者模型。</p>
+
+  <h4>写入流程</h4>
+  <ol>
+    <li>用户对话 → Claude Code 使用工具</li>
+    <li>Hook 触发 → Worker Service 接收</li>
+    <li>AI 观察者模型分析 → 写入 SQLite observations 表</li>
+  </ol>
+  <ul>
+    <li>会话元数据 + 观察记录 + 每轮对话总结</li>
+    <li>图结构记录 Memory</li>
+    <li>异步调用<span class="key">小模型</span>来总结（避免阻塞）</li>
+  </ul>
+
+  <h4>读取流程</h4>
+  <ul>
+    <li><strong>SessionStart hook</strong> — 启动时注入上下文（基于项目 + 时间倒序 + 类型/概念过滤）</li>
+    <li><strong>MCP Server</strong> — 对话过程中提供 ChromaDB 向量搜索，基于当前 prompt 的语义相似度检索历史</li>
+  </ul>
+</div>
+
+<!-- Claude Code -->
+<div class="agent-card">
+  <h3>Claude Code <span class="tag">原生方案</span></h3>
+  <p>分为会话内上下文管理（In-Session）和跨会话持久化记忆（Cross-Session / Persistent Memory）两大核心维度。</p>
+  <ul>
+    <li><strong>会话内上下文管理：</strong>压缩过往对话、保留关键上下文</li>
+    <li><strong>跨会话持久化（CLAUDE.md / MEMORY.md）：</strong>以文件形式持久化，工具直接读写</li>
+    <li>CLAUDE.md 就是每次 Session 启动时自动注入的 Memory 之一</li>
+  </ul>
+  <p>详见：<a href="file:///Users/liurui/workspace/learn-claude-code/claude-code/notes/memory-system-analysis.html" target="_blank">memory-system-analysis.html</a></p>
+</div>
+
+<!-- Hermes -->
+<div class="agent-card">
+  <h3>Hermes Agent <span class="tag">无损存储</span><span class="tag">FTS5</span></h3>
+
+  <h4>长效环境背景</h4>
+  <p>存储活动项目、技术栈、核心依赖关系等长期信息。</p>
+
+  <h4>原始对话无损保存</h4>
+  <p>所有 CLI 终端和消息网关（Telegram/Discord/Slack）的原始对话均保存于本地的 <code>~/.hermes/state.db</code>。</p>
+  <ul>
+    <li>使用 SQLite <strong>FTS5</strong>（全文检索）技术实现精准关键词匹配</li>
+    <li>应用场景：长对话截断后查找几周前的某句代码或特定 Bug → 直接检索原始文本，而非依赖 LLM 模糊总结</li>
+  </ul>
+
+  <h4>Memory Tool（Agent 自维护）</h4>
+  <p>通过 <span class="key">add</span>（添加）、<span class="key">replace</span>（替换/合并）和 <span class="key">remove</span>（删除）三个原子操作管理 USER.md 和 MEMORY.md。</p>
+</div>
+
+<!-- MemTensor/MemOS -->
+<div class="agent-card">
+  <h3>MemTensor / MemOS <span class="tag">层次化</span><span class="tag">自进化</span></h3>
+
+  <h4>层次化存储（Hierarchical Storage）</h4>
+  <table>
+    <tr><th>层级</th><th>内容</th><th>特点</th></tr>
+    <tr>
+      <td><strong>L1 轨迹层</strong> — Traces</td>
+      <td>纯原始的对话和工具执行日志</td>
+      <td>完整保留，不做提炼</td>
+    </tr>
+    <tr>
+      <td><strong>L2 策略层</strong> — Policies</td>
+      <td>"用户喜欢什么样的代码风格"、"这个 Bug 应该怎么修"等规则</td>
+      <td>Agent 自己总结的抽象规则</td>
+    </tr>
+    <tr>
+      <td><strong>L3 世界模型</strong> — World Models</td>
+      <td>项目的核心架构、不可变的事实</td>
+      <td>高稳定性，极少变动</td>
+    </tr>
+  </table>
+
+  <h4>混合检索引擎（Hybrid Retrieval）</h4>
+  <ul>
+    <li><strong>向量检索（Vector Search）：</strong>模糊的、语义相关的记忆（"找一下之前聊过的关于高并发优化的地方"）</li>
+    <li><strong>全文检索（SQLite FTS5）：</strong>精准的关键词匹配（"查找包含 auth_v2_final 这个函数名的历史对话"）</li>
+    <li>智能<span class="key">去重（Deduplication）</span>，确保用最少 Token 带来最精准的背景</li>
+  </ul>
+
+  <h4>异步吞吐 & MemScheduler</h4>
+  <p>Agent 在前台流畅对话，内存的写入、向量化（Embedding）、合并与擦除都在<strong>后台异步</strong>完成，毫秒级延迟。</p>
+
+  <h4>自进化与纠错</h4>
+  <ul>
+    <li><strong>记忆整合（Consolidation）：</strong>多条零散记忆指向同一件事时，自动融合成一条高信息密度记忆</li>
+    <li><strong>反思纠错（Feedback Loop）：</strong>人类说"不对，刚才那个方案不安全，以后别用了"→ 主动定位旧记忆，修改、补充或无痕替换</li>
+  </ul>
+</div>
 
 </div>
 
@@ -243,108 +348,24 @@ Prompt =
 
 <hr>
 
-<!-- ============ DETAILED ============ -->
-<div class="section-overview">
-<h2>各方案详解</h2>
-</div>
-
+<!-- ============ CACHE PROBLEM ============ -->
 <div class="section-detail">
 
-<!-- claude-mem -->
-<div class="agent-card">
-  <h3>claude-mem <span class="tag">旁路观察</span><span class="tag warn">全自动</span></h3>
-  <p><a href="https://github.com/thedotmack/claude-mem" target="_blank">github.com/thedotmack/claude-mem</a></p>
+<h2>动态 Memory 与 Cache 的冲突</h2>
 
-  <h4>架构</h4>
-  <p>Worker Service（HTTP server on port 37777）+ SQLite 数据库 + AI 观察者模型。</p>
-
-  <h4>写入流程</h4>
-  <ol>
-    <li>用户对话 → Claude Code 使用工具</li>
-    <li>Hook 触发 → Worker Service 接收</li>
-    <li>AI 观察者模型分析 → 写入 SQLite observations 表</li>
-  </ol>
-  <ul>
-    <li>会话元数据 + 观察记录 + 每轮对话总结</li>
-    <li>图结构记录 Memory</li>
-    <li>异步调用<span class="key">小模型</span>来总结（避免阻塞）</li>
-  </ul>
-
-  <h4>读取流程</h4>
-  <ul>
-    <li><strong>SessionStart hook</strong> — 启动时注入上下文（基于项目 + 时间倒序 + 类型/概念过滤）</li>
-    <li><strong>MCP Server</strong> — 对话过程中提供 ChromaDB 向量搜索，基于当前 prompt 的语义相似度检索历史</li>
-  </ul>
+<div class="card warm">
+  <p>动态 Memory 会在对话中插入 Token。如果设计不当，动态更新的 Memory 会高频触发 <strong>Cache Miss</strong>（缓存未命中），导致 API 费用暴涨、首字延迟飙升。</p>
 </div>
 
-<!-- Claude Code -->
-<div class="agent-card">
-  <h3>Claude Code <span class="tag">原生方案</span></h3>
-  <p>分为会话内上下文管理（In-Session）和跨会话持久化记忆（Cross-Session / Persistent Memory）两大核心维度。</p>
-  <ul>
-    <li><strong>会话内上下文管理：</strong>压缩过往对话、保留关键上下文</li>
-    <li><strong>跨会话持久化（CLAUDE.md / MEMORY.md）：</strong>以文件形式持久化，工具直接读写</li>
-  </ul>
-</div>
+<h3>解决方案：Static-to-Dynamic Layout</h3>
+<p>严格控制 Prompt 拓扑结构，将最不容易变动的内容放在最前面，将最高频变动的内容放在最后面：</p>
 
-<!-- Hermes -->
-<div class="agent-card">
-  <h3>Hermes Agent <span class="tag">无损存储</span><span class="tag">FTS5</span></h3>
-
-  <h4>长效环境背景</h4>
-  <p>存储活动项目、技术栈、核心依赖关系等长期信息。</p>
-
-  <h4>原始对话无损保存</h4>
-  <p>所有 CLI 终端和消息网关（Telegram/Discord/Slack）的原始对话均保存于本地的 <code>~/.hermes/state.db</code>。</p>
-  <ul>
-    <li>使用 SQLite <strong>FTS5</strong>（全文检索）技术实现精准关键词匹配</li>
-    <li>应用场景：长对话截断后查找几周前的某句代码或特定 Bug → 直接检索原始文本，而非依赖 LLM 模糊总结</li>
-  </ul>
-
-  <h4>Memory Tool（Agent 自维护）</h4>
-  <p>通过 <span class="key">add</span>（添加）、<span class="key">replace</span>（替换/合并）和 <span class="key">remove</span>（删除）三个原子操作管理 USER.md 和 MEMORY.md。</p>
-</div>
-
-<!-- MemTensor/MemOS -->
-<div class="agent-card">
-  <h3>MemTensor / MemOS <span class="tag">层次化</span><span class="tag">自进化</span></h3>
-
-  <h4>层次化存储（Hierarchical Storage）</h4>
-  <table>
-    <tr><th>层级</th><th>内容</th><th>特点</th></tr>
-    <tr>
-      <td><strong>L1 轨迹层</strong> — Traces</td>
-      <td>纯原始的对话和工具执行日志</td>
-      <td>完整保留，不做提炼</td>
-    </tr>
-    <tr>
-      <td><strong>L2 策略层</strong> — Policies</td>
-      <td>"用户喜欢什么样的代码风格"、"这个 Bug 应该怎么修"等规则</td>
-      <td>Agent 自己总结的抽象规则</td>
-    </tr>
-    <tr>
-      <td><strong>L3 世界模型</strong> — World Models</td>
-      <td>项目的核心架构、不可变的事实</td>
-      <td>高稳定性，极少变动</td>
-    </tr>
-  </table>
-
-  <h4>混合检索引擎（Hybrid Retrieval）</h4>
-  <ul>
-    <li><strong>向量检索（Vector Search）：</strong>模糊的、语义相关的记忆（"找一下之前聊过的关于高并发优化的地方"）</li>
-    <li><strong>全文检索（SQLite FTS5）：</strong>精准的关键词匹配（"查找包含 auth_v2_final 这个函数名的历史对话"）</li>
-    <li>智能<span class="key">去重（Deduplication）</span>，确保用最少 Token 带来最精准的背景</li>
-  </ul>
-
-  <h4>异步吞吐 & MemScheduler</h4>
-  <p>Agent 在前台流畅对话，内存的写入、向量化（Embedding）、合并与擦除都在<strong>后台异步</strong>完成，毫秒级延迟。</p>
-
-  <h4>自进化与纠错</h4>
-  <ul>
-    <li><strong>记忆整合（Consolidation）：</strong>多条零散记忆指向同一件事时，自动融合成一条高信息密度记忆</li>
-    <li><strong>反思纠错（Feedback Loop）：</strong>人类说"不对，刚才那个方案不安全，以后别用了"→ 主动定位旧记忆，修改、补充或无痕替换</li>
-  </ul>
-</div>
+<pre>
+Prompt =
+  System Prompt + Tool Schemas   {绝对固定 (100% Hit)
+  Chat History (Append Only)     线性增长 (自动续期缓存)
+  Dynamic Memory / Timestamp     置于末尾 (仅此处 Miss)
+</pre>
 
 </div>
 

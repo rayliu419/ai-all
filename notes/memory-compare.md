@@ -1,16 +1,12 @@
 # 比较不同的Agent的memory的运作方式
 
-## 动态Memory可能会导致Cache失效的问题
-- 因为相当于在对话中动态插入了token。
-- 如果设计不当，动态更新的 Memory 会高频触发 Cache Miss（缓存未命中），导致 API 费用暴涨、首字延迟飙升。
+## 为什么需要memory
+- 大模型的运作模式是每次对话，需要将前面所有的历史一起发过去。
+- 新的session只包含新的对话，不包含以前的内容。
+- 因此在老的session的背景知识，新session完全不知道。
 
-## 如何让 Memory 与 Cache 完美共存
-- 严格控制 Prompt 拓扑结构（Static-to-Dynamic Layout）
-  - 将最不容易变动的内容放在最前面，将最高频变动的内容放在最后面。
-  - Prompt = 
-    - System Prompt + Tool Schemas {绝对固定 (100 Hit)
-    - Chat History (Append Only) 线性增长 (自动追加缓存) 
-    - Dynamic Memory / Timestamp 置于末尾 (仅此处 Miss)
+## memory系统的难点
+- 应该是在做开始做某个任务之前，怎么把以前相关的知识获取，能够更好的完成新的任务。
 
 ## memory plugin 
 - https://github.com/thedotmack/claude-mem 是怎么做的？
@@ -30,6 +26,7 @@
 ## claude code memory 
 - /Users/liurui/workspace/learn-claude-code/claude-code/notes/memory-system-analysis.html
 - 分为会话内上下文管理（In-Session）和跨会话持久化记忆（Cross-Session / Persistent Memory）两大核心维度。
+- CLAUDE.md就是每次session启动的memory之一。
 
 ## Hermes agent 
 - 存储长效环境背景（活动项目、技术栈、核心依赖关系）。
@@ -51,3 +48,15 @@
 - 记忆反馈与自我进化（Self-Evolving & Correction）
   - 记忆整合（Consolidation）：当发现多条零散记忆都在说同一件事时，它会自动融合成一条高信息密度的记忆。
   - 反思与纠错（Feedback Loop）：人类可以说：“不对，刚才那个方案不安全，以后别用了。”Memory OS 收到指令后，会主动去定位旧的记忆，将其修改、补充或无痕替换。
+
+## 动态Memory可能会导致Cache失效的问题
+- 因为相当于在对话中动态插入了token。
+- 如果设计不当，动态更新的 Memory 会高频触发 Cache Miss（缓存未命中），导致 API 费用暴涨、首字延迟飙升。
+
+## 如何让 Memory 与 Cache 完美共存
+- 严格控制 Prompt 拓扑结构（Static-to-Dynamic Layout）
+    - 将最不容易变动的内容放在最前面，将最高频变动的内容放在最后面。
+    - Prompt =
+        - System Prompt + Tool Schemas {绝对固定 (100 Hit)
+        - Chat History (Append Only) 线性增长 (自动追加缓存)
+        - Dynamic Memory / Timestamp 置于末尾 (仅此处 Miss)
