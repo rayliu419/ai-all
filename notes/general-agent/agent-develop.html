@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent 开发环境与框架</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 28px 20px;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  h1 { font-size: 1.35em; margin: 18px 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+  h2 { font-size: 1.2em; margin: 16px 0 8px; color: #1f4a2e; }
+  h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+
+  p { margin: 6px 0; }
+  ul, ol { padding-left: 20px; margin: 4px 0; }
+  li { margin: 2px 0; }
+
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card.warm {
+    background: #fdf6ec;
+    border-color: #e6d5b8;
+  }
+
+  .highlight {
+    background: #e8f5ec;
+    border-left: 4px solid #2a8f4f;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #1a4a2a;
+  }
+  .highlight.accent {
+    border-left-color: #d97706;
+    background: #fef7e6;
+    color: #7c5200;
+  }
+
+  .key { color: #d97706; font-weight: 600; }
+  strong { color: #1a4a2a; }
+  em { color: #3d6a4f; }
+
+  code {
+    font-size: 0.88em;
+    background: #e2efe5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4a2a;
+  }
+  pre {
+    font-size: 0.8em;
+    background: #e2efe5;
+    border: 1px solid #c3dbcc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+
+  hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+
+  .takeaway {
+    background: #e8f5ec;
+    border: 1px solid #2a8f4f;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 0.95em;
+  }
+  .takeaway-title {
+    font-weight: 700;
+    color: #1a4a2a;
+    margin-bottom: 4px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    margin: 10px 0;
+  }
+  th, td {
+    border: 1px solid #c3dbcc;
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #d4e8db;
+    color: #1a4a2a;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: #f5faf6; }
+
+  .tag {
+    display: inline-block;
+    background: #d4e8db;
+    color: #1a4a2a;
+    font-size: 0.85em;
+    padding: 0 8px;
+    border-radius: 10px;
+    margin: 2px 2px;
+  }
+  .tag.blue { background: #dbeafe; color: #1e40af; }
+  .tag.green { background: #d4e8db; color: #1a4a2a; }
+  .tag.warn { background: #fdebd0; color: #9e6b00; }
+  .tag.purple { background: #ede9fe; color: #5b21b6; }
+
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .toc ol { margin: 0; padding-left: 20px; }
+  .toc li { margin: 3px 0; }
+  .toc a { color: #1f4a2e; text-decoration: none; font-weight: 500; }
+  .toc a:hover { text-decoration: underline; color: #2a8f4f; }
+
+  @media (max-width: 600px) {
+    body { padding: 16px 12px; }
+    ul, ol { padding-left: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Agent 开发环境与框架</h1>
+
+<div class="toc">
+  <ol>
+    <li><a href="#environment">依赖环境</a></li>
+    <li><a href="#framework-compare">LangChain vs LangGraph vs DeepAgent vs CrewAI vs Raw</a></li>
+    <li><a href="#raw">Raw</a></li>
+    <li><a href="#langchain">LangChain</a></li>
+    <li><a href="#langgraph">LangGraph 重点</a></li>
+    <li><a href="#crewai">CrewAI 重点</a></li>
+  </ol>
+</div>
+
+<hr>
+
+<!-- ============ ENVIRONMENT ============ -->
+<h2 id="environment">依赖环境</h2>
+
+<h3>安装</h3>
+<pre>
+python3 -m venv .venv
+pip install jupyter ipykernel
+python -m ipykernel install --user --name ray
+</pre>
+
+<h3>使用方法 1：浏览器调用 Notebook</h3>
+<pre>
+source .venv/bin/activate
+jupyter notebook
+</pre>
+
+<h3>使用方法 2：Visual Studio</h3>
+<div class="card">
+  <p>更方便，能做函数跳转等。</p>
+</div>
+
+<h3>LLM API Key</h3>
+<div class="card warm">
+  <p>DeepSeek</p>
+</div>
+
+<hr>
+
+<!-- ============ FRAMEWORK COMPARE ============ -->
+<h2 id="framework-compare">LangChain vs LangGraph vs DeepAgent vs CrewAI vs Raw</h2>
+
+<div class="card">
+  <table>
+    <tr><th>框架</th><th>定位</th><th>优先级</th></tr>
+    <tr>
+      <td><strong>LangChain</strong></td>
+      <td>基础积木库。最全的框架，提供连接各种 LLM、数据库、内存管理和 Prompt 模板的标准化接口。实现不了复杂的逻辑，不要投入太多。</td>
+      <td>了解即可</td>
+    </tr>
+    <tr>
+      <td><strong>LangGraph</strong></td>
+      <td>带控制流的框架，支持跳转、条件执行等底层编排。最严谨的工业控制台。</td>
+      <td><span class="key">P0</span></td>
+    </tr>
+    <tr>
+      <td><strong>CrewAI</strong></td>
+      <td>多 Agent 配合。封装了复杂的团队协作协议，快速落地原型。</td>
+      <td><span class="key">P1</span></td>
+    </tr>
+    <tr>
+      <td><strong>Raw</strong></td>
+      <td>高端开发的选择，直接使用原生 SDK。</td>
+      <td><span class="key">P0</span></td>
+    </tr>
+    <tr>
+      <td><strong>DeepAgent</strong></td>
+      <td>偏高层的编排，封装了底层。提供开箱即用的高级 Agent 框架。</td>
+      <td>不要投入</td>
+    </tr>
+  </table>
+</div>
+
+<hr>
+
+<!-- ============ RAW ============ -->
+<h2 id="raw">Raw</h2>
+
+<div class="card warm">
+  <p>直接使用 Anthropic API 和 OpenAI 的 SDK。</p>
+</div>
+
+<ul>
+  <li>能快速使用原生 API，不用等待框架实现</li>
+  <li>框架中会过度封装，自动加入上下文等，反而会引起性能问题</li>
+  <li><strong>每一行都是可解释、可调试的。</strong>适合集成到现有的后端服务中，因为不必再去适配框架复杂的异步逻辑</li>
+</ul>
+
+<hr>
+
+<!-- ============ LANGCHAIN ============ -->
+<h2 id="langchain">LangChain</h2>
+
+<h3>Message</h3>
+<div class="card">
+  <p>理解 LLM 调用时其实是每次将不同角色的 Message 作为历史一起传入：</p>
+  <ul>
+    <li><strong>SystemMessage</strong></li>
+    <li><strong>HumanMessage</strong></li>
+    <li><strong>AIMessage</strong></li>
+    <li><strong>ToolMessage</strong></li>
+  </ul>
+</div>
+
+<h3>PromptTemplate</h3>
+<p>在实际开发中，你不会把给 AI 的指令死死地写在代码里，而是像 <code>String.format</code>，根据用户输入动态填充内容。</p>
+
+<h3>OutputParser</h3>
+<p>模型返回的通常是字符串，但你可能需要 JSON、列表或特定的 Python 对象。解析器负责将 AI 的回复"格式化"为代码可以直接处理的数据结构。是打通 MCP Tools 的关键。</p>
+
+<h3>LCEL</h3>
+<ul>
+  <li>仿照 Unix 的管道方式，构建 pipeline</li>
+  <li>类似高阶函数，先把操作连起来，最后 invoke 的时候再开始传数据</li>
+  <li>像个控制流模板，运行时做一定的参数改变就可以了</li>
+</ul>
+
+<h3>定制 Agent 类</h3>
+<div class="card warm">
+  <p>现在很少用内置的 Agent，还是使用定制化的方式更好。LangChain 本身自带一些 Agent，但是都是黑盒。</p>
+</div>
+
+<hr>
+
+<!-- ============ LANGGRAPH ============ -->
+<h2 id="langgraph">LangGraph 重点</h2>
+
+<h3>State</h3>
+<div class="card">
+  <p><strong>LangGraph = 节点（处理逻辑）+ 边（执行顺序）+ State（数据流动）</strong></p>
+  <p>理解 LangGraph 的核心。State 就是一个数据流水本，记录了从开始到现在所有节点产生的数据。</p>
+  <p>想象一个城市的中心广场，所有人（节点）都会来这里：</p>
+  <ul>
+    <li><strong>发布消息：</strong>把自己处理的结果贴到广场的公告板上</li>
+    <li><strong>查看消息：</strong>看看别人贴了什么信息，作为自己工作的输入</li>
+    <li><strong>信息汇总：</strong>所有人的工作成果都汇集在这个广场</li>
+  </ul>
+</div>
+
+<h4>特点</h4>
+<ul>
+  <li><strong>可累积性：</strong>State 像滚雪球一样，越滚越大，每个节点都往上加东西</li>
+  <li><strong>可覆盖性：</strong>如果节点返回了同名字段，会覆盖旧值。可以自定义 Reduce 方式来改变默认行为</li>
+  <li><strong>节点间通信的唯一方式：</strong>在 LangGraph 中，节点之间不能直接对话，只能通过 State 交流</li>
+</ul>
+
+<hr>
+
+<!-- ============ CREWAI ============ -->
+<h2 id="crewai">CrewAI 重点</h2>
+
+<div class="card">
+  <p>能快速出活，多 Agent 协调。</p>
+</div>
+
+<div style="text-align:center;color:#6a8f7a;font-size:0.9em;margin-top:20px;">
+  Agent 开发环境与框架 · 整理笔记
+</div>
+
+</body>
+</html>

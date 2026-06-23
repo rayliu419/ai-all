@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harness Engineering 经验</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 28px 20px;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  h1 { font-size: 1.35em; margin: 18px 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+  h2 { font-size: 1.2em; margin: 16px 0 8px; color: #1f4a2e; }
+  h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+
+  p { margin: 6px 0; }
+  ul, ol { padding-left: 20px; margin: 4px 0; }
+  li { margin: 2px 0; }
+
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card.warm {
+    background: #fdf6ec;
+    border-color: #e6d5b8;
+  }
+
+  .highlight {
+    background: #e8f5ec;
+    border-left: 4px solid #2a8f4f;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #1a4a2a;
+  }
+  .highlight.accent {
+    border-left-color: #d97706;
+    background: #fef7e6;
+    color: #7c5200;
+  }
+
+  .key { color: #d97706; font-weight: 600; }
+  strong { color: #1a4a2a; }
+  em { color: #3d6a4f; }
+
+  code {
+    font-size: 0.88em;
+    background: #e2efe5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4a2a;
+  }
+  pre {
+    font-size: 0.8em;
+    background: #e2efe5;
+    border: 1px solid #c3dbcc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+
+  hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+
+  .takeaway {
+    background: #e8f5ec;
+    border: 1px solid #2a8f4f;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 0.95em;
+  }
+  .takeaway-title {
+    font-weight: 700;
+    color: #1a4a2a;
+    margin-bottom: 4px;
+  }
+
+  .tag {
+    display: inline-block;
+    background: #d4e8db;
+    color: #1a4a2a;
+    font-size: 0.85em;
+    padding: 0 8px;
+    border-radius: 10px;
+    margin: 2px 2px;
+  }
+
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .toc ol { margin: 0; padding-left: 20px; }
+  .toc li { margin: 3px 0; }
+  .toc a { color: #1f4a2e; text-decoration: none; font-weight: 500; }
+  .toc a:hover { text-decoration: underline; color: #2a8f4f; }
+
+  @media (max-width: 600px) {
+    body { padding: 16px 12px; }
+    ul, ol { padding-left: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Harness Engineering 经验</h1>
+
+<div class="toc">
+  <ol>
+    <li><a href="#core">核心思想</a></li>
+    <li><a href="#practices">实践方法</a></li>
+    <li><a href="#long-tasks">长程任务支架设计</a></li>
+    <li><a href="#loop">Loop Engineering</a></li>
+  </ol>
+</div>
+
+<div class="card" style="text-align:center; border:2px solid #d97706;">
+  <p><strong>LLM 是概率模型，怎么让概率模型在工程上更稳定？</strong><br>通过对模型的优化 + Harness Framework 的共同配合，更好地完成复杂任务。</p>
+</div>
+
+<hr>
+
+<!-- ============ CORE ============ -->
+<h2 id="core">核心思想</h2>
+
+<div class="card warm">
+  <p><strong>LLM 的能力：</strong>一个博学但记性有限的专家。<strong>重复输入当前问题能唤回记忆，提高能力。</strong></p>
+</div>
+
+<h3>围绕 AI 构建 Task 的 Infra</h3>
+<p>先使用 AI 来构建某个 Task 的 Infra。例如对于 Agent Chatbot，把下载执行记录、配置 Emux MCP、Benchmark 都搭建出来，会极大提高效率。</p>
+
+<h3>标准模板</h3>
+<p>模板很重要。Coding Agent 从 Few-Shot 学习，会被不好的模板带偏。</p>
+
+<hr>
+
+<!-- ============ PRACTICES ============ -->
+<h2 id="practices">实践方法</h2>
+
+<h3>配置 CLAUDE.md</h3>
+<div class="card"><p>所有 Session 共享的知识，防止 Session 中反复需要提及。</p></div>
+
+<h3>Skill</h3>
+<div class="card"><p>确定性高，原子化的 SOP。防止自己过于发散。</p></div>
+
+<h3>定制化 MCP 功能</h3>
+<div class="card"><p>从 CKO incident 分析提升的 Case 学到：要提高 Grafana 的多种搜索，需要提供定制化的 MCP Grafana，提供更强的 API 能力。</p></div>
+
+<h3>Memory</h3>
+<div class="card"><p>解决新 Session 的冷启动。</p></div>
+
+<h3>配置好的 Plugin</h3>
+<div class="card"><p>这些 Plugin 其实就是带了很多提示词的 Skill 和 Agent。</p></div>
+
+<h3>Context 管理</h3>
+<div class="card warm">
+  <p>Context 是珍贵资源。简洁且准确的 Context 能大幅提高效率和准确。对于模型可以从代码中自己获取的，不要提供。应该提供从代码中看不到的知识。</p>
+</div>
+
+<h4>优化 Context 的方式</h4>
+<ul>
+  <li><code>/compact</code> 可以压缩 context</li>
+  <li>任务分层：设计完以后，使用 Memory MCP 保存最后结论，下一轮对话中 load 并开始编码</li>
+  <li>新任务应该单独开新 Session</li>
+  <li>Rewind 清理掉中间错误的上下文</li>
+  <li>怎么提供 Context 看起来也很重要——例如以 3 层结构的方式注入 context</li>
+</ul>
+
+<h3>多 Agent 使用</h3>
+<div class="card">
+  <ul>
+    <li>并行化提高性能</li>
+    <li>单 Agent 碰上复杂问题 Context 容易超</li>
+    <li>单 Agent 聚焦单任务不容易导致"头脑爆炸"</li>
+  </ul>
+</div>
+
+<h3>多角色混合使用</h3>
+<div class="card warm">
+  <ul>
+    <li>Claude Code 做编程，Codex 新开 Session Review</li>
+    <li>多线程操作</li>
+    <li>Claude 擅长 Coding，Gemini 擅长文档</li>
+    <li><strong>不要用同一个 Agent Review 自己的工作</strong></li>
+  </ul>
+</div>
+
+<h3>Skills vs. Agent</h3>
+<div class="card">
+  <ul>
+    <li>原子化或确定性的 → 使用 Skills</li>
+    <li>多步骤或目标模糊、需要多反馈的 → 使用 Agent</li>
+  </ul>
+</div>
+
+<h3>合理使用不同模型</h3>
+<div class="card">
+  <ul>
+    <li>Thinking 模型擅长复杂推理问题</li>
+    <li>能不能有一种 Skill，会根据不同的复杂度，让不同的 Agent 使用不同的模型</li>
+  </ul>
+</div>
+
+<h3>提高确定性的方法</h3>
+<div class="card warm">
+  <ul>
+    <li><strong>LLM 集成程序：</strong>数学计算技能不行，尤其是大数字</li>
+    <li><strong>确定性算法：</strong>如果能用确定性算法的时候，可以直接通过 Markdown 来提供一段程序执行。显式指定能降低幻觉</li>
+    <li><strong>Hooks：</strong>CC 中的 Plugin 专门支持 Hooks 来 Harness，由于 Hooks 是通过程序调用的方式，保证 100% 调用</li>
+  </ul>
+</div>
+
+<h3>为模型建立系统工程</h3>
+<div class="card">
+  <p>单一复杂的提示词不稳定，切换模型以后效果可能就变了。</p>
+  <ul>
+    <li>引入 Task Breakdown</li>
+    <li>引入 Plan + 反思</li>
+    <li>引入 Tool</li>
+    <li>引入反馈循环到环境中（如 UT、集成测试 + 错误输出）</li>
+    <li>对立的 Agent 也是一种反馈循环</li>
+  </ul>
+</div>
+
+<hr>
+
+<!-- ============ LONG TASKS ============ -->
+<h2 id="long-tasks">长程任务支架设计</h2>
+
+<h3>长程应用的问题</h3>
+<div class="card">
+  <p>对于更复杂的任务，智能体容易随着时间的推移而偏离轨道。两种常见的故障模式：</p>
+</div>
+
+<h4>1. 上下文焦虑与丢失连贯性</h4>
+<div class="card">
+  <p>随着上下文窗口逐渐填满，模型在执行长时间任务时往往会失去连贯性。一些模型还会表现出"上下文焦虑"——当接近自身认为的上下文极限时，过早结束工作。</p>
+  <p><strong>方案：上下文重置</strong>——清除上下文窗口并启动新 Agent，配合结构化的交接机制（传递前一个 Agent 的状态和后续步骤）。</p>
+  <p>这与压缩不同：压缩会原地概括对话早期部分；重置提供全新状态，但代价是交接工件。重置可以解决上下文焦虑，因为 Agent 可以从头开始。</p>
+</div>
+
+<h4>2. 自我评价</h4>
+<div class="card warm">
+  <p>受到 GAN 的启发。将执行任务的 Agent 与评估任务的 Agent 分开，被证明是解决这一问题的有效方法。</p>
+  <p>一旦有了外部反馈，生成器就有了可以迭代的具体依据。</p>
+  <p>核心是设置对立角色（系统提示词）和信息不对称。</p>
+</div>
+
+<h3>经验</h3>
+<div class="card">
+  <p><strong>Loop Engineering：</strong>想靠一轮完整的提示词达到效果是不现实的。关键是构建长程任务获得良好结果：<strong>提供 AI 能读懂的反馈。</strong></p>
+</div>
+
+<h3>防止错误 propagate</h3>
+<div class="card warm">
+  <ul>
+    <li>错误积累的问题：让整个流程中每个 Task 不能积累</li>
+    <li>Checkable Contracts</li>
+    <li>Blocking Gates</li>
+    <li>Feedback from Failed Checks</li>
+  </ul>
+</div>
+
+<h3>Agent Loop</h3>
+<div class="card">
+  <ul>
+    <li>定制化 MCP Tool：参数校验 + 错误信息 Surface</li>
+    <li>Agent Loop 的自我校验就像人的交互式校验</li>
+    <li>模型胡说八道时，记录 Tool 调用的结果，跟结论交互校验</li>
+    <li>如果不符合，加入这轮质疑的反馈，保证 LLM 纠错</li>
+    <li>系统本身对 AI 的友好性</li>
+  </ul>
+</div>
+
+<h3>Anthropic 解决方案</h3>
+<div class="card">
+  <p>参考：<a href="https://www.anthropic.com/engineering/harness-design-long-running-apps" target="_blank">Harness Design for Long-Running Apps</a></p>
+  <p><strong>核心思路：</strong>与其指望一个模型在单一对话中解决所有问题，不如建立一个结构化的系统，通过 Multi-Agent 的协作来克服 AI 的"遗忘"和"盲目"问题。</p>
+</div>
+
+<h4>三角色模型</h4>
+<div class="card">
+  <p><strong>规划者 (Planner)</strong> — 将模糊用户需求转化为详细 JSON 规范或功能列表。不直接写代码，只负责制定"蓝图"。</p>
+  <p><strong>生成者 (Generator)</strong> — 根据规范进行短距离"冲刺"（Sprints），编写具体代码。</p>
+  <p><strong>评估者 (Evaluator)</strong> — 最关键的角色。使用自动化工具运行生成的应用，根据设计、功能、原创性等标准给出反馈。</p>
+</div>
+
+<h4>多 Agent 协作</h4>
+<div class="card warm">
+  <p><strong>协调核心机制：反馈循环。</strong>协调不是通过"开会"完成的，而是通过生成的制品。</p>
+  <ul>
+    <li><strong>Planner → Generator：</strong>将目标拆解成小的、可执行的 Task Specs</li>
+    <li><strong>Generator → Evaluator：</strong>完成任务后，输出代码并部署到临时环境</li>
+    <li><strong>Evaluator → Planner/Generator：</strong>运行自动化测试，发现报错或不达标，生成 Error Log/Feedback 送回 Planner 修正</li>
+  </ul>
+</div>
+
+<h4>状态管理：共享上下文</h4>
+<div class="card">
+  <p>关键协调工具：共享文件系统/数据库。</p>
+  <ul>
+    <li><strong>隔离性：</strong>每个 Generator 只能看到与其任务相关的代码片段</li>
+    <li><strong>统一视角：</strong>Planner 维护全局 "Source of Truth"，记录哪些功能已完成，哪些待修复</li>
+  </ul>
+</div>
+
+<h4>防止"跑偏"</h4>
+<div class="card">
+  <ul>
+    <li><strong>硬性重置：</strong>Evaluator 连续三次低分 → 强制回滚到上一个稳定 Checkpoint，Planner 重新审视路线图</li>
+    <li><strong>强制多样性：</strong>Generator 总尝试同一种失败方法 → 通过 Prompt 注入强迫它"尝试一种完全不同的架构路径"</li>
+  </ul>
+</div>
+
+<hr>
+
+<!-- ============ LOOP ENGINEERING ============ -->
+<h2 id="loop">Loop Engineering</h2>
+
+<div class="card">
+  <p><strong>Loop Engineering</strong> 是指设计、构建和调优 AI Agent "控制循环 (Control Loop)" 的工程实践。不再追求让 AI 靠一次性 (Single-shot) 给出完美答案，而是给 AI 一个触发条件和一个可验证的目标，让它在一个"执行 → 观测 → 反思 → 调整"的密闭循环中直到彻底完成任务。</p>
+  <p><strong>长程任务的延伸。</strong>都在讨论怎么做长程任务的方法学。</p>
+</div>
+
+<h3>循环要素</h3>
+<div class="card">
+  <p><strong>意图定义 (Intent)</strong> — 明确定义任务终点。不再告诉 AI"请帮我写一个登录页面"，而是"在 /login 路由下实现一个表单，通过现有的登录集成测试"。</p>
+  <p><strong>上下文摄取 (Context Fetching)</strong> — 动态注入最精准的上下文（代码、错误日志、配置、用户历史偏好等）</p>
+  <p><strong>行动执行 (Action)</strong> — AI 利用工具实操：修改文件、运行命令行、调用 API 或生成新的子计划</p>
+  <p><strong>结果观测 (Observation)</strong> — 捕捉行动后的反馈（编译错误、测试堆栈、Lint 报告、用户反馈）。这是闭环能否转起来的关键</p>
+  <p><strong>状态调整与反思 (Adjustment)</strong> — AI 根据观测结果更新内部状态和下一步计划，重新进入循环</p>
+</div>
+
+<h3>反馈设计的关键性</h3>
+<div class="card warm">
+  <ul>
+    <li>SDUI 这种完全自制的 LIB，由于训练时无法学习，在没有额外动作时几乎无法做好</li>
+    <li>模板写错了，没有提供好的错误反馈，导致 AI 很难观察结果</li>
+    <li>Maven 或编译器在错误时给出了很多细节，这样 AI 很容易学习</li>
+    <li><strong>如果要做得好，要专门设计反馈机制</strong></li>
+  </ul>
+</div>
+
+<hr>
+
+<div class="takeaway">
+  <div class="takeaway-title">💡 总结</div>
+  <p>Harness Engineering 的核心是把概率性的 LLM 包装在确定性的工程框架中。通过 Context 管理、多 Agent 协作、反馈循环设计、Loop Engineering 等手段，让 LLM 的不可靠性被系统性地约束和弥补。</p>
+</div>
+
+<div style="text-align:center;color:#6a8f7a;font-size:0.9em;margin-top:20px;">
+  Harness Engineering 经验 · 整理笔记
+</div>
+
+</body>
+</html>

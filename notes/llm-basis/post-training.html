@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>后训练 Post-Training 笔记</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 28px 20px;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  h1 { font-size: 1.35em; margin: 18px 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+  h2 { font-size: 1.2em; margin: 16px 0 8px; color: #1f4a2e; }
+  h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+
+  p { margin: 6px 0; }
+  ul, ol { padding-left: 20px; margin: 4px 0; }
+  li { margin: 2px 0; }
+
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card.warm {
+    background: #fdf6ec;
+    border-color: #e6d5b8;
+  }
+
+  .highlight {
+    background: #e8f5ec;
+    border-left: 4px solid #2a8f4f;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #1a4a2a;
+  }
+  .highlight.accent {
+    border-left-color: #d97706;
+    background: #fef7e6;
+    color: #7c5200;
+  }
+
+  .key { color: #d97706; font-weight: 600; }
+  strong { color: #1a4a2a; }
+  em { color: #3d6a4f; }
+
+  code {
+    font-size: 0.88em;
+    background: #e2efe5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4a2a;
+  }
+
+  hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+
+  .takeaway {
+    background: #e8f5ec;
+    border: 1px solid #2a8f4f;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 0.95em;
+  }
+  .takeaway-title {
+    font-weight: 700;
+    color: #1a4a2a;
+    margin-bottom: 4px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    margin: 10px 0;
+  }
+  th, td {
+    border: 1px solid #c3dbcc;
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #d4e8db;
+    color: #1a4a2a;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: #f5faf6; }
+
+  .tag {
+    display: inline-block;
+    background: #d4e8db;
+    color: #1a4a2a;
+    font-size: 0.85em;
+    padding: 0 8px;
+    border-radius: 10px;
+    margin: 2px 2px;
+  }
+
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .toc ol { margin: 0; padding-left: 20px; }
+  .toc li { margin: 3px 0; }
+  .toc a { color: #1f4a2e; text-decoration: none; font-weight: 500; }
+  .toc a:hover { text-decoration: underline; color: #2a8f4f; }
+
+  @media (max-width: 600px) {
+    body { padding: 16px 12px; }
+    ul, ol { padding-left: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>后训练 Post-Training 笔记</h1>
+
+<div class="toc">
+  <ol>
+    <li><a href="#definition">后训练的定义</a></li>
+    <li><a href="#sft">SFT</a></li>
+    <li><a href="#rlhf">RLHF</a></li>
+    <li><a href="#vs-agent">Post Training vs. Agent Engineer</a></li>
+  </ol>
+</div>
+
+<div class="card">
+  <p>如果说预训练是让模型在大海里"读书破万卷"，那么后训练就是"社会化规范训练"——把一个满腹经纶但满嘴胡话的"野生"模型，驯化成一个听话、有用、安全的"AI 助手"。</p>
+  <p>SFT 和 RLHF 是大模型后训练阶段最核心的两个方法。</p>
+</div>
+
+<hr>
+
+<!-- ============ SFT ============ -->
+<h2 id="sft">SFT（监督微调）</h2>
+
+<div class="card">
+  <p>用高质量、人工编写的"提示词—完美答案"对来训练模型。</p>
+  <pre>{"prompt": "请把这段话翻译成英文：...", "response": "..."}</pre>
+</div>
+
+<ul>
+  <li><strong>核心作用：</strong>教模型学会"格式"与"听懂指令"</li>
+  <li>SFT 强行扭转模型的行为模式，教它看到问号就要给出答案，看到"翻译"就要执行翻译</li>
+  <li>把它从一个"续写软件"变成一个"对话助手"</li>
+</ul>
+
+<hr>
+
+<!-- ============ RLHF ============ -->
+<h2 id="rlhf">RLHF（基于人类反馈的强化学习）</h2>
+
+<div class="card warm">
+  <p>SFT 结束后模型已会听懂人话，但仍可能狡辩、敷衍或给出有害回答。RLHF 引入人类偏好，通过强化学习来规范模型。</p>
+</div>
+
+<h3>训练奖励模型（Reward Model）</h3>
+<ul>
+  <li>让人类给模型的多个回答打分（回答A礼貌且准确 5 分，回答B态度恶劣 1 分）</li>
+  <li>让一个单独的模型学会"人类喜欢什么样的回答"</li>
+</ul>
+
+<h3>PPO/DPO 强化学习</h3>
+<p>让大模型自己去回答问题，如果它的回答符合人类偏好，奖励模型就给它加分，否则扣分。</p>
+
+<hr>
+
+<!-- ============ POST TRAINING VS AGENT ENGINEER ============ -->
+<h2 id="vs-agent">Post Training vs. Agent Engineer</h2>
+
+<div class="card">
+  <h3>后训练工程师</h3>
+  <ul>
+    <li><strong>核心目标：</strong>让模型"懂代码"、"会思考"、"听指令"</li>
+    <li>工作是在模型出厂前，通过数据喂养来改变它的"神经元"</li>
+    <li>构造思维链数据、代码质量对齐、错误纠正能力、偏好学习 (DPO)</li>
+    <li><strong>交付物：</strong>一个 .pth 或 .safetensors 模型权重文件</li>
+  </ul>
+</div>
+
+<div class="card warm">
+  <h3>Agent Engineer</h3>
+  <ul>
+    <li><strong>核心目标：</strong>让模型"能运行"、"会查文档"、"能自主闭环"</li>
+    <li>把那个"大脑"放进一个真实的开发环境中</li>
+    <li>环境隔离、工具编排、长程规划与状态管理、记忆检索 (RAG)</li>
+    <li><strong>交付物：</strong>一个复杂的软件系统，能打开 VS Code，自己跑测试，遇到报错会翻文档，最后提交 PR</li>
+  </ul>
+</div>
+
+<h3>对比总结</h3>
+<table>
+  <tr>
+    <th>维度</th>
+    <th>后训练工程师 (Model Side)</th>
+    <th>Agent 工程师 (System Side)</th>
+  </tr>
+  <tr>
+    <td><strong>核心目标</strong></td>
+    <td>提高模型基础能力 (如 Function Calling)</td>
+    <td>提高任务完成率 (Success Rate)</td>
+  </tr>
+  <tr>
+    <td><strong>主要工具</strong></td>
+    <td>PyTorch, DeepSpeed, Llama-Factory</td>
+    <td>LangGraph, Python, Vector DB</td>
+  </tr>
+  <tr>
+    <td><strong>关注点</strong></td>
+    <td>损失函数 (Loss)、困惑度 (PPL)</td>
+    <td>逻辑闭环、延迟、API 稳定性</td>
+  </tr>
+  <tr>
+    <td><strong>交付物</strong></td>
+    <td>一个 Checkpoint (模型权重)</td>
+    <td>一个可运行的业务系统 (Service)</td>
+  </tr>
+</table>
+
+<hr>
+
+<div class="takeaway">
+  <div class="takeaway-title">💡 总结</div>
+  <p>SFT 教模型"听懂指令"，RLHF 教模型"符合人类偏好"。后训练工程师优化模型的"内在能力"，Agent 工程师构建模型的"外部系统"。</p>
+</div>
+
+<div style="text-align:center;color:#6a8f7a;font-size:0.9em;margin-top:20px;">
+  后训练 Post-Training · 整理笔记
+</div>
+
+</body>
+</html>

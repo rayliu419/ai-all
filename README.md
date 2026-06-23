@@ -8,4 +8,5 @@ https://github.com/yasasbanukaofficial/claude-code
 
 # 3. MIT 怎么使用AI 课程
 https://mit-mi.github.io/how2ai-course/spring2025/
-   
+
+# 4. https://github.com/Lordog/dive-into-llms

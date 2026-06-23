@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习笔记索引</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 24px 60px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  header h1 {
+    font-size: 1.6em;
+    color: #1a3a24;
+    margin-bottom: 6px;
+  }
+  header p {
+    color: #5a7a6a;
+    font-size: 0.9em;
+  }
+  header .count {
+    margin-top: 4px;
+    font-size: 0.8em;
+    color: #8bbaa0;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #c3dbcc;
+    margin: 28px 0;
+  }
+
+  /* Chapter section */
+  .chapter {
+    margin-bottom: 28px;
+  }
+  .chapter-title {
+    font-size: 1.15em;
+    font-weight: 600;
+    color: #1a3a24;
+    padding: 8px 14px;
+    background: #e0efe4;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chapter-title .count {
+    font-size: 0.7em;
+    font-weight: 500;
+    background: #c3dbcc;
+    color: #1a3a24;
+    padding: 1px 10px;
+    border-radius: 10px;
+  }
+
+  /* File list */
+  .file-list {
+    list-style: none;
+    padding: 0;
+  }
+  .file-list li {
+    margin: 3px 0;
+  }
+  .file-list a {
+    display: block;
+    padding: 6px 16px;
+    color: #1f4a2e;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.95em;
+    transition: background 0.12s;
+  }
+  .file-list a:hover {
+    background: #e0efe4;
+    color: #1a3a24;
+  }
+  .file-list a .num {
+    display: inline-block;
+    width: 22px;
+    color: #8bbaa0;
+    font-size: 0.8em;
+  }
+
+  footer {
+    text-align: center;
+    color: #8bbaa0;
+    font-size: 0.78em;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #e0efe4;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📚 学习笔记索引</h1>
+  <p>AI · Agent · LLM 技术学习笔记</p>
+  <div class="count">共 15 篇笔记，5 个章节</div>
+</header>
+
+<!-- ============ CODING AGENT ============ -->
+<div class="chapter">
+  <div class="chapter-title">
+    🖥️ Coding Agent
+    <span class="count">4 篇</span>
+  </div>
+  <ul class="file-list">
+    <li><a href="coding-agent/coding-agent-infra.html"><span class="num">1.</span> Coding Agent 底层基础设施</a></li>
+    <li><a href="coding-agent/memory-compare.html"><span class="num">2.</span> Agent Memory 方案对比</a></li>
+    <li><a href="coding-agent/reference.html"><span class="num">3.</span> Claude Code 内核学习参考</a></li>
+    <li><a href="coding-agent/use-and-debug.html"><span class="num">4.</span> Claude Code 使用与调试</a></li>
+  </ul>
+</div>
+
+<!-- ============ GENERAL AGENT ============ -->
+<div class="chapter">
+  <div class="chapter-title">
+    🤖 General Agent
+    <span class="count">5 篇</span>
+  </div>
+  <ul class="file-list">
+    <li><a href="general-agent/agent-compare.html"><span class="num">1.</span> Agent 类型对比</a></li>
+    <li><a href="general-agent/agent-develop.html"><span class="num">2.</span> Agent 开发环境与框架</a></li>
+    <li><a href="general-agent/mcp.html"><span class="num">3.</span> MCP Tool 开发笔记</a></li>
+    <li><a href="general-agent/rag.html"><span class="num">4.</span> RAG 检索增强生成</a></li>
+    <li><a href="general-agent/use-case.html"><span class="num">5.</span> Agent 应用场景实践</a></li>
+  </ul>
+</div>
+
+<!-- ============ LLM BASIS ============ -->
+<div class="chapter">
+  <div class="chapter-title">
+    🧠 LLM 基础
+    <span class="count">3 篇</span>
+  </div>
+  <ul class="file-list">
+    <li><a href="llm-basis/how2ai-course.html"><span class="num">1.</span> MIT-MAS-S60 How2AI 课程笔记</a></li>
+    <li><a href="llm-basis/llm-serving.html"><span class="num">2.</span> LLM Serving 架构笔记</a></li>
+    <li><a href="llm-basis/post-training.html"><span class="num">3.</span> 后训练 Post-Training 笔记</a></li>
+  </ul>
+</div>
+
+<!-- ============ MILESTONE PAPER ============ -->
+<div class="chapter">
+  <div class="chapter-title">
+    📄 里程碑论文
+    <span class="count">1 篇</span>
+  </div>
+  <ul class="file-list">
+    <li><a href="milestone-paper/paper.html"><span class="num">1.</span> 里程碑论文阅读笔记</a></li>
+  </ul>
+</div>
+
+<!-- ============ USE LLM ============ -->
+<div class="chapter">
+  <div class="chapter-title">
+    🔧 使用 LLM 实践
+    <span class="count">2 篇</span>
+  </div>
+  <ul class="file-list">
+    <li><a href="use-llm/agent-engineer.html"><span class="num">1.</span> Agent Engineer 经验总结</a></li>
+    <li><a href="use-llm/harness.html"><span class="num">2.</span> Harness Engineering 经验</a></li>
+  </ul>
+</div>
+
+<footer>
+  整理笔记 · 持续更新中
+</footer>
+
+</body>
+</html>

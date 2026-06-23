@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coding Agent 底层基础设施</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 28px 20px;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  h1 { font-size: 1.35em; margin: 18px 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+  h2 { font-size: 1.2em; margin: 16px 0 8px; color: #1f4a2e; }
+  h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+
+  p { margin: 6px 0; }
+  ul, ol { padding-left: 20px; margin: 4px 0; }
+  li { margin: 2px 0; }
+
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card.warm {
+    background: #fdf6ec;
+    border-color: #e6d5b8;
+  }
+
+  .highlight {
+    background: #e8f5ec;
+    border-left: 4px solid #2a8f4f;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #1a4a2a;
+  }
+  .highlight.accent {
+    border-left-color: #d97706;
+    background: #fef7e6;
+    color: #7c5200;
+  }
+
+  .key { color: #d97706; font-weight: 600; }
+  strong { color: #1a4a2a; }
+  em { color: #3d6a4f; }
+
+  code {
+    font-size: 0.88em;
+    background: #e2efe5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4a2a;
+  }
+  pre {
+    font-size: 0.8em;
+    background: #e2efe5;
+    border: 1px solid #c3dbcc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #c3dbcc;
+    margin: 18px 0;
+  }
+
+  blockquote {
+    border-left: 3px solid #c3dbcc;
+    padding: 4px 12px;
+    margin: 8px 0;
+    color: #4a6b55;
+    background: #edf6f0;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .takeaway {
+    background: #e8f5ec;
+    border: 1px solid #2a8f4f;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 0.95em;
+  }
+  .takeaway-title {
+    font-weight: 700;
+    color: #1a4a2a;
+    margin-bottom: 4px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    margin: 10px 0;
+  }
+  th, td {
+    border: 1px solid #c3dbcc;
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #d4e8db;
+    color: #1a4a2a;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: #f5faf6; }
+
+  .tag {
+    display: inline-block;
+    background: #d4e8db;
+    color: #1a4a2a;
+    font-size: 0.85em;
+    padding: 0 8px;
+    border-radius: 10px;
+    margin: 2px 2px;
+  }
+
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .toc ol { margin: 0; padding-left: 20px; }
+  .toc li { margin: 3px 0; }
+  .toc a { color: #1f4a2e; text-decoration: none; font-weight: 500; }
+  .toc a:hover { text-decoration: underline; color: #2a8f4f; }
+
+  @media (max-width: 600px) {
+    body { padding: 16px 12px; }
+    ul, ol { padding-left: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Coding Agent 底层基础设施</h1>
+
+<div class="toc">
+  <ol>
+    <li><a href="#git-worktree">Git Worktree — 核心隔离原语</a></li>
+    <li><a href="#beyond-worktree">Worktree 覆盖不到的隔离维度</a></li>
+    <li><a href="#multi-layer">多层隔离堆叠方案</a></li>
+  </ol>
+</div>
+
+<hr>
+
+<!-- ============ GIT WORKTREE ============ -->
+<h2 id="git-worktree">Git Worktree — 核心隔离原语</h2>
+
+<div class="card">
+  <p>在现在的 Coding Agent AI 智能体中，Git Worktree 几乎成为了核心的底层基础设施。</p>
+</div>
+
+<h3>为什么是"大依赖"</h3>
+<ul>
+  <li><strong>并行 Agent 的核心问题：</strong>多个 Agent 同时操作同一仓库时，共享状态污染、交叉干扰、错误分支提交等结构性问题不可避免</li>
+  <li><strong>Worktree 提供的隔离：</strong>独立工作目录、独立 HEAD、独立 index/staging、独立 cwd</li>
+  <li><strong>对比 Git Clone：</strong>共享 .git 对象存储，近乎无额外磁盘开销，合并是本地分支 merge</li>
+  <li><strong>行业共识：</strong>Clawt、Mothership、Agent Workspace Fabric、GitHub Copilot App、ait-vcs 均以 Worktree 作为并行 Agent 的标准隔离方案</li>
+</ul>
+
+<h3>CMU CAID 论文的形式化描述</h3>
+<div class="card">
+  <ol>
+    <li>先构建依赖图 (dependency graph)</li>
+    <li>只有所有依赖满足的单元才能委派给 Agent</li>
+    <li>强依赖/循环依赖打包给同一个 Agent</li>
+    <li>每个 Agent 在独立 Worktree 中工作</li>
+    <li>集成用 git merge，冲突由冲突方 Agent 解决</li>
+  </ol>
+</div>
+
+<hr>
+
+<!-- ============ BEYOND WORKTREE ============ -->
+<h2 id="beyond-worktree">Worktree 覆盖不到的隔离维度</h2>
+
+<div class="card warm">
+  <p>Worktree 解决了约 <strong>80%</strong> 的冲突（文件修改冲突），但以下几个维度是 Worktree 无法覆盖的：</p>
+</div>
+
+<table>
+  <tr><th>隔离维度</th><th>问题描述</th></tr>
+  <tr><td><strong>运行时版本</strong></td><td>共享系统只有一份 node/python</td></tr>
+  <tr><td><strong>系统级依赖</strong></td><td>apt/brew 安装互斥</td></tr>
+  <tr><td><strong>端口冲突</strong></td><td>多个 Agent 都 bind port 3000</td></tr>
+  <tr><td><strong>守护进程/服务</strong></td><td>如 PostgreSQL 只能跑一份</td></tr>
+  <tr><td><strong>GPU 资源</strong></td><td>显存不够分</td></tr>
+  <tr><td><strong>缓存污染</strong></td><td>共享的 node_modules / ~/.cache</td></tr>
+  <tr><td><strong>跨仓库依赖</strong></td><td>Worktree 只能管一个 repo</td></tr>
+</table>
+
+<hr>
+
+<!-- ============ MULTI-LAYER ============ -->
+<h2 id="multi-layer">多层隔离堆叠方案</h2>
+
+<div class="card">
+  <p>当冲突溢出到环境/网络/资源层时，需要向上堆叠 Docker 等隔离层。</p>
+</div>
+
+<pre>
+         ┌─────────────────────────────┐
+         │   Git Worktree (目录隔离)     │  ← 基础层
+         ├─────────────────────────────┤
+         │   Docker Compose (环境隔离)   │  ← 系统层
+         ├─────────────────────────────┤
+         │   独立 port mapping / 反向代理 │  ← 网络层
+         ├─────────────────────────────┤
+         │   独立 cache 目录 (CARGO_     │
+         │   TARGET_DIR, npm prefix)   │  ← 缓存层
+         ├─────────────────────────────┤
+         │   Nix Flake (可复现依赖树)    │  ← 依赖层
+         └─────────────────────────────┘
+</pre>
+
+<div class="card">
+  <p><strong>Docker 容器化：</strong>每个 Agent 一个 Docker Compose stack，解决运行时版本、系统包、端口、守护进程隔离</p>
+  <p><strong>Nix/Flake：</strong>声明式依赖树，每个 Agent 可声明完全不同版本的 toolchain</p>
+  <p><strong>远程沙箱</strong>（E2B、Codespaces、StackBlitz）：云端独立 VM，物理级隔离</p>
+  <p><strong>构建缓存重定向：</strong>CARGO_TARGET_DIR、npm --prefix、PIP_CACHE_DIR 等环境变量</p>
+</div>
+
+<hr>
+
+<div class="takeaway">
+  <div class="takeaway-title">💡 总结</div>
+  <p>Worktree 是最小可行隔离原语——用最低成本解决最频繁的冲突（文件修改冲突，约 80% 场景）。当冲突溢出到环境/网络/资源层时，需要向上堆叠 Docker 等隔离层。</p>
+</div>
+
+<div style="text-align:center;color:#6a8f7a;font-size:0.9em;margin-top:20px;">
+  Coding Agent 底层基础设施 · 整理笔记
+</div>
+
+</body>
+</html>
