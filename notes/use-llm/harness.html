@@ -125,6 +125,7 @@
   <ol>
     <li><a href="#core">核心思想</a></li>
     <li><a href="#practices">实践方法</a></li>
+    <li><a href="#single-vs-multi">单 Agent vs. 多 Agent</a></li>
     <li><a href="#long-tasks">长程任务支架设计</a></li>
     <li><a href="#loop">Loop Engineering</a></li>
   </ol>
@@ -236,6 +237,144 @@
     <li>引入 Tool</li>
     <li>引入反馈循环到环境中（如 UT、集成测试 + 错误输出）</li>
     <li>对立的 Agent 也是一种反馈循环</li>
+  </ul>
+</div>
+
+<!-- ============ SINGLE VS MULTI AGENT ============ -->
+<h2 id="single-vs-multi">单 Agent vs. 多 Agent</h2>
+
+<p>看看 Claude Code 是怎么用多 Agent 的。</p>
+
+<h3>核心维度对比看板</h3>
+
+<div class="card" style="overflow-x:auto; padding:0;">
+<table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+  <thead>
+    <tr style="background:#d4e8db;">
+      <th style="padding:8px 10px; text-align:left; border-bottom:2px solid #2a8f4f;">对比维度</th>
+      <th style="padding:8px 10px; text-align:left; border-bottom:2px solid #2a8f4f;">单 Agent 架构</th>
+      <th style="padding:8px 10px; text-align:left; border-bottom:2px solid #2a8f4f;">多 Agent 架构</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><strong>核心定位</strong></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">全能型通用实体，独立全责处理</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">专业化分工团队，协同处理复杂长链路</td></tr>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><strong>上下文管理</strong></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">单一上下文窗口，极易受无关信息污染，易触顶</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">按角色拆分/压缩上下文，保持各节点信息纯净</td></tr>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><strong>工具调用</strong></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">面对多而杂的工具易过载，产生能力稀释与误调用</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">工具依职责隔离，通过路由精准分发，支持 Tool Search</td></tr>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><strong>执行效率</strong></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">线性串行执行，单次调用延迟低，但广度受限</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">天然支持并行化，牺牲单次延迟换取高吞吐与全面性</td></tr>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><strong>提示词工程</strong></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">提示词冗长，复杂任务下极易产生提示词冲突</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">提示词短小精悍，任务边界清晰，职业划分明确</td></tr>
+    <tr><td style="padding:6px 10px;"><strong>架构重心</strong></td><td style="padding:6px 10px;">依赖单个大模型的微调或强推理能力</td><td style="padding:6px 10px;">依赖流程编排、路由决策与组织架构的确定性</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>多 Agent 超越单 Agent 的核心场景</h3>
+
+<div class="card">
+  <p>多 Agent 架构的本质是用 <strong>"组织架构的确定性"</strong> 来对抗单个大模型在面对超长上下文、超多工具时的"随机性与无序性"。</p>
+</div>
+
+<h4>1. 规避无关上下文污染与海量内容筛选</h4>
+<div class="card warm">
+  <p><strong>痛点（单 Agent）：</strong>子任务（如长文检索、深度解析）产生的大量中间内容与主线任务无关，全部塞进单一上下文会造成信息污染（Noise Pollution），导致模型后续决策"分心"或产生幻觉。</p>
+  <p><strong>优势（多 Agent）：</strong>子任务由独立的 Sub-Agent 执行，产生的海量内容在内部进行筛选、摘要和压缩后，仅将高价值的"结论"或"关键因子"交付给主线 Agent，确保主线上下文的高纯净度。</p>
+</div>
+
+<h4>2. 超大信息空间的全面覆盖</h4>
+<div class="card">
+  <p>多 Agent 架构的核心目的通常不是为了"快"，而是为了<strong>"全"</strong>。</p>
+  <p>当任务天然可拆分（如同时对 10 家竞品公司的财报进行深度扫描），单体 Agent 受限于时序执行和注意力机制，很难做到全覆盖；多 Agent 架构通过<strong>并行架构</strong>横向展开，能同时探索多个信息空间分支，实现超高覆盖度。</p>
+</div>
+
+<h4>3. 专业化分工，消除"能力稀释"与"提示词冲突"</h4>
+<div class="card warm">
+  <p><strong>打破工具低效魔咒：</strong>当 AI 需要使用多个差异性极大的工具时，单 Agent 会因为 Tool Definitions 过多而导致<strong>工具过载</strong>，新增工具不仅不提效，反而降低整体成功率。</p>
+  <p><strong>清晰的边界：</strong>多 Agent 将任务边界划清，每个 Agent 职业划分明确，只背负极少数专属工具。通过模糊性极低的<strong>路由决策</strong>进行任务分发，完美解决提示词冲突，实现专业人做专业事。</p>
+</div>
+
+<h4>何时该从单 Agent 拆分为多 Agent？</h4>
+<ul>
+  <li><strong>上下文触顶：</strong>业务链路拉长，Prompt + 历史对话 + 工具返回原始数据导致 Token 数量逼近模型上限。必须通过多 Agent 进行<strong>上下文拆分</strong>与<strong>上下文压缩</strong>。</li>
+  <li><strong>工具过载：</strong>集成外部 API/插件数量过多（通常超过 10-15 个），模型开始频繁误调用、参数推断错误。需要引入 Tool Search 或将工具按领域拆分给不同子 Agent 托管。</li>
+  <li><strong>天然可并行：</strong>业务流中存在大量互不依赖、可同时进行的探索性子任务。引入并行架构（如 Map-Reduce 模式），利用空间换深度。</li>
+</ul>
+
+<div class="card warm">
+  <p><strong>⚠ 缺点：</strong>多 Agent 架构会带来模型间通信开销增加、整体延迟变长、路由节点可能模糊等新挑战。如果任务边界无法清晰划分，或路由规则容易产生歧义，强行拆分反而因"管理内耗"降低系统整体效率。</p>
+</div>
+
+<h3>多 Agent 本质区别（从 LLM 认知机制看）</h3>
+
+<p>从 LLM 的角度看，每个 Agent 确实有全局知识，但设计多 Agent 不是为了拥有不同的知识，而是为了拥有不同的<strong>"视角"和"能力"</strong>。</p>
+
+<h4>1. 专注力与角色分工</h4>
+<div class="card">
+  <p>类比人类团队：经理、工程师和设计师拥有相同的全局知识（公司的产品、文化、目标），但职责不同。LLM 也是如此——让它同时扮演所有角色会导致思考混乱和效率低下。</p>
+  <ul>
+    <li><strong>单 Agent：</strong>像"全能选手"，需要自己思考"我应该扮演哪个角色？我接下来该做什么？"——这个过程低效且容易"精神分裂"。</li>
+    <li><strong>多 Agent：</strong>每个 Agent 被赋予明确的角色（通过系统提示词）：
+      <ul>
+        <li>"你是 SRE 专家" → LLM 专注于系统指标和稳定性的思考</li>
+        <li>"你是 Python 开发者" → LLM 专注于代码逻辑和错误调试</li>
+      </ul>
+      通过角色分工，每个 Agent 能更精准地运用其知识，避免不必要的认知负担。
+    </li>
+  </ul>
+</div>
+
+<h4>2. 可靠性与分步验证</h4>
+<div class="card warm">
+  <p>复杂任务，尤其在高风险生产环境中，一步到位的解决方案不可靠。</p>
+  <ul>
+    <li><strong>单 Agent：</strong>容易出现"幻觉"或逻辑错误。如果生成不正确方案，无人验证，任务直接失败。</li>
+    <li><strong>多 Agent：</strong>引入验证和审查机制：
+      <ol>
+        <li>Agent A 提出一个部署方案</li>
+        <li>Agent B（安全审查官）审查该方案，指出潜在风险</li>
+        <li>Agent C（经理）接收并协调两者意见，得出最终安全方案</li>
+      </ol>
+      这种<strong>内部辩论和多方验证</strong>模式，极大提高了输出质量和可靠性。
+    </li>
+  </ul>
+</div>
+
+<h4>3. 可控性与流程编排</h4>
+<div class="card">
+  <ul>
+    <li><strong>单 Agent：</strong>整个思考过程在一个黑盒里——只知输入和输出，很难调试中间环节。</li>
+    <li><strong>多 Agent：</strong>整个流程透明——可清楚看到 Agent A 输出什么指标分析，Agent B 基于这些分析查询了哪些日志，最终决策 Agent 如何综合信息得出结论。这种透明度便于调试、优化和审计。</li>
+  </ul>
+</div>
+
+<h3>单 Agent 的优势</h3>
+
+<p>多 Agent 并非万能，在某些场景下单 Agent 反而更优。</p>
+
+<h4>1. 速度与效率</h4>
+<div class="card">
+  <ul>
+    <li><strong>零通信开销：</strong>不需要等待其他 Agent 回复或协调流程</li>
+    <li><strong>单次调用：</strong>整个任务只需要一次 LLM 推理和工具调用（或一个 ReAct 循环）</li>
+    <li><strong>结果：</strong>决策链更短，响应时间更快，在低延迟场景中至关重要（如快速交易决策、即时客服响应）</li>
+  </ul>
+  <p><strong>举例：</strong>简单健康检查只需要查询两个指标并立即做出 Pass/Fail 决定——用多 Agent 反而浪费通信和等待时间。</p>
+</div>
+
+<h4>2. 知识融合与交叉领域洞察</h4>
+<div class="card warm">
+  <p>虽然多 Agent 强调分工，但有时不分工的融合思考才能带来最佳洞察。</p>
+  <ul>
+    <li><strong>复合知识运用：</strong>当任务需要同时、快速地权衡和融合多种知识时，单 Agent 更高效。例如一个 Agent 看到指标异常（SRE 知识）同时联想到代码库中的特定 Bug（Dev 知识），直接给出解决方案。</li>
+    <li><strong>避免信息丢失：</strong>信息不需要在 Agent 间传递，减少了在交接过程中（Prompt 限制、Summary 丢失）造成信息失真的风险。</li>
+  </ul>
+  <p><strong>举例：</strong>如果 Agent 发现"延迟指标略微上升，同时日志中出现少量但全新的警告信息"，单 Agent 可能直接将两者关联为"新特性引入的次要性能瓶颈"；多 Agent 则需要复杂的流程来确保两个 Agent 的信息能被决策 Agent 正确融合。</p>
+</div>
+
+<h4>3. 简单任务与低开销</h4>
+<div class="card">
+  <p>对于目标明确、工具调用次数有限的简单任务，单 Agent 更经济简单。</p>
+  <ul>
+    <li>易于开发和调试，整个逻辑在一个地方，Prompt 和工具调用清晰，维护简单</li>
+    <li>成本低——只需为一次推理付费。多 Agent 系统可能需要 3-5 次甚至更多 LLM 调用，成本成倍增加</li>
   </ul>
 </div>
 

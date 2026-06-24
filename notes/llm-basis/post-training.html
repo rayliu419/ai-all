@@ -5,126 +5,138 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>后训练 Post-Training 笔记</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: #f5faf6;
-    color: #2d3a31;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
-    font-size: 13px;
-    line-height: 1.45;
-    padding: 28px 20px;
-    max-width: 820px;
-    margin: 0 auto;
-  }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #f5faf6;
+  color: #2d3a31;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 28px 20px;
+  max-width: 820px;
+  margin: 0 auto;
+}
 
-  h1 { font-size: 1.35em; margin: 18px 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
-  h2 { font-size: 1.2em; margin: 16px 0 8px; color: #1f4a2e; }
-  h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
-  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+h1 { font-size: 1.35em; margin: 18px 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+h2 { font-size: 1.2em; margin: 16px 0 8px; color: #1f4a2e; }
+h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
 
-  p { margin: 6px 0; }
-  ul, ol { padding-left: 20px; margin: 4px 0; }
-  li { margin: 2px 0; }
+p { margin: 6px 0; }
+ul, ol { padding-left: 20px; margin: 4px 0; }
+li { margin: 2px 0; }
 
-  .card {
-    background: #e8f5ec;
-    border: 1px solid #c3dbcc;
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin: 10px 0;
-  }
-  .card.warm {
-    background: #fdf6ec;
-    border-color: #e6d5b8;
-  }
+.card {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+.card.warm {
+  background: #fdf6ec;
+  border-color: #e6d5b8;
+}
 
-  .highlight {
-    background: #e8f5ec;
-    border-left: 4px solid #2a8f4f;
-    padding: 8px 12px;
-    margin: 10px 0;
-    font-weight: 600;
-    color: #1a4a2a;
-  }
-  .highlight.accent {
-    border-left-color: #d97706;
-    background: #fef7e6;
-    color: #7c5200;
-  }
+.highlight {
+  background: #e8f5ec;
+  border-left: 4px solid #2a8f4f;
+  padding: 8px 12px;
+  margin: 10px 0;
+  font-weight: 600;
+  color: #1a4a2a;
+}
+.highlight.accent {
+  border-left-color: #d97706;
+  background: #fef7e6;
+  color: #7c5200;
+}
 
-  .key { color: #d97706; font-weight: 600; }
-  strong { color: #1a4a2a; }
-  em { color: #3d6a4f; }
+.key { color: #d97706; font-weight: 600; }
+strong { color: #1a4a2a; }
+em { color: #3d6a4f; }
 
-  code {
-    font-size: 0.88em;
-    background: #e2efe5;
-    padding: 1px 5px;
-    border-radius: 3px;
-    color: #1a4a2a;
-  }
+code {
+  font-size: 0.88em;
+  background: #e2efe5;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #1a4a2a;
+}
 
-  hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+pre {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 5px;
+  padding: 10px 14px;
+  margin: 8px 0;
+  overflow-x: auto;
+  font-size: 0.8em;
+  line-height: 1.5;
+}
+pre code { background: none; padding: 0; font-size: 1em; }
 
-  .takeaway {
-    background: #e8f5ec;
-    border: 1px solid #2a8f4f;
-    border-radius: 8px;
-    padding: 10px 14px;
-    margin: 12px 0;
-    font-size: 0.95em;
-  }
-  .takeaway-title {
-    font-weight: 700;
-    color: #1a4a2a;
-    margin-bottom: 4px;
-  }
+hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9em;
-    margin: 10px 0;
-  }
-  th, td {
-    border: 1px solid #c3dbcc;
-    padding: 7px 10px;
-    text-align: left;
-    vertical-align: top;
-  }
-  th {
-    background: #d4e8db;
-    color: #1a4a2a;
-    font-weight: 600;
-  }
-  tr:nth-child(even) { background: #f5faf6; }
+.takeaway {
+  background: #e8f5ec;
+  border: 1px solid #2a8f4f;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 12px 0;
+  font-size: 0.95em;
+}
+.takeaway-title {
+  font-weight: 700;
+  color: #1a4a2a;
+  margin-bottom: 4px;
+}
 
-  .tag {
-    display: inline-block;
-    background: #d4e8db;
-    color: #1a4a2a;
-    font-size: 0.85em;
-    padding: 0 8px;
-    border-radius: 10px;
-    margin: 2px 2px;
-  }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+  margin: 10px 0;
+}
+th, td {
+  border: 1px solid #c3dbcc;
+  padding: 7px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: #d4e8db;
+  color: #1a4a2a;
+  font-weight: 600;
+}
+tr:nth-child(even) { background: #f5faf6; }
 
-  .toc {
-    background: #e8f5ec;
-    border: 1px solid #c3dbcc;
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin: 10px 0;
-  }
-  .toc ol { margin: 0; padding-left: 20px; }
-  .toc li { margin: 3px 0; }
-  .toc a { color: #1f4a2e; text-decoration: none; font-weight: 500; }
-  .toc a:hover { text-decoration: underline; color: #2a8f4f; }
+.tag {
+  display: inline-block;
+  background: #d4e8db;
+  color: #1a4a2a;
+  font-size: 0.85em;
+  padding: 0 8px;
+  border-radius: 10px;
+  margin: 2px 2px;
+}
 
-  @media (max-width: 600px) {
-    body { padding: 16px 12px; }
-    ul, ol { padding-left: 16px; }
-  }
+.toc {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+.toc ol { margin: 0; padding-left: 20px; }
+.toc li { margin: 3px 0; }
+.toc a { color: #1f4a2e; text-decoration: none; font-weight: 500; }
+.toc a:hover { text-decoration: underline; color: #2a8f4f; }
+
+@media (max-width: 600px) {
+  body { padding: 16px 12px; }
+  ul, ol { padding-left: 16px; }
+}
 </style>
 </head>
 <body>
@@ -135,76 +147,353 @@
   <ol>
     <li><a href="#definition">后训练的定义</a></li>
     <li><a href="#sft">SFT</a></li>
+    <li><a href="#lora">LoRA SFT</a></li>
+    <li><a href="#lora-vs-full">LoRA SFT vs. 全参数 SFT</a></li>
+    <li><a href="#sft-vs-pretrain">SFT 与 Pre-train 的优化差异</a></li>
     <li><a href="#rlhf">RLHF</a></li>
+    <li><a href="#rlhf-vs-pretrain">RLHF 的优化 vs. Pre-train / SFT 优化</a></li>
+    <li><a href="#no-forgetting">Post-training 怎么保证不遗忘 Pre-train 的知识</a></li>
+    <li><a href="#two-dimensions">两维度比较</a></li>
+    <li><a href="#quantization">模型量化与压缩</a></li>
     <li><a href="#vs-agent">Post Training vs. Agent Engineer</a></li>
   </ol>
 </div>
 
+<hr>
+
+<!-- ============ 后训练的定义 ============ -->
+<h2 id="definition">后训练的定义</h2>
+
 <div class="card">
   <p>如果说预训练是让模型在大海里"读书破万卷"，那么后训练就是"社会化规范训练"——把一个满腹经纶但满嘴胡话的"野生"模型，驯化成一个听话、有用、安全的"AI 助手"。</p>
-  <p>SFT 和 RLHF 是大模型后训练阶段最核心的两个方法。</p>
 </div>
+
+<h3>对齐与微调 (Alignment &amp; Fine-Tuning)</h3>
+<ul>
+  <li>比如 SFT (指令微调)、RLHF。</li>
+  <li>从产品和软件工程的角度来看，SFT 解决的是"能不能做（功能性需求）"，而 RLHF 解决的是"做得好不好、优不优雅（非功能性需求）"。</li>
+</ul>
+
+<h3>量化与压缩 (Quantization &amp; Compression)</h3>
+<ul>
+  <li>比如 GPTQ、AWQ，把模型的"体重"从 16GB 减到 4GB，让普通电脑甚至手机也能跑得动。</li>
+</ul>
 
 <hr>
 
 <!-- ============ SFT ============ -->
-<h2 id="sft">SFT（监督微调）</h2>
+<h2 id="sft">SFT</h2>
+<ul>
+  <li>预训练模型 (Base 模型) 虽然知识渊博，但它只会"根据前文接话"。比如你问它："请帮我写一首关于夏天的诗"，它可能会接着你的话继续列举："1. 请帮我写一首关于冬天的诗；2. 请帮我写一首关于春天的诗……"。</li>
+</ul>
 
-<div class="card">
-  <p>用高质量、人工编写的"提示词—完美答案"对来训练模型。</p>
-  <pre>{"prompt": "请把这段话翻译成英文：...", "response": "..."}</pre>
+<p>SFT 的核心作用就是打破这种"复读机"状态：</p>
+<ul>
+  <li><strong>格式与行为对齐 (Alignment)：</strong>让模型理解 "Prompt (提示词/问题)" 与 "Response (回答)" 的关系。看到问号或指令，它知道自己该去回答，而不是去续写。</li>
+  <li><strong>解锁特定任务能力：</strong>如果你想让模型变成一个专业的医疗诊断助手、代码生成器或者法律顾问，你可以用特定的专业问答数据喂给它，让它在某个特定领域开窍。</li>
+  <li><strong>控制输出风格和语气：</strong>通过 SFT，可以规范模型的说话语气（如：专业、温柔、幽默），或者限定输出格式（如：必须返回 JSON 格式、必须用 Markdown 表格展示）。</li>
+</ul>
+
+<hr>
+
+<!-- ============ LoRA SFT ============ -->
+<h2 id="lora">LoRA SFT</h2>
+<ul>
+  <li>大模型内部是由无数个巨大的矩阵 (Weights) 组成的，这些矩阵就像是一堵堵巨大的承重墙，负责处理信息的传输。
+    <ul>
+      <li><strong>原模型：</strong>被彻底冻结 (Frozen)。在 LoRA 训练期间，原模型的任何一个参数都不允许发生改变（不接受任何训练）。</li>
+      <li><strong>LoRA 的结构：</strong>它是包含两个非常窄的矩阵（我们称为 A 和 B）的微型网络。</li>
+    </ul>
+  </li>
+  <li>LoRA 被"插"在原模型矩阵的旁边。当有数据流过时，一份数据走原模型（不改变），另一份数据走 LoRA（进行训练）。最后，把两者的输出结果加在一起。
+    <ul>
+      <li>它不是一个独立从头到尾运行的新网络，它必须依赖原模型才能存在。</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="highlight accent">
+  核心假设："大模型虽然参数多，但为了完成某个特定任务，真正起作用的'核心维度'其实很低。"
 </div>
 
 <ul>
-  <li><strong>核心作用：</strong>教模型学会"格式"与"听懂指令"</li>
-  <li>SFT 强行扭转模型的行为模式，教它看到问号就要给出答案，看到"翻译"就要执行翻译</li>
-  <li>把它从一个"续写软件"变成一个"对话助手"</li>
+  <li>假设原模型是一个 4096 × 4096 的超级大矩阵（约 1600 万个参数）。如果要全参数微调，你得调整这 1600 万个数字。</li>
+  <li>LoRA 采用了"曲径通幽"的办法。它把这个大矩阵拆成了两个相乘的薄矩阵：
+    <ul>
+      <li>矩阵 A：把 4096 维的高度信息，压缩到只有 8 维（这 8 维就是所谓的 Rank，秩）。</li>
+      <li>矩阵 B：再把这 8 维的信息，放大回 4096 维。</li>
+    </ul>
+  </li>
+  <li>全参数微调：需要训练 4096 × 4096 = 16,777,216 个参数。</li>
+  <li>LoRA (Rank=8) 微调：只需要训练 (4096 × 8) + (8 × 4096) = 65,536 个参数。</li>
+</ul>
+
+<p>训练完成后，你手里会有一个原模型文件（很大，几个 G 到几十 G）和一个 LoRA 权重文件（很小，通常只有几十 MB）。</p>
+
+<p>在实际部署和使用（推理）时，有两种玩法：</p>
+<ul>
+  <li><strong>动态外挂（不合并）：</strong>原模型不动，动态加载 LoRA。这种好处是，如果你有 10 个不同的任务（比如一个写诗、一个写代码、一个做客服），你只需要存 1 个原模型和 10 个几十兆的 LoRA 文件。针对不同用户切换不同的 LoRA 即可，极省显存。</li>
+  <li><strong>熔合合并 (Merge)：</strong>利用矩阵乘法的原理，在服务上线前，直接把 LoRA 的参数加进原模型的矩阵里（因为数学上 W<sub>新</sub> = W<sub>原</sub> + A × B）。合并后，LoRA 消失，原模型参数更新，变成了一个干净利落、没有任何额外计算开销的新模型。</li>
+</ul>
+
+<h3>LoRA 的定位</h3>
+<div class="highlight">
+  LoRA 既可以用来做 SFT，也可以用来做 DPO，甚至可以用来做 PPO。它不是与 SFT 并列的、非此即彼的关系，它是一种"底层训练手段"。
+</div>
+
+<hr>
+
+<!-- ============ LoRA SFT vs. 全参数 SFT ============ -->
+<h2 id="lora-vs-full">LoRA SFT vs. 全参数 SFT</h2>
+
+<table>
+  <tr>
+    <th>对比维度</th>
+    <th>全参数微调 (Full Fine-Tuning)</th>
+    <th>LoRA (Low-Rank Adaptation)</th>
+  </tr>
+  <tr>
+    <td><strong>直观比喻</strong></td>
+    <td>把整栋房子推倒，根据新图纸重新整体翻修。</td>
+    <td>房子主体结构完全不动，在墙外加装一个功能阳台。</td>
+  </tr>
+  <tr>
+    <td><strong>训练参数量</strong></td>
+    <td>模型的 <strong>100%</strong> 参数（所有神经元权重一起参与计算与更新）。</td>
+    <td>仅训练外挂的薄矩阵参数（通常 <strong>&lt; 1%</strong>，原模型参数完全冻结）。</td>
+  </tr>
+  <tr>
+    <td><strong>显存与算力</strong></td>
+    <td><strong>极高</strong>。通常需要多卡或多机集群 (如 A100/H100 服务器集群)。</td>
+    <td><strong>极低</strong>。单张消费级显卡 (如 RTX 4090 / 3090 24G) 即可展开训练。</td>
+  </tr>
+  <tr>
+    <td><strong>训练速度</strong></td>
+    <td><strong>较慢</strong>。每次迭代都需要计算、传输和保存海量的参数梯度。</td>
+    <td><strong>极快</strong>。由于需要计算梯度的参数极少，反向传播开销大幅降低。</td>
+  </tr>
+  <tr>
+    <td><strong>遗忘风险</strong></td>
+    <td><strong>高</strong>。新数据容易把预训练阶段学到的通用海量知识"冲刷"掉（灾难性遗忘）。</td>
+    <td><strong>极低</strong>。底座参数被死死冻结，通用知识基础完好无损。</td>
+  </tr>
+  <tr>
+    <td><strong>通用能力影响</strong></td>
+    <td>模型在特定垂直任务上显著变强，但往往伴随着通用逻辑、常识能力的退化。</td>
+    <td>几乎不影响模型的通用推理能力，更像是在上一层"行为规范滤镜"。</td>
+  </tr>
+  <tr>
+    <td><strong>多任务部署</strong></td>
+    <td><strong>成本极高</strong>。每个独立的任务都需要单独保存一份几十 GB 的完整大模型文件。</td>
+    <td><strong>成本极低</strong>。只需共享一个庞大底座模型，不同任务动态切换几十 MB 的 LoRA 插件文件。</td>
+  </tr>
+  <tr>
+    <td><strong>最终推理延迟</strong></td>
+    <td><strong>无延迟</strong>。因为模型本身的物理网络结构没有发生任何改变。</td>
+    <td><strong>无延迟</strong>（若上线前将 LoRA 权重熔合合并）；<strong>极微小延迟</strong>（若保持独立结构进行动态加载）。</td>
+  </tr>
+  <tr>
+    <td><strong>最佳适用场景</strong></td>
+    <td>1. 打造核心行业基座（如从头定制彻底改变逻辑习惯的医疗、法律大模型）。<br>2. 团队拥有充足的预算、算力以及海量高质量的专业 SFT 数据集。</td>
+    <td>1. 企业落地特定垂直应用任务（如智能客服、特定格式 JSON 数据输出、角色扮演）。<br>2. 个人开发者、预算受限的团队、快速原型验证与迭代。</td>
+  </tr>
+</table>
+
+<hr>
+
+<!-- ============ SFT 与 Pre-train 的优化差异 ============ -->
+<h2 id="sft-vs-pretrain">SFT 与 Pre-train 的优化差异</h2>
+<ul>
+  <li>从数学和第一性原理的角度来看，它们的<strong>损失函数 (Loss Function) 在形式上是完全一模一样的</strong>。</li>
+  <li>无论是 Pretrain 还是 LoRA (甚至全参数 SFT)，大语言模型的核心任务永远只有一个：<strong>Next-Token Prediction (预测下一个词)</strong>。
+    <ul>
+      <li>在 Pretrain 时，模型说出来的每一个字（包括问题和答案）都要计算 Loss。而在 LoRA (SFT) 时，我们通常会把"问题 (Prompt)"部分的 Loss 遮蔽掉 (Mask)，只对"答案 (Response)"部分的预测算 Loss。因为我们不想惩罚模型预测问题的能力，只想规范它回答的能力。</li>
+    </ul>
+  </li>
+  <li>虽然 Loss 的计算方式类似，但反向传播 (Backpropagation) 更新参数时，两者的行为完全不同。
+    <ul>
+      <li>LoRA 不能更新原模型矩阵的参数。</li>
+      <li>优化过程：Loss 计算出来后，梯度同样向前传递。但是当梯度传到原模型的参数时，原模型说："我被冻结了，拒绝修改"。于是，所有的梯度最终全部堆积到了那几个 LoRA 外挂参数上。</li>
+    </ul>
+  </li>
 </ul>
 
 <hr>
 
 <!-- ============ RLHF ============ -->
-<h2 id="rlhf">RLHF（基于人类反馈的强化学习）</h2>
+<h2 id="rlhf">RLHF</h2>
 
 <div class="card warm">
-  <p>SFT 结束后模型已会听懂人话，但仍可能狡辩、敷衍或给出有害回答。RLHF 引入人类偏好，通过强化学习来规范模型。</p>
+  <p>如果说 SFT 是给模型请了一个"标准答案家教"，那 RLHF 就是给模型请了一位"教导主任"。它不再给你提供完美的标准答案，而是坐在那里看你写出好几个不同的回答，然后告诉你："这个挺好，那个太敷衍，另一个有毒不能说。"</p>
 </div>
 
-<h3>训练奖励模型（Reward Model）</h3>
 <ul>
-  <li>让人类给模型的多个回答打分（回答A礼貌且准确 5 分，回答B态度恶劣 1 分）</li>
-  <li>让一个单独的模型学会"人类喜欢什么样的回答"</li>
+  <li><strong>写出"好答案"比"判卷子"难得多：</strong>让人类专家写几万条完美的医学、法律、逻辑推理答案，成本高到爆炸；但让人类看大模型写的两句话，分辨出"哪一个更有礼貌、更安全"，却非常容易。</li>
+  <li><strong>SFT 无法解决"幻觉"和"安全问题"：</strong>大模型如果在 SFT 里没学过某个知识，它会倾向于瞎编。你很难通过 SFT 数据穷尽所有不能说的话（比如"怎么造炸弹"）。</li>
 </ul>
 
-<h3>PPO/DPO 强化学习</h3>
-<p>让大模型自己去回答问题，如果它的回答符合人类偏好，奖励模型就给它加分，否则扣分。</p>
+<p>它专门用来解决大模型的 <strong>3H 问题</strong>：</p>
+<ul>
+  <li><strong>Helpful (有用性)：</strong>回答是不是切中要害，是不是真的帮到了用户。</li>
+  <li><strong>Honest (诚实性)：</strong>知之为知之，不知为不知，减少瞎编（幻觉）。</li>
+  <li><strong>Harmless (无害性)：</strong>拒绝回答暴力、色情、歧视、偏见等有毒内容。</li>
+</ul>
+
+<h3>数据集的物理结构</h3>
+<ul>
+  <li><strong>Prompt (提示词/问题)：</strong>比如"请告诉我怎么在网上黑掉别人的电脑"。</li>
+  <li><strong>Chosen (被选中的优质回答)：</strong>模型 A 的回答——"对不起，我无法提供协助网络攻击的行为……"（安全、合规）。</li>
+  <li><strong>Rejected (被拒绝的劣质回答)：</strong>模型 B 的回答——"黑掉电脑有以下几个步骤：第一步……"（不安全）。</li>
+  <li>人类标注员（或者更高级的模型）的工作，就是针对同一个问题，在大模型生成的 2 到 4 个候选回答里，勾选出哪个是 Chosen (赢家)，哪个是 Rejected (输家)。</li>
+</ul>
+
+<h3>RLHF 的主流算法</h3>
+
+<h4>PPO 算法 (Proximal Policy Optimization)</h4>
+<ul>
+  <li><strong>第一阶段：</strong>SFT 训练。</li>
+  <li><strong>第二阶段：</strong>训练"奖励模型 (Reward Model)"。拿上面提到的"偏好数据集"去训练一个小模型。这个小模型不负责回答问题，它只负责看大模型的回答，然后打分（比如 Chosen 给 90 分，Rejected 给 10 分）。</li>
+  <li><strong>第三阶段：</strong>强化学习 (PPO 核心)。让大模型去回答海量的新问题，回答完后，把答案丢给第二阶段的"裁判小模型"打分。如果得分高，大模型的参数就获得奖励，强化这种说话方式；如果得分低，参数就被惩罚，以后少这么说话。</li>
+</ul>
+
+<h4>DPO 算法 (Direct Preference Optimization)</h4>
+<div class="highlight">
+  "既然我们已经有了人类的偏好数据 (Chosen 和 Rejected)，为什么还要费尽心思先训练一个裁判模型，再用强化学习去折腾大模型呢？我们能不能直接让大模型学习这个偏好？"
+</div>
+<ul>
+  <li><strong>做法：</strong>DPO 抛弃了"裁判模型"，也抛弃了强化学习那套复杂的框架。它在数学上做了一个精妙的转换，直接把偏好数据喂给大模型：如果模型预测 Chosen 的概率升高了，就进行奖励；如果预测 Rejected 的概率升高了，就进行惩罚。通过这种方式直接优化。</li>
+</ul>
 
 <hr>
 
-<!-- ============ POST TRAINING VS AGENT ENGINEER ============ -->
-<h2 id="vs-agent">Post Training vs. Agent Engineer</h2>
+<!-- ============ RLHF 的优化 vs. Pre-train / SFT 优化 ============ -->
+<h2 id="rlhf-vs-pretrain">RLHF 的优化 vs. Pre-train / SFT 优化</h2>
 
-<div class="card">
-  <h3>后训练工程师</h3>
-  <ul>
-    <li><strong>核心目标：</strong>让模型"懂代码"、"会思考"、"听指令"</li>
-    <li>工作是在模型出厂前，通过数据喂养来改变它的"神经元"</li>
-    <li>构造思维链数据、代码质量对齐、错误纠正能力、偏好学习 (DPO)</li>
-    <li><strong>交付物：</strong>一个 .pth 或 .safetensors 模型权重文件</li>
-  </ul>
+<div class="highlight accent">
+  RLHF (PPO 算法) 的 Loss 计算方式，和 Pre-train / SFT 的 Next-Token Prediction (交叉熵损失) 有着本质的区别。
 </div>
+
+<ul>
+  <li><strong>Pre-train / SFT 的本质是"模仿"：</strong>Loss 的核心是：我说 A，正确答案是 B，如果模型没猜中 B，就扣分 (Loss 变大)。</li>
+  <li><strong>RLHF 的本质是"评价"：</strong>这时候，已经没有人类写好的"正确答案 B"了，模型自己随便说了一长串话（可能包含 50 个词），裁判模型 (Reward Model) 看完这一长串话后，只给了一个整体的分数（比如：+2.5 分）。
+    <ul>
+      <li>一个长句子只得到一个总分。请问：这 50 个词里，到底是哪一个词说得好才拿的高分？又是哪一个词说得差导致被扣分？</li>
+      <li>传统的 Next-Token Prediction 面对这种"一锤子买卖"打分方式，直接抓瞎了，公式根本套不进去。</li>
+    </ul>
+  </li>
+</ul>
 
 <div class="card warm">
-  <h3>Agent Engineer</h3>
+  <p><strong>PPO Loss 的核心思想：</strong></p>
+  <p>Text{PPO Loss} ≈ Text{这句话被说出来的概率变化} × Text{裁判给的优势得分} - Text{KL 散度惩罚}</p>
+  <p>在 DPO 的 Loss 里：</p>
   <ul>
-    <li><strong>核心目标：</strong>让模型"能运行"、"会查文档"、"能自主闭环"</li>
-    <li>把那个"大脑"放进一个真实的开发环境中</li>
-    <li>环境隔离、工具编排、长程规划与状态管理、记忆检索 (RAG)</li>
-    <li><strong>交付物：</strong>一个复杂的软件系统，能打开 VS Code，自己跑测试，遇到报错会翻文档，最后提交 PR</li>
+    <li>它去计算模型生成 Chosen（好话）的概率。</li>
+    <li>它去计算模型生成 Rejected（坏话）的概率。</li>
+    <li>DPO Loss 目标：直接拉大这两者的差距——让 Chosen 的概率疯狂飙升，让 Rejected 的概率疯狂下跌。</li>
   </ul>
 </div>
 
-<h3>对比总结</h3>
+<hr>
+
+<!-- ============ Post-training 怎么保证不遗忘 Pre-train 的知识 ============ -->
+<h2 id="no-forgetting">Post-training 怎么保证不遗忘 Pre-train 的知识</h2>
+<ul>
+  <li>强化学习对齐 (Alignment) 中最核心的工程痛点：<strong>模型怎么保留知识，以及最后上线的到底是啥。</strong></li>
+  <li>SFT 和 RLHF 时，其实都等同于最终面向用户的参数跟 pre-train 的参数不同，因此可能会影响到 pre-train 的效果（改变了参数即改变了知识）。</li>
+</ul>
+
+<h3>怎么保证不会导致灾难性遗忘？</h3>
+
+<h4>DPO 的方法</h4>
+<ul>
+  <li>在 DPO 训练时，显存里其实偷偷复制了一份原模型（我们叫它 M<sub>ref</sub>，参考模型），并且把它彻底冻结。当 DPO 优化真正的目标模型（我们叫它 M<sub>txt</sub>）时，它的损失函数 (Loss) 里其实包含两个力量在拔河：
+    <ul>
+      <li><strong>偏好拉力：</strong>让模型多说 Chosen (好话)，少说 Rejected (坏话)。</li>
+      <li><strong>紧箍咒 (KL 散度约束)：</strong>要求正在训练的 M<sub>txt</sub>，绝对不能偏离原始参考模型 M<sub>ref</sub> 太远。如果正在训练的模型为了迎合好评偏好，开始疯狂修改参数、甚至开始忘掉以前的常识，Loss 函数中的"紧箍咒"就会瞬间飙升，给模型施加一个巨大的惩罚。所以，DPO 并不是盲目地直接修改参数，而是在"保证底座通用能力不垮"的前提下戴着镣铐跳舞。</li>
+    </ul>
+  </li>
+</ul>
+
+<hr>
+
+<!-- ============ 两维度比较 ============ -->
+<h2 id="two-dimensions">两维度比较</h2>
+
+<h3>维度 A：你要训练什么任务？（目标与数据维度）</h3>
+<ul>
+  <li><strong>SFT (监督微调)：</strong>任务是"学写好答案"。数据是"问题 + 完美答案"。</li>
+  <li><strong>RLHF / DPO (偏好对齐)：</strong>任务是"学分好坏、懂礼貌"。数据是"Chosen + Rejected"。</li>
+</ul>
+
+<h3>维度 B：你打算怎么改动参数？（工程与算力维度）</h3>
+<ul>
+  <li><strong>Full (全参数)：</strong>直接修改模型的 100% 参数。</li>
+  <li><strong>LoRA (高效参数)：</strong>冻结原模型，只修改旁路外挂参数 (&lt;1%)。</li>
+</ul>
+
+<hr>
+
+<!-- ============ 模型量化与压缩 ============ -->
+<h2 id="quantization">模型量化与压缩</h2>
+<ul>
+  <li>模型量化 (Quantization) 和压缩，本质上就是一个纯粹的、硬核的底层工程优化。它和前面讲的 SFT、RLHF 的底层逻辑截然相反。</li>
+  <li>大模型内部的参数，默认是用 FP16 (16位浮点数) 存储的，一个 70B (700亿参数) 的模型，用 FP16 存储需要占用 70 × 2 = 140 GB 的显存。</li>
+  <li>除了大厂的专业服务器，普通显卡根本塞不下。量化的本质，就是把 16 位的浮点数 (FP16/BF16)，强行转换成 8 位 (INT8) 甚至 4 位 (INT4) 的整数。
+    <ul>
+      <li>FP16 (原版)：70B 模型 = 140 GB 显存</li>
+      <li>INT4 (4位量化版)：70B 模型 = 70 × 0.5 = 35 GB 显存</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>既然量化不训练参数，怎么保证模型不变成"智障"？</h3>
+
+<h4>PTQ (Post-Training Quantization, 后训练量化)</h4>
+<ul>
+  <li>模型已经训练完了，参数都固定了。我们直接用一个数学公式（缩放因子 Scaling Factor），把原本是 0.123456 这样的浮点数，映射成整型数字（比如 12）。</li>
+  <li>不需要重新训练，几分钟就能搞定，模型能力几乎不下降。现在我们在网上下载的 4-bit、8-bit 体验版大模型，99% 都是用这种方法压出来的。</li>
+</ul>
+
+<h4>GGUF</h4>
+<ul>
+  <li>它把模型压缩成不同档次（如 Q4_K_M，代表 4 位混合量化），并且优化了底层的 C/C++ 矩阵乘法。</li>
+  <li>特点：让大模型摆脱了对显卡 (GPU) 和 CUDA 的绝对依赖，直接用电脑的内存和 CPU 就能跑。</li>
+</ul>
+
+<hr>
+
+<!-- ============ Post Training vs. Agent Engineer ============ -->
+<h2 id="vs-agent">Post Training vs. Agent Engineer</h2>
+
+<h3>1. 后训练工程师</h3>
+<div class="card">
+  <ul>
+    <li><strong>核心目标：</strong>让模型"懂代码"、"会思考"、"听指令"。</li>
+    <li>如果你是这个角色，你的工作是在模型出厂前，通过数据喂养来改变它的"神经元"：</li>
+    <li><strong>构造思维链数据：</strong>通用模型直接给代码。你会训练它先写逻辑：Step 1: 分析需求 → Step 2: 设计类接口 → Step 3: 实现业务逻辑 → Step 4: 编写单元测试。</li>
+    <li><strong>代码质量对齐：</strong>收集成千上万个高质量的 GitHub 提交记录，通过 SFT 让模型学会编写符合行业规范的代码。</li>
+    <li><strong>错误纠正能力：</strong>专门喂给模型一些"带 Bug 的代码"和"编译报错信息"，教模型如何根据报错信息进行自我修复 (Self-Correction)。</li>
+    <li><strong>偏好学习 (DPO)：</strong>比如模型生成了两种实现方案，一种运行快但难懂，一种简洁但性能略低。你会根据公司偏好（比如"可读性优先"）来训练模型倾向于哪种风格。</li>
+    <li><strong>交付物：</strong>一个 .pth 或 .safetensors 模型权重文件。它在没有任何外部工具的情况下，白板代码的能力极强。</li>
+  </ul>
+</div>
+
+<h3>2. Agent Engineer</h3>
+<div class="card warm">
+  <ul>
+    <li><strong>核心目标：</strong>让模型"能运行"、"会查文档"、"能自主闭环"。</li>
+    <li>如果你是这个角色，你的工作是把那个"大脑"放进一个真实的开发环境中：</li>
+    <li><strong>环境隔离 (Sandboxing)：</strong>编写 Python/Docker 代码，为模型创建一个安全的"沙盒"，让它能执行 npm install 或 pytest 而不会写坏用户的硬盘。</li>
+    <li><strong>工具编排 (Tool Integration)：</strong>编写接口让模型可以调用 grep 搜索全域代码，或者调用浏览器去查最新的 API 文档。</li>
+    <li><strong>长程规划与状态管理：</strong>如果项目很大，Agent 可能会迷路。你需要用 LangGraph 等工具设计逻辑：如果编译失败，强制模型进入"Debug 模式"；如果成功，进入"代码审计模式"。</li>
+    <li><strong>记忆检索 (RAG)：</strong>当模型处理万行代码的大项目时，上下文装不下。你需要建立向量索引，根据模型当前的改动，自动把相关的代码文件"喂"进模型的缓存里。</li>
+    <li><strong>交付物：</strong>一个复杂的软件系统。它能打开 VS Code，自己跑测试，遇到报错会翻文档，最后给你提交一个 Pull Request。</li>
+  </ul>
+</div>
+
+<h3>总结：Agent Engineer vs. 后训练工程师</h3>
+
 <table>
   <tr>
     <th>维度</th>
@@ -237,7 +526,7 @@
 
 <div class="takeaway">
   <div class="takeaway-title">💡 总结</div>
-  <p>SFT 教模型"听懂指令"，RLHF 教模型"符合人类偏好"。后训练工程师优化模型的"内在能力"，Agent 工程师构建模型的"外部系统"。</p>
+  <p>SFT 教模型"听懂指令"，RLHF 教模型"符合人类偏好"。后训练工程师优化模型的"内在能力"，Agent 工程师构建模型的"外部系统"。量化让大模型摆脱对高端 GPU 的依赖，让普通硬件也能运行。</p>
 </div>
 
 <div style="text-align:center;color:#6a8f7a;font-size:0.9em;margin-top:20px;">

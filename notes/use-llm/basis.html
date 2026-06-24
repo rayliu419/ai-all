@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM 使用基础</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #f5faf6;
+  color: #2d3a31;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 28px 20px;
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+h1 { font-size: 1.35em; margin: 18px 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+h2 { font-size: 1.2em; margin: 16px 0 8px; color: #1f4a2e; }
+h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+
+p { margin: 6px 0; }
+ul, ol { padding-left: 20px; margin: 4px 0; }
+li { margin: 2px 0; }
+
+.card {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+.card.warm {
+  background: #fdf6ec;
+  border-color: #e6d5b8;
+}
+
+strong { color: #1a4a2a; }
+em { color: #3d6a4f; }
+
+code {
+  font-size: 0.88em;
+  background: #e2efe5;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #1a4a2a;
+}
+
+hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+
+.toc {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+.toc ol { margin: 0; padding-left: 20px; }
+.toc li { margin: 3px 0; }
+.toc a { color: #1f4a2e; text-decoration: none; font-weight: 500; }
+.toc a:hover { text-decoration: underline; color: #2a8f4f; }
+
+a { color: #1f4a2e; text-decoration: none; }
+a:hover { text-decoration: underline; color: #2a8f4f; }
+
+blockquote {
+  border-left: 3px solid #2d8f5a;
+  background: #e8f5ec;
+  padding: 6px 12px;
+  margin: 8px 0;
+  border-radius: 0 4px 4px 0;
+  color: #1a4a2e;
+  font-size: 0.95em;
+}
+
+@media (max-width: 600px) {
+  body { padding: 16px 12px; }
+  ul, ol { padding-left: 16px; }
+}
+</style>
+</head>
+<body>
+
+<h1>LLM 使用基础</h1>
+
+<div class="toc">
+  <ol>
+    <li><a href="#mcp">MCP</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#rag">RAG</a></li>
+    <li><a href="#tools">Tools</a></li>
+    <li><a href="#deep-research">Deep Research</a></li>
+    <li><a href="#prompt">Prompt</a></li>
+    <li><a href="#media">图片和语音处理</a></li>
+    <li><a href="#advanced-voice">高级语音模式</a></li>
+  </ol>
+</div>
+
+<hr>
+
+<!-- ============ MCP ============ -->
+<h2 id="mcp">MCP</h2>
+<ul>
+  <li>让 LLM 加入更多的数据源，改变 LLM 的预测 Token。</li>
+</ul>
+
+<h3>MCP 实现</h3>
+<ul>
+  <li>每个 MCP 有多个 tools，其实都是编程实现的。</li>
+  <li>类似为一个服务写 API endpoint，只是这个 API endpoint 是给 LLM 使用的。</li>
+  <li><a href="https://github.com/modelcontextprotocol/servers/blob/main/src/memory/index.ts" target="_blank" rel="noopener">参考实现：MCP Memory Server</a></li>
+</ul>
+
+<h3>引用 MCP 的 Tools</h3>
+<ul>
+  <li>在提示词或者 skills 中，用这样的方式引用 MCP 的 Tool：<code>mcp__{mcp_sever_name}_{tool_name}</code>。</li>
+</ul>
+
+<hr>
+
+<!-- ============ Skills ============ -->
+<h2 id="skills">Skills</h2>
+
+<h3>1. 定义</h3>
+<ul>
+  <li>Skills are folders containing instructions, scripts, and resources。</li>
+  <li><strong>SKILL.md</strong>：规定了 Skill 的名称和描述，这是模型识别并决定是否调用该技能的唯一凭据。</li>
+  <li><strong>scripts</strong>：可选组件，包含 Python 或 Bash 等脚本，赋予了在沙箱环境中执行确定性操作的能力，例如复杂的数学计算、数据转换或特定的文件处理逻辑。对于确定性相关的，尤其数学计算，最好用程序来协助。</li>
+  <li><strong>references</strong>：可选组件，包含供模型随时查阅的文档、API 规范或领域专业手册。这部分内容只有在模型认为需要时才会按需加载，极大地节省了初始上下文空间。</li>
+  <li><strong>assets</strong>：可选组件，如公司品牌指南、特定的模板文件、图标或样式表，确保模型生成的输出（如文档或 PPT）符合特定的视觉和规范要求。</li>
+</ul>
+
+<h3>2. 解决的三大问题</h3>
+
+<h4>重复提示</h4>
+<ul>
+  <li>如果希望始终遵循特定的代码风格或品牌调性，必须在每一个新对话的开始处粘贴数千字的 System Prompt——这种模式不仅增加了用户的认知负担，也极易因为提示词的微小差异导致模型输出的波动。</li>
+</ul>
+
+<h4>"渐进式披露"架构</h4>
+<p>三层信息加载机制平衡模型的智能水平与 Token 消耗成本。</p>
+<ul>
+  <li><strong>元数据加载</strong>：在会话启动时，仅加载所有已安装技能的名称和描述。技能索引让模型知道自己"会做什么"而不需要知道"怎么做"。</li>
+  <li><strong>指令加载</strong>：检测到用户需求与某个技能匹配时，它才会读取 SKILL.md 全文。节省上下文。</li>
+  <li><strong>资源深入</strong>：在执行过程中，如果模型需要具体的 API 或脚本，进一步访问文件夹中的辅助文件。</li>
+</ul>
+
+<hr>
+
+<!-- ============ RAG ============ -->
+<h2 id="rag">RAG</h2>
+<ul>
+  <li>Retrieval-Augmented Generation。RAG = 外部知识库 + 大语言模型。</li>
+  <li><strong>RAG 是目前让大模型进入企业生产、解决"落地难"问题的最主流方案。</strong></li>
+</ul>
+
+<h3>检索（Retrieval）</h3>
+<ul>
+  <li>当你问问题时，系统先去你的私有文档或数据库中搜索相关的资料。</li>
+</ul>
+
+<h3>生成（Generation）</h3>
+<ul>
+  <li>系统把搜到的资料和你的问题一起喂给大模型，让模型参考这些资料来回答。相当于改变了输入 Token。</li>
+</ul>
+
+<h3>为什么需要 RAG？</h3>
+<ul>
+  <li><strong>解决"幻觉"问题：</strong>模型有时会一本正经地编造事实。RAG 要求模型"看书说话"，回答必须基于检索到的证据，大大降低了造谣概率。</li>
+  <li><strong>解决时效性问题：</strong>大模型的知识停留在预训练结束时间。如果你问它昨天的科技新闻，它不知道。通过 RAG，你只需把最新的新闻放入检索库，模型就能立刻掌握最新动态，无需重新训练。</li>
+  <li><strong>保护数据隐私与私有化知识：</strong>企业的内部文档、财务报表、个人笔记是不可能发给 OpenAI 去训练模型的。通过 RAG，这些敏感数据留在你的本地服务器上，模型只在回答那一刻临时"阅读"一下，既安全又专业。</li>
+</ul>
+
+<hr>
+
+<!-- ============ Tools ============ -->
+<h2 id="tools">Tools</h2>
+<ul>
+  <li>最新知识要用搜索 tool。
+    <ul>
+      <li>pretraining 是基于历史数据训练。</li>
+      <li>base model 是这个时间点之前的整体模糊记忆。</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>搜索结合原理</h3>
+<ul>
+  <li>搜索以后拿到返回，填充到上下文窗口，然后继续生成 token。</li>
+  <li>不再使用原来的 token 做 sampling 预测。</li>
+  <li>显式指定使用可以降低幻觉。</li>
+</ul>
+<ul>
+  <li>生成各种图表，概念图，关系等。</li>
+</ul>
+
+<hr>
+
+<!-- ============ Deep Research ============ -->
+<h2 id="deep-research">Deep Research</h2>
+<ul>
+  <li>thinking + search tool</li>
+  <li>只能作为 draft，还是可能有幻觉。</li>
+  <li>使用 LLM 帮助读书，论文。
+    <ul>
+      <li>在读某个章节时，最好把原文贴过去，因为现在 LLM 只有模糊的记忆，可能效果不好。</li>
+    </ul>
+  </li>
+</ul>
+
+<hr>
+
+<!-- ============ Prompt ============ -->
+<h2 id="prompt">Prompt</h2>
+
+<h3>PerFECT 原则</h3>
+<ul>
+  <li><strong>P</strong>ersona</li>
+  <li><strong>E</strong>xamples</li>
+  <li><strong>F</strong>ormat</li>
+  <li><strong>E</strong>xtra</li>
+  <li><strong>C</strong>ontext</li>
+  <li><strong>T</strong>ask</li>
+</ul>
+
+<h3>其他技巧</h3>
+<ul>
+  <li>zero / few shot prompt</li>
+  <li>tree of thoughts
+    <ul>
+      <li>有三个工程师，需要对于某个设计有想法，他们需要考虑并讨论。</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>Q & A Strategy</h3>
+<ul>
+  <li>windsurf 一般全部做决策，这些决策的假设可能有错误。</li>
+  <li>可以说如果有觉得不清楚的，可以问我。</li>
+</ul>
+
+<hr>
+
+<!-- ============ 图片和语音处理 ============ -->
+<h2 id="media">图片和语音处理</h2>
+<ul>
+  <li>一般都是先转录，转成文本。</li>
+</ul>
+
+<hr>
+
+<!-- ============ 高级语音模式 ============ -->
+<h2 id="advanced-voice">高级语音模式</h2>
+<ul>
+  <li>中间不再转化成 text token，直接使用语音 token。</li>
+  <li>能够具有比转换方式独特的能力。</li>
+</ul>
+
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何构建一个 Coding Agent</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #f5faf6;
+  color: #2d3a31;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 24px 16px;
+  max-width: 820px;
+  margin: 0 auto;
+}
+h1 { font-size: 1.35em; color: #1a3a2a; margin: 18px 0 8px; border-bottom: 2px solid #c3dbcc; padding-bottom: 6px; }
+h2 { font-size: 1.2em; color: #1f4231; margin: 16px 0 6px; }
+h3 { font-size: 1.02em; color: #244f38; margin: 12px 0 5px; }
+p { margin: 6px 0; }
+ul, ol { padding-left: 20px; margin: 4px 0; }
+li { margin: 2px 0; }
+code {
+  background: #e8f5ec;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.88em;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+  color: #1a5c35;
+}
+pre {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 5px;
+  padding: 10px 14px;
+  margin: 8px 0;
+  overflow-x: auto;
+  font-size: 0.8em;
+  line-height: 1.5;
+}
+pre code { background: none; padding: 0; font-size: 1em; }
+blockquote {
+  border-left: 3px solid #2d8f5a;
+  background: #e8f5ec;
+  padding: 6px 12px;
+  margin: 8px 0;
+  border-radius: 0 4px 4px 0;
+  color: #1a4a2e;
+  font-size: 0.95em;
+}
+blockquote p { margin: 2px 0; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+  font-size: 0.9em;
+}
+th, td {
+  border: 1px solid #c3dbcc;
+  padding: 6px 10px;
+  text-align: left;
+}
+th { background: #e0f0e6; color: #1a3a2a; font-weight: 600; }
+strong { color: #1a5c35; }
+em { color: #3a6b4e; }
+hr { border: none; border-top: 1px solid #c3dbcc; margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<h1>如何构建一个 Coding Agent</h1>
+
+<p>Claude Code 或是类似的顶级 Coding Agent 之所以强大，并不仅仅是因为底层的 LLM 聪明，更在于一套围绕代码逻辑、工具链和工作流的系统性工程。</p>
+
+<hr>
+
+<h2>1. 针对代码的底层模型微调（Post-training）</h2>
+<p>基础模型虽然读过 GitHub，但并不代表它懂"如何修 Bug"。</p>
+
+<h3>长文本上下文（Context Window）</h3>
+<p>Agent 需要理解整个代码库（Repo-level context），能让它"看到"项目全局。</p>
+
+<h3>指令遵循与推理强化</h3>
+<p>通过 RLHF 专门针对代码逻辑进行训练，让模型学会"思考步骤"（Chain of Thought），例如在写代码前先写计划。</p>
+
+<h3>工具调用优化</h3>
+<p>专门训练模型输出高度精准的 JSON 或特定格式来调用 Shell、读取文件或执行测试。</p>
+
+<hr>
+
+<h2>2. 环境感知与工具集成（Tool Use）</h2>
+<p>Agent 和普通 Chatbot 的最大区别在于它有"手"。</p>
+
+<h3>感知能力</h3>
+<p>它能自主运行 <code>ls</code>、<code>grep</code>、<code>find</code> 来探索陌生的目录结构，而不是等着你把代码粘贴给它。</p>
+
+<h3>执行环境</h3>
+<p>在沙盒化的终端（Sandbox）里运行编译器、Linter 和测试框架（如 Pytest、Jest）。</p>
+
+<h3>自愈能力（Self-healing）</h3>
+<p>当它写出有 Bug 的代码时，它能看到编译器报错，并根据报错信息自动循环修复，直到测试通过。</p>
+
+<hr>
+
+<h2>3. 检索与上下文管理（RAG for Code）</h2>
+<p>面对几十万行代码，模型塞不下所有内容，必须有精准的"记忆提取"。</p>
+
+<h3>代码索引（Indexing）</h3>
+<p>利用符号图（Symbol Graph）或抽象语法树（AST）来理解类与函数之间的调用关系，而不仅仅是文本匹配。</p>
+
+<h3>相关性排序</h3>
+<p>当你问"登录逻辑在哪"时，系统要能跨文件提取相关的 <code>auth.py</code>、<code>User.java</code> 和数据库配置。</p>
+
+<hr>
+
+<h2>4. 专有的交互协议（MCP &amp; Specialized Protocols）</h2>
+<p>Claude Code 背后使用了 MCP（Model Context Protocol）协议。</p>
+
+<h3>标准化标准</h3>
+<p>MCP 允许模型以统一的方式访问本地文件、数据库和 API。</p>
+
+<h3>流式编辑</h3>
+<p>传统的模型会重写整个文件，而优秀的 Agent 采用类似 git patch 的方式，只修改受影响的代码行，这既节省了 Token，又降低了出错率。</p>
+
+<hr>
+
+<h2>5. 软件工程思维的编排（Orchestration）</h2>
+<p>这是最核心的"灵魂"：让模型像程序员一样思考。</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>阶段</th>
+      <th>传统 Chat</th>
+      <th>Coding Agent（Claude Code）</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>理解</strong></td>
+      <td>只看当前对话</td>
+      <td>扫描文件树，搜寻关键词</td>
+    </tr>
+    <tr>
+      <td><strong>规划</strong></td>
+      <td>直接吐代码</td>
+      <td>生成 Plan.md，确认修改范围</td>
+    </tr>
+    <tr>
+      <td><strong>执行</strong></td>
+      <td>让你自己复制粘贴</td>
+      <td>自动执行 sed 或文件写入命令</td>
+    </tr>
+    <tr>
+      <td><strong>验证</strong></td>
+      <td>说"应该没问题"</td>
+      <td>运行 npm test，看绿灯才停</td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>

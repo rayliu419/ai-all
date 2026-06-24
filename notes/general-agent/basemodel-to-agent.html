@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base Model → Agent</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #f5faf6;
+  color: #2d3a31;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 24px 16px;
+  max-width: 820px;
+  margin: 0 auto;
+}
+h1 { font-size: 1.35em; color: #1a3a2a; margin: 18px 0 8px; border-bottom: 2px solid #c3dbcc; padding-bottom: 6px; }
+h2 { font-size: 1.2em; color: #1f4231; margin: 16px 0 6px; }
+h3 { font-size: 1.02em; color: #244f38; margin: 12px 0 5px; }
+h4 { font-size: 0.95em; color: #2a5c40; margin: 10px 0 4px; }
+p { margin: 6px 0; }
+ul, ol { padding-left: 20px; margin: 4px 0; }
+li { margin: 2px 0; }
+code {
+  background: #e8f5ec;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.88em;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+  color: #1a5c35;
+}
+pre {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 5px;
+  padding: 10px 14px;
+  margin: 8px 0;
+  overflow-x: auto;
+  font-size: 0.8em;
+  line-height: 1.5;
+}
+pre code { background: none; padding: 0; font-size: 1em; }
+blockquote {
+  border-left: 3px solid #2d8f5a;
+  background: #e8f5ec;
+  padding: 6px 12px;
+  margin: 8px 0;
+  border-radius: 0 4px 4px 0;
+  color: #1a4a2e;
+  font-size: 0.95em;
+}
+blockquote p { margin: 2px 0; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+  font-size: 0.9em;
+}
+th, td {
+  border: 1px solid #c3dbcc;
+  padding: 6px 10px;
+  text-align: left;
+}
+th { background: #e0f0e6; color: #1a3a2a; font-weight: 600; }
+strong { color: #1a5c35; }
+em { color: #3a6b4e; }
+hr { border: none; border-top: 1px solid #c3dbcc; margin: 16px 0; }
+summary { cursor: pointer; font-weight: 600; color: #1f4231; padding: 4px 0; }
+summary:hover { color: #2d8f5a; }
+details { margin: 6px 0; }
+details[open] { margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Base Model → Agent</h1>
+
+<h2>LLM → Agent 的完整链路</h2>
+
+<h3>1️⃣ 预训练（Base Model）</h3>
+<ul>
+  <li>只学语言建模</li>
+  <li>目标是预测下一个 token</li>
+  <li>没有"对话意识"</li>
+  <li>没有"任务意识"</li>
+</ul>
+
+<p><strong>举例：</strong></p>
+<ul>
+  <li>OpenAI 的 GPT-3 base</li>
+  <li>Meta 的 LLaMA base</li>
+  <li>Google DeepMind 的 Gemini base</li>
+</ul>
+
+<blockquote>它不知道什么是"回答问题"或"写代码"。</blockquote>
+
+<h3>2️⃣ 指令微调（SFT）</h3>
+<ul>
+  <li>给出很多类似训练 chat 的训练集，在 base model 上继续训练。</li>
+  <li>Supervised Fine-Tuning</li>
+  <li>识别 user / assistant 角色</li>
+  <li>给出"完整回答"</li>
+  <li>组织清晰结构</li>
+  <li>避免乱续写</li>
+</ul>
+
+<p><strong>举例：</strong></p>
+<ul>
+  <li>OpenAI 的 GPT-3 → ChatGPT</li>
+  <li>Anthropic 的 Claude 系列</li>
+  <li>Mistral AI 的 Instruct 模型</li>
+</ul>
+
+<blockquote>这一步结束以后 Base model → Chat model</blockquote>
+
+<h3>3️⃣ 对齐训练（RLHF / DPO）</h3>
+<p>Direct Preference Optimization</p>
+<p>SFT 之后模型已经能回答问题，但还不够：</p>
+<ul>
+  <li>可能啰嗦</li>
+  <li>可能不安全</li>
+  <li>可能答非所问</li>
+</ul>
+
+<h3>4️⃣ 工具使用能力训练</h3>
+
+<h3>5️⃣ 记忆 / 规划 / 多步推理增强</h3>
+<p>现在模型还不能：</p>
+<ul>
+  <li>记忆长期信息</li>
+  <li>规划多步骤任务</li>
+</ul>
+<p>这一部分已经不是模型训练问题，而是系统架构问题。</p>
+
+<p><strong>短期记忆：</strong></p>
+<ul>
+  <li>对话上下文（prompt）</li>
+</ul>
+<p><strong>长期记忆：</strong></p>
+<ul>
+  <li>RAG</li>
+  <li>向量数据库</li>
+  <li>用户偏好存储</li>
+</ul>
+
+<hr>
+
+<h2>为什么通过 post-training 可以形成某种 Agent</h2>
+
+<p>LLM 本质是"条件概率机器"，它只是：在给定上下文条件下，预测最可能的下一个 token。</p>
+<p>谁控制了"context 分布"，谁就控制了模型行为。</p>
+<p>Post-training <strong>改变了条件分布</strong>。</p>
+<ul>
+  <li>通过大量的对话训练集，LLM 学会了在这种 prompt 结构下生成稳定的"assistant 风格输出"。</li>
+</ul>
+
+<h3>为什么这种变化是比较稳定的？</h3>
+<p>Transformer 是极强的模式拟合器。</p>
+<p>它会在 embedding 空间中形成：</p>
+<ul>
+  <li>"对话态分布"</li>
+  <li>"文章态分布"</li>
+  <li>"代码态分布"</li>
+</ul>
+<p>SFT 本质是在强化"对话态"这个分布区域。</p>
+<ul>
+  <li>模型会被拉进<strong>对话态流形（manifold）</strong></li>
+  <li>如果你 Post-train 时：
+    <ul>
+      <li>只喂"客服对话数据"</li>
+      <li>或只喂"代码审查数据"</li>
+      <li>或只喂"数学推理数据"</li>
+    </ul>
+  </li>
+  <li>那模型会把概率质量集中到那种行为区域。</li>
+</ul>
+
+<blockquote>这就像在参数空间里从一个"宽分布球体"压缩成一个"窄分布椭球体"。</blockquote>
+
+<p><strong>注意：</strong> 虽然是稳定的，但不是数学意义上的绝对稳定。</p>
+<ul>
+  <li>本质概率模型 → 永远不是 100% 确定。</li>
+</ul>
+
+<h3>要多少数据量来保持稳定？</h3>
+<p>不是数据量本身，而是 <code>KL(P<sub>assistant</sub> || P<sub>model</sub>)</code> 足够小。</p>
+<p>当模型的输出分布在对话上下文下已经接近人类标注分布时就算"收敛到对话态"。</p>
+
+<hr>
+
+<h2>Memory</h2>
+<p>长期记忆都是 Agent 在做。</p>
+<p>Agent 的 memory 本质是<strong>选择性地把过去信息重新送入模型</strong>。</p>
+
+<blockquote>模型没有真正"存储"。只是每次都重新读取外部状态。</blockquote>
+
+<p><strong>LLM 不维护 state，Agent 维护 state。</strong></p>
+
+<hr>
+
+<h2>长上下文概念的理解</h2>
+<p>长上下文能力，究竟来自模型结构，还是可以靠 Agent 优化"弥补"？</p>
+<ul>
+  <li>真正的"长上下文处理能力"来自模型架构与训练。</li>
+  <li>仅靠优化 Agent 是无法凭空获得的。</li>
+  <li>但 Agent 可以在系统层"模拟"或"绕开"部分限制。</li>
+</ul>
+
+<p><strong>定义：</strong> 模型在一次前向计算中，能够处理 N 个 token，并有效利用它们。</p>
+<ul>
+  <li>Transformer 结构</li>
+  <li>位置编码机制（RoPE / ALiBi 等）</li>
+  <li>是否在长序列上训练过</li>
+</ul>
+<p>这些都发生在预训练或长序列微调阶段。</p>
+
+<hr>
+
+<h2>LLM Agent 架构全景</h2>
+
+<h3>核心理解</h3>
+<ul>
+  <li>Agent 本身是把所有组件串起来的"胶水层"。</li>
+  <li>LLM 是大脑核心——使用哪些 Tool、如何 Planning、记住什么，都由 LLM 决定。</li>
+  <li>光有大脑无法驱动，Agent 给大脑加上"眼睛"（感知）、"鼻子"（工具）、"反馈"（评估）。</li>
+  <li>Agent 给大脑加上记忆（Memory）和外部输入信息。</li>
+</ul>
+
+<h3>架构</h3>
+<ul>
+  <li>其实跟其他的 agent 也是跟 coding agent 类似的。</li>
+  <li><a href="https://github.com/rayliu419/learn-claude-code/blob/main/notes/standard_agent.png" target="_blank" rel="noopener">标准 Agent 架构图</a></li>
+</ul>
+
+</body>
+</html>
