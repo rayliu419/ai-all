@@ -5,49 +5,488 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>预训练 Pre-Training 笔记</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  background: #f5faf6;
-  color: #2d3a31;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
-  font-size: 13px;
-  line-height: 1.45;
-  padding: 24px 16px;
-  max-width: 820px;
-  margin: 0 auto;
-}
-h1 { font-size: 1.35em; color: #1a3a2a; margin: 18px 0 8px; border-bottom: 2px solid #c3dbcc; padding-bottom: 6px; }
-h2 { font-size: 1.2em; color: #1f4231; margin: 16px 0 6px; }
-p { margin: 6px 0; }
-ul, ol { padding-left: 20px; margin: 4px 0; }
-li { margin: 2px 0; }
-a { color: #1f4a2e; text-decoration: none; }
-a:hover { text-decoration: underline; color: #2a8f4f; }
-code {
-  background: #e8f5ec;
-  padding: 1px 5px;
-  border-radius: 3px;
-  font-size: 0.88em;
-  font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
-  color: #1a5c35;
-}
-strong { color: #1a5c35; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 28px 20px;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  h1 { font-size: 1.35em; margin: 18px 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+  h2 { font-size: 1.2em; margin: 16px 0 8px; color: #1f4a2e; }
+  h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+
+  p { margin: 6px 0; }
+  ul, ol { padding-left: 20px; margin: 4px 0; }
+  li { margin: 2px 0; }
+
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card.warm {
+    background: #fdf6ec;
+    border-color: #e6d5b8;
+  }
+  .card.red {
+    background: #fef0f0;
+    border-color: #e6b8b8;
+  }
+  .card.blue {
+    background: #e8f0fe;
+    border-color: #b8cce6;
+  }
+  .card.purple {
+    background: #f3ecfa;
+    border-color: #d4c3e6;
+  }
+
+  .highlight {
+    background: #e8f5ec;
+    border-left: 4px solid #2a8f4f;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #1a4a2a;
+  }
+  .highlight.accent {
+    border-left-color: #d97706;
+    background: #fef7e6;
+    color: #7c5200;
+  }
+  .highlight.red {
+    border-left-color: #cf3a3a;
+    background: #fef0f0;
+    color: #7a2a2a;
+  }
+  .highlight.blue {
+    border-left-color: #3a7acf;
+    background: #e8f0fe;
+    color: #2a3a7a;
+  }
+
+  .key {
+    color: #d97706;
+    font-weight: 600;
+  }
+
+  strong { color: #1a4a2a; }
+  em { color: #3d6a4f; }
+
+  code {
+    font-size: 0.88em;
+    background: #e2efe5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4a2a;
+  }
+  pre {
+    font-size: 0.8em;
+    background: #e2efe5;
+    border: 1px solid #c3dbcc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #c3dbcc;
+    margin: 18px 0;
+  }
+
+  .takeaway {
+    background: #e8f5ec;
+    border: 1px solid #2a8f4f;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 0.95em;
+  }
+  .takeaway-title {
+    font-weight: 700;
+    color: #1a4a2a;
+    margin-bottom: 4px;
+  }
+
+  .insight {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: #fdf6ec;
+    border: 1px solid #e6d5b8;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 12px 0;
+  }
+  .insight-icon { font-size: 1.3em; flex-shrink: 0; margin-top: 1px; }
+  .insight p { margin: 0; }
+
+  .story-connector {
+    text-align: center;
+    padding: 12px 0;
+    color: #6a8f7a;
+    font-size: 1.5em;
+    letter-spacing: 8px;
+  }
+
+  .failure-box {
+    background: #fef0f0;
+    border: 2px solid #cf3a3a;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 14px 0;
+  }
+  .failure-box .title {
+    color: #cf3a3a;
+    font-weight: 700;
+    font-size: 1.05em;
+    margin-bottom: 6px;
+  }
+  .failure-box .vs {
+    display: flex;
+    gap: 12px;
+    margin: 8px 0;
+  }
+  .failure-box .vs > div {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 6px;
+  }
+  .failure-box .expected {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+  }
+  .failure-box .actual {
+    background: #fef0f0;
+    border: 1px solid #e6b8b8;
+  }
+
+  .diagnosis-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 10px 0;
+  }
+  @media (min-width: 600px) {
+    .diagnosis-grid { grid-template-columns: 1fr 1fr 1fr; }
+  }
+  .diagnosis-card {
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .diagnosis-card .num {
+    display: inline-block;
+    width: 24px; height: 24px;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 50%;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85em;
+    margin-bottom: 6px;
+  }
+  .diagnosis-card h4 { margin: 4px 0; }
+
+  .resource-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0;
+  }
+  .resource-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.9em;
+    text-decoration: none;
+    color: #1a4a2a;
+    transition: background 0.15s;
+  }
+  .resource-link:hover { background: #d4e8db; }
+
+  .section-label {
+    display: inline-block;
+    background: #1a4a2a;
+    color: #fff;
+    font-size: 0.75em;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 16px 12px; }
+    ul, ol { padding-left: 16px; }
+    .failure-box .vs { flex-direction: column; }
+  }
 </style>
 </head>
 <body>
 
 <h1>预训练 Pre-Training 笔记</h1>
 
-<h2>Hugging Face 课程</h2>
-<ul>
-  <li><a href="https://huggingface.co/learn/llm-course/en/chapter0/1" target="_blank" rel="noopener">Hugging Face LLM Course</a></li>
-</ul>
+<!-- ========== 资源入口 ========== -->
+<div class="resource-bar">
+  <a class="resource-link" href="https://huggingface.co/learn/llm-course/en/chapter0/1" target="_blank">🤗 Hugging Face LLM Course</a>
+  <a class="resource-link" href="https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi" target="_blank">🎬 3Blue1Brown 神经网络系列</a>
+  <a class="resource-link" href="https://www.3blue1brown.com/topics/neural-networks" target="_blank">🧮 3B1B 官方页面</a>
+</div>
 
-<h2>3Blue1Brown</h2>
+<p style="color:#4a6b55;margin-top:8px;">3Blue1Brown 的动效视频能帮你建立极强的<strong>"空间几何直觉"</strong>，而不是死记公式。以下笔记围绕视频内容组织，试图讲清"为什么"而非"是什么"。</p>
+
+<hr>
+
+<!-- ================================================================ -->
+<!--  章节一：函数选择 — 每个神经元都是一个有意义的决定                      -->
+<!-- ================================================================ -->
+
+<div style="margin-bottom:6px;"><span class="section-label">第一幕</span></div>
+<h2>🧠 神经网络的函数选择 — 每个变换都在编码一个决定</h2>
+
+<div class="card">
+  <p>神经网络是一系列函数（变换）的组合。但<strong>选择什么函数从来不是任意的</strong>——每个激活函数、每个规范化操作，都在编码一个设计者对于"这个世界是什么样的"的假设。</p>
+  <p>选择函数，就是在选择满足特定性质的变换。<span class="key">这些性质可以归为两个维度</span>。</p>
+</div>
+
+<div class="diagnosis-grid">
+  <div class="card diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#1f4a2e;">1</div>
+    <h4>数学运算的要求</h4>
+    <p style="font-size:0.93em;color:#4a6b55;">—— 约束来自"可行"</p>
+    <ul style="font-size:0.93em;">
+      <li>输出必须能解释为概率（softmax）</li>
+      <li>梯度不能爆炸 / 消失（求导链式法则的约束）</li>
+      <li>数值稳定性、尺度不变性、零中心化</li>
+    </ul>
+    <p style="font-size:0.9em;color:#6a8f7a;margin-top:6px;">这些是<strong>必要条件</strong>。不满足，网络就训练不好。</p>
+  </div>
+
+  <div class="card warm diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#b8860b;">2</div>
+    <h4>数学上的意义</h4>
+    <p style="font-size:0.93em;color:#4a6b55;">—— 追问"为什么这个函数能代表现实规律？"</p>
+    <ul style="font-size:0.93em;">
+      <li><strong>拓扑学意义</strong>：ReLU 折纸般折叠高维空间</li>
+      <li><strong>统计学意义</strong>：sigmoid 模拟神经元激活概率</li>
+      <li><strong>先验知识</strong>：CNN 注入"局部相关性"假设</li>
+    </ul>
+    <p style="font-size:0.9em;color:#6a8f7a;margin-top:6px;">这些是<strong>深刻的设计哲学</strong>。理解了它，你就能理解为什么有些架构天然更好。</p>
+  </div>
+</div>
+
+<!-- --- ReLU 深潜 --- -->
+<h3>🏔️ 深潜一：ReLU 为什么更好？—— 一段函数筛选史</h3>
+
+<div class="card">
+  <p>今天我们知道 ReLU 比 sigmoid 好，但当初并不是这样推理出来的：</p>
+  <ol>
+    <li><strong>早期（数学驱动）</strong>：sigmoid 的灵感来自生物神经元的"激活阈值"——看起来有生物学依据，数学上也光滑可导，所以被广泛使用</li>
+    <li><strong>中期（工程试错）</strong>：人们发现深层网络用 sigmoid 训练不动了——梯度在链式法则下一层层地消失。ReLU 的常数导数（x &gt; 0 时导数为 1）完美解决了这个问题，但当时并不完全清楚为什么它"这么好"</li>
+    <li><strong>后期（理论解释）</strong>：数学和优化理论给出了优雅的解释——<span class="key">ReLU 对高维空间的"折纸"操作为什么从根本上改变了数据分布的拓扑结构</span></li>
+  </ol>
+  <div class="highlight" style="margin-top:8px;">启示：选择激活函数，绝大部分时候就是在选择它的导数。基于梯度下降的神经网络中，导数特性决定了训练成败。</div>
+</div>
+
+<!-- --- ReLU 拓扑学意义 --- -->
+<div class="card blue">
+  <h4 style="color:#2a3a7a;">🔬 ReLU 的拓扑学意义</h4>
+  <p>ReLU 在数学上相当于对高维空间进行<strong>弯折（folding / creasing）</strong>。</p>
+  <p>每一个 ReLU 神经元都像是一把"剪刀"，把空间沿着某条直线折叠。成千上万个 ReLU 组合起来，就能把原本<strong>线性不可分</strong>的高维空间，像折纸一样层层折叠、裁剪，最终让不同类别的数据在新的空间里变得<strong>线性可分</strong>。</p>
+  <p style="font-size:0.9em;color:#4a6b55;margin-top:4px;">这不仅仅是一个工程技巧——这是在用几何变换重新组织信息的表达方式。</p>
+</div>
+
+<!-- --- Bias 深潜 --- -->
+<h3>⚖️ 深潜二：偏置（Bias）—— 一个"小参数"背后的几何革命</h3>
+
+<div class="insight">
+  <div class="insight-icon">💡</div>
+  <div><strong>核心直觉</strong>：如果只有 $W\vec{x}$，原点 $(0,0,...,0)$ 永远被固定死。无论怎么旋转、拉伸，原点变换后依然是原点（$W \cdot \vec{0} = \vec{0}$）。但在现实任务中，分类边界几乎从不经过原点。偏置 $\vec{b}$ 的唯一作用就是<strong>平移整个高维空间</strong>，赋予网络脱离原点束缚的能力。</div>
+</div>
+
+<div class="diagnosis-grid" style="grid-template-columns:1fr 1fr;">
+  <div class="card" style="margin:0;">
+    <h4>🤔 偏置能用矩阵替代吗？</h4>
+    <p>可以——通过<strong>齐次坐标（Homogeneous Coordinates）</strong>给向量升一维，把平移融入矩阵乘法。</p>
+    <p>但深度学习框架仍然显式写 <code>+b</code>：</p>
+    <ul>
+      <li><strong>显式表达</strong>：权重（敏感度）和偏置（基准线）分开，更符合直觉</li>
+      <li><strong>节省内存</strong>：强行拼接 1 到数据中徒增存储，广播机制在 GPU 上更高效</li>
+    </ul>
+  </div>
+  <div class="card warm" style="margin:0;">
+    <h4>🔗 偏置的神经网络解释</h4>
+    <p>在 sigmoid 时代，偏置直接决定了<strong>神经元是否容易被激活</strong>——当输入加权和超过偏置阈值时，神经元才"兴奋"。</p>
+    <p>偏置越大，神经元越难激活（阈值更高）。这也是早期神经科学启发的一个设计痕迹。</p>
+  </div>
+</div>
+
+<div class="story-connector">· · ·</div>
+
+<h3>🏗️ 不把网络当黑盒</h3>
+<p>理解这些"为什么"的实用价值：当模型出问题时，它指导你从哪个方向优化。</p>
+<div class="card red" style="border-left:4px solid #cf3a3a;">
+  <p><strong>反例</strong>：梯度消失 → 你知道该检查激活函数和初始化方式，而不是盲目调学习率。</p>
+  <p><strong>正例</strong>：CNN 包含的先验知识（局部性 + 平移不变性）让它能以数量级更少的数据达到相同的效果。</p>
+</div>
+
+<div class="takeaway">
+  <div class="takeaway-title">📌 第一幕总结</div>
+  <p>神经网络的函数选择不是随意的——<strong>每个变换都在编码一个关于世界的假设</strong>。数学可行性和哲学理解是两条并行的线索，交汇在一起决定了"什么架构能 work"。理解这些，是走出"调参工程师"的第一步。</p>
+</div>
+
+<hr>
+
+<!-- ================================================================ -->
+<!--  章节二：梯度下降 — 从优化算法到架构觉醒                          -->
+<!-- ================================================================ -->
+
+<div style="margin-bottom:6px;"><span class="section-label">第二幕</span></div>
+<h2>📐 梯度下降 — 是怎么学的，和为什么学不会是两回事</h2>
+
+<div class="card">
+  <p><a href="https://www.youtube.com/watch?v=IHZwWFHWa-w&list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi&index=2" target="_blank" style="font-weight:600;">🎬 3Blue1Brown — 梯度下降（视频）</a></p>
+  <p>梯度下降是神经网络学习的<strong>机制</strong>，但它不保证学到<strong>有意义</strong>的东西。接下来的实验会暴露这个深刻的区别。</p>
+</div>
+
+<h3>⚙️ 机制：梯度下降简述</h3>
 <ul>
-  <li>关于 ChatGPT、Transformer 内部机制的动效视频，能帮你建立极强的"空间几何直觉"，而不是死记公式。</li>
-  <li><a href="https://www.3blue1brown.com/topics/neural-networks" target="_blank" rel="noopener">3Blue1Brown Transformer 系列</a></li>
+  <li>单变量函数 → 求导找最小值</li>
+  <li>多变量函数 → 梯度是一个向量，指向"最陡上升"方向，取反就是下山方向</li>
+  <li>loss function 定义"错误程度" → 梯度告诉你如何调整参数来减小错误</li>
 </ul>
+<div class="highlight accent">⚠️ 这是多变量微积分的内容，如果三维梯度的几何意义不清晰，值得停下来补充一下。这是所有后续理解的基础。</div>
+
+<div class="story-connector">↓</div>
+
+<!-- --- 失败实验 --- -->
+<h3>❌ 实验：两层的数字识别网络 — 它没有按预期工作</h3>
+
+<div class="failure-box">
+  <div class="title">😤 期望 vs 现实</div>
+  <div class="vs">
+    <div class="expected">
+      <strong>🟢 我们期望的</strong>
+      <p style="margin-top:6px;font-size:0.93em;">第一层识别"横、竖、撇、捺"等笔画部件，第二层组合这些部件来识别数字。层级结构**有意义的**抽象。</p>
+    </div>
+    <div class="actual">
+      <strong>🔴 实际发生的</strong>
+      <p style="margin-top:6px;font-size:0.93em;">用随机图片测试，网络给出错误输出。特征可视化显示第一层看到的不是笔画，而是<strong>噪音般的模糊鬼影</strong>——它根本没学会我们想象中的"特征"。</p>
+    </div>
+  </div>
+  <p style="font-size:0.9em;color:#7a2a2a;margin-top:6px;">梯度下降在运行，loss 在下降，但网络学到的不是我们想要的东西。这就是<span class="key" style="color:#cf3a3a;">机制正确但意义缺失</span>。</p>
+</div>
+
+<div class="story-connector">↓ 为什么？三个根本原因 ⟶</div>
+
+<!-- --- 三大诊断 --- -->
+<h3>🔍 诊断：三个原因解释为什么"学好"不等于"学会"</h3>
+
+<div class="diagnosis-grid">
+  <div class="card red diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#cf3a3a;">1</div>
+    <h4>全连接的"全局性"摧毁了空间局部性</h4>
+    <p style="font-size:0.93em;color:#4a6b55;">——每个神经元看整张图</p>
+    <ul style="font-size:0.93em;">
+      <li><strong>现实</strong>：每个隐藏神经元与<strong>所有</strong>像素相连</li>
+      <li><strong>后果</strong>：神经元不关注"局部"，而是全局统计。最终学到的不是笔画边缘，而是斑驳光点</li>
+    </ul>
+    <p style="font-size:0.9em;color:#cf3a3a;margin-top:6px;">→ <strong>教训</strong>：没有局部性假设，模型只能找粗糙的统计规律</p>
+  </div>
+
+  <div class="card warm diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#b8860b;">2</div>
+    <h4>浅层网络（仅两层）缺乏"抽象深度"</h4>
+    <p style="font-size:0.93em;color:#4a6b55;">——像素→边缘→纹理→部件→整体的层次需要多层</p>
+    <ul style="font-size:0.93em;">
+      <li>两层网络没有足够层级来实现分层抽象</li>
+      <li>它<strong>"走捷径"</strong>：直接拟合像素→标签的非线性映射，而不是构建有意义的中间表示</li>
+    </ul>
+    <p style="font-size:0.9em;color:#b8860b;margin-top:6px;">→ <strong>教训</strong>：深度不是为了"更深的网络听起来更厉害"，而是层次结构是抽象的必要条件</p>
+  </div>
+
+  <div class="card blue diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#3a7acf;">3</div>
+    <h4>缺乏"平移不变性"</h4>
+    <p style="font-size:0.93em;color:#4a6b55;">——"7"向右移 2px，对网络来说就是全新输入</p>
+    <ul style="font-size:0.93em;">
+      <li>全连接网络对位置极其敏感：换个位置，之前学到的权重完全对不上</li>
+      <li>没有不变的图像，只有<strong>无穷多的变体</strong></li>
+    </ul>
+    <p style="font-size:0.9em;color:#3a7acf;margin-top:6px;">→ <strong>教训</strong>：没有不变性假设，需要指数级数据来覆盖所有变体</p>
+  </div>
+</div>
+
+<!-- --- CNN 解法 --- -->
+<h3>💊 解法：CNN 如何用"结构先验"同时解决这三个问题</h3>
+
+<div class="card" style="border-left:4px solid #2a8f4f;">
+  <p>CNN 之所以大幅超越全连接网络，不是因为它"更聪明"，而是因为它<strong>在设计之初就注入了关于图像世界的物理假设</strong>：</p>
+</div>
+
+<div class="diagnosis-grid" style="grid-template-columns:1fr 1fr;">
+  <div class="card" style="margin:0;">
+    <h4>🏋️ 权重共享</h4>
+    <p>同一个卷积核在整个图像上滑动，参数只有一小套。这不仅<strong>减少了参数量</strong>，更关键的是——无论特征出现在画面的哪个位置，都能被同一组参数检测到。</p>
+  </div>
+  <div class="card" style="margin:0;">
+    <h4>🧠 归纳偏置（Inductive Bias）</h4>
+    <p>模型在训练前就被注入了两大假设：</p>
+    <ul>
+      <li><strong>局部相关性</strong>——靠得近的像素关系更密切</li>
+      <li><strong>平移不变性</strong>——同一物体换个位置还是同一物体</li>
+    </ul>
+    <div class="highlight accent" style="margin-top:6px;padding:6px 10px;font-size:0.92em;">CNN 在训练开始之前，已经站在了终点线附近。</div>
+  </div>
+</div>
+
+<div class="insight">
+  <div class="insight-icon">🔗</div>
+  <div><strong>这里完美呼应了 how2ai-course 的内容</strong>：找到数据的不变性能大幅减少所需样本量。CNN 找到的不变性是"平移"——所以它不需要像 MLP 那样，用成千上万张"往右平移 5 像素"的图片去肉搏学习这个规律。这不仅仅是效率提升，这是<strong>学习范式的根本转变</strong>。</div>
+</div>
+
+<div class="takeaway">
+  <div class="takeaway-title">📌 第二幕总结</div>
+  <p>梯度下降是学习的<strong>引擎</strong>，但架构才是学习的<strong>方向盘</strong>。</p>
+  <p>两层的全连接网络在数字识别上的失败揭示了一条核心规律：<span class="key">没有结构先验的模型，需要用指数级的数据和参数来弥补架构的盲目性</span>。CNN 的成功不是因为它"更深"或"更新"，而是因为它编码了对这个物理世界的基本假设——而这些假设，正是我们通过"理解数据、找到不变性"得到的洞察。</p>
+</div>
+
+<hr>
+
+<!-- ================================================================ -->
+<!--  总结：两幕合在一起看                                              -->
+<!-- ================================================================ -->
+
+<h2>🎯 贯穿两条线索的主线</h2>
+
+<div class="card purple">
+  <p>这份笔记的两幕其实在讲述同一件事的两个侧面：</p>
+  <ul>
+    <li><strong>第一幕</strong>从微观出发：<span class="key">每一个函数选择都是一个有意义的决定</span>——ReLU 折纸、偏置平移、归纳偏置注入先验</li>
+    <li><strong>第二幕</strong>从宏观出发：<span class="key">架构决定模型能学到什么层次的规律</span>——梯度下降只是工具，CNN 的结构先验才是它成功的本质</li>
+  </ul>
+  <p style="margin-top:8px;">两者交汇于同一个洞察：<span class="key">对数据结构和物理世界的理解，才是设计好模型的核心能力</span>。这不仅仅是深度学习，这是"理解问题"的方法论。</p>
+</div>
+
+<div style="text-align:center;color:#6a8f7a;font-size:0.9em;margin-top:20px;padding:14px 0;border-top:1px solid #c3dbcc;">
+  预训练笔记 · 基于 3Blue1Brown 神经网络系列 · 理解驱动重组
+</div>
 
 </body>
 </html>
