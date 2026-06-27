@@ -102,6 +102,11 @@
     body { padding: 16px 12px; }
     ul, ol { padding-left: 16px; }
   }
+  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
+  .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
+  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+  .toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
+  .toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
 </style>
 </head>
 <body>
@@ -112,9 +117,19 @@
   <p>开发一个提供查名单功能的 MCP Tool。</p>
 </div>
 
+<div class="toc">
+  <div class="toc-title">📖 目录</div>
+  <div class="toc-grid">
+    <a href="#sec1">一、MCP SDK 下载</a>
+    <a href="#sec2">二、编写 Tool</a>
+    <a href="#sec3">三、OpenCode 集成</a>
+    <a href="#sec4">四、测试 Tool</a>
+  </div>
+</div>
+
 <hr>
 
-<h2>MCP SDK 下载</h2>
+<h2 id="sec1">MCP SDK 下载</h2>
 
 <pre>
 # 创建并进入工程目录
@@ -130,7 +145,7 @@ pip install mcp
 
 <hr>
 
-<h2>编写 Tool</h2>
+<h2 id="sec2">编写 Tool</h2>
 
 <pre>
 import os
@@ -168,7 +183,7 @@ if __name__ == "__main__":
 
 <hr>
 
-<h2>OpenCode 集成</h2>
+<h2 id="sec3">OpenCode 集成</h2>
 
 <pre><code>{
   "plugin": [
@@ -193,7 +208,7 @@ if __name__ == "__main__":
 
 <hr>
 
-<h2>测试 Tool</h2>
+<h2 id="sec4">测试 Tool</h2>
 
 <div class="card warm">
   <p>待补充测试方法。</p>

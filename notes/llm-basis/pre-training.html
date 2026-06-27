@@ -236,7 +236,20 @@
     ul, ol { padding-left: 16px; }
     .failure-box .vs { flex-direction: column; }
   }
+  /* KaTeX inline fix: reduce font size to match text */
+  .katex { font-size: 1.02em; }
+
+  /* Table of contents */
+  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
+  .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
+  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+  .toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
+  .toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
 </style>
+<!-- KaTeX for math rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
 </head>
 <body>
 
@@ -251,6 +264,18 @@
 
 <p style="color:#4a6b55;margin-top:8px;">3Blue1Brown 的动效视频能帮你建立极强的<strong>"空间几何直觉"</strong>，而不是死记公式。以下笔记围绕视频内容组织，试图讲清"为什么"而非"是什么"。</p>
 
+<div class="toc">
+  <div class="toc-title">📖 目录</div>
+  <div class="toc-grid">
+    <a href="#act1">第一幕 · 函数选择</a>
+    <a href="#act4">第四幕 · 总结</a>
+    <a href="#act2">第二幕 · 梯度下降</a>
+    <a href="#act3">第三幕 · 反向传播</a>
+    <a href="#backprop-calc">反向传播的微积分</a>
+    <a href="#transformer">Transformer（待补充）</a>
+  </div>
+</div>
+
 <hr>
 
 <!-- ================================================================ -->
@@ -258,7 +283,7 @@
 <!-- ================================================================ -->
 
 <div style="margin-bottom:6px;"><span class="section-label">第一幕</span></div>
-<h2>🧠 神经网络的函数选择 — 每个变换都在编码一个决定</h2>
+<h2 id="act1">🧠 神经网络的函数选择 — 每个变换都在编码一个决定</h2>
 
 <div class="card">
   <p>神经网络是一系列函数（变换）的组合。但<strong>选择什么函数从来不是任意的</strong>——每个激活函数、每个规范化操作，都在编码一个设计者对于"这个世界是什么样的"的假设。</p>
@@ -358,7 +383,7 @@
 <!-- ================================================================ -->
 
 <div style="margin-bottom:6px;"><span class="section-label">第二幕</span></div>
-<h2>📐 梯度下降 — 是怎么学的，和为什么学不会是两回事</h2>
+<h2 id="act2">📐 梯度下降 — 是怎么学的，和为什么学不会是两回事</h2>
 
 <div class="card">
   <p><a href="https://www.youtube.com/watch?v=IHZwWFHWa-w&list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi&index=2" target="_blank" style="font-weight:600;">🎬 3Blue1Brown — 梯度下降（视频）</a></p>
@@ -470,18 +495,159 @@
 <hr>
 
 <!-- ================================================================ -->
-<!--  总结：两幕合在一起看                                              -->
+<!--  章节三：反向传播 — 从直觉到微积分                                -->
 <!-- ================================================================ -->
 
-<h2>🎯 贯穿两条线索的主线</h2>
+<div style="margin-bottom:6px;"><span class="section-label">第三幕</span></div>
+<h2 id="act3">🔙 反向传播（Back Propagation）— 学习的"幕后推手"</h2>
+
+<div class="resource-bar">
+  <a class="resource-link" href="https://www.youtube.com/watch?v=Ilg3gGewQ5U" target="_blank">🎬 3B1B — 反向传播（直觉篇）</a>
+  <a class="resource-link" href="https://www.youtube.com/watch?v=tIeHLnjs5U8" target="_blank">🎬 3B1B — 反向传播（微积分篇）</a>
+  <a class="resource-link" href="https://www.bilibili.com/video/BV1qW411N7FU" target="_blank">📺 B站 — 反向传播微积分</a>
+</div>
+
+<div class="card">
+  <p><strong>所谓的学习，就是找到所有参数组合，使得 loss function 最小。</strong></p>
+  <p>对于手写识别神经网络，我们需要求 13000 个参数的负梯度。虽然参数分布在不同的网络层次上，但我们可以先把它们简单地看作一个梯度——<span class="key">每个参数对 loss function 的敏感程度不一样</span>。</p>
+  <p style="font-size:0.93em;color:#4a6b55;margin-top:4px;">举个例子：如果一个权重是 3.2，另一个是 0.1，则第一个有扰动时对 loss 的影响大约是第二个的 32 倍。敏感度差异巨大。</p>
+</div>
+
+<div class="story-connector">↓ 让我们通过"数字 2"的故事来理解反向传播的直觉 ⟶</div>
+
+<h3>👁️ 直觉：识别数字"2"背后的三个动作</h3>
+
+<p>在输出层，网络要对"这张图是不是 2"做出判断。反向传播会依次做三件事，每一件都有清晰的直觉逻辑：</p>
+
+<div class="diagnosis-grid" style="grid-template-columns:1fr 1fr 1fr;">
+  <div class="card purple diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#7c3a9e;">1</div>
+    <h4>改变 Bias</h4>
+    <p style="font-size:0.93em;"><strong>直接给"2"的输出神经元加温</strong></p>
+    <p style="font-size:0.9em;color:#4a6b55;">Bias 就像一个神经元的"基础门槛"或"自带分值"。如果不管输入是什么，我都想让"2"的概率变大，最直接的方法就是把"2"这个神经元的 Bias 调大——<strong>相当于降低激活"2"的门槛</strong>。</p>
+  </div>
+
+  <div class="card diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#1f4a2e;">2</div>
+    <h4>改变 Weight</h4>
+    <p style="font-size:0.93em;"><strong>顺藤摸瓜，给贡献大的前层神经元"发奖金"</strong></p>
+    <p style="font-size:0.9em;color:#4a6b55;">"2"的输出是由倒数第二层的神经元乘以各自的权重相加得到的。如果倒数第二层某个神经元 $A$ 正处于高激活状态（比如它捕捉到了"2"底部的横线），把 $A$ 连接到"2"的权重调大，就能极大地放大这个正向刺激。</p>
+    <div class="highlight accent" style="margin-top:6px;padding:6px 10px;font-size:0.9em;">"大的权重调整起来更有性价比"——因为权重调整幅度正比于前层激活值。前层越兴奋，调整它的权重效果越立竿见影。</div>
+  </div>
+
+  <div class="card warm diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#b8860b;">3</div>
+    <h4>改变前一层激活值</h4>
+    <p style="font-size:0.93em;"><strong>对前一层提要求——"有功的再兴奋一点，帮倒忙的闭嘴"</strong></p>
+    <p style="font-size:0.9em;color:#4a6b55;">光改当前参数（Bias 和 Weight）是有上限的。反向传播最厉害的地方在于，它会向倒数第二层传达一个<strong>愿望（Desire）</strong>：</p>
+    <ul style="font-size:0.9em;">
+      <li>对连接着正权重的神经元 → "再亮一点"（激活值变大）</li>
+      <li>对连接着负权重的神经元 → "再暗一点"（激活值变小）</li>
+    </ul>
+  </div>
+</div>
+
+<div class="insight">
+  <div class="insight-icon">💡</div>
+  <div><strong>贯穿逻辑</strong>：这三步本质上是在回答一个问题——"如果要降低 loss，每个参数应该往哪个方向调整多少？" Bias 直接调门槛，Weight 放大关键信号，激活值调整则为<strong>下一轮</strong>的反向传播做好了准备。每一层都做同样的事情，信号就从输出层一层层传回了输入层。</div>
+</div>
+
+<h3>⚡ mini-batch 与 SGD</h3>
+<div class="card">
+  <p>实际训练中，不会只用一个样本的梯度来更新参数——那样太毛糙（每个样本的"愿望"都不同）。</p>
+  <p>相反，用<strong>一小批（mini-batch）</strong>样本的平均梯度来决定更新方向。这就是<span class="key">随机梯度下降（SGD）</span>——在效率和稳定性之间取平衡。</p>
+</div>
+
+<div class="story-connector">· · ·</div>
+
+<!-- --- 反向传播的微积分 --- -->
+<h2 id="backprop-calc">🔬 反向传播的微积分 — 从扰动到链式法则</h2>
+
+<div class="card">
+  <p>直觉给了我们方向，但<strong>微积分给了我们精确的数字</strong>。</p>
+  <p>反向传播本质上就是<strong>微分的链式法则在神经网络中的应用</strong>。以下用"多条数轴联动"和"微小扰动（Nudges）"的直观方式来解释。</p>
+</div>
+
+<h3>📐 核心直觉：导数 = 对局部扰动的敏感度</h3>
+
+<div class="card blue">
+  <h4 style="color:#2a3a7a;">三条基本认识</h4>
+  <ul>
+    <li><span class="key">$\frac{dy}{dh}$</span>：如果系统在 $h$ 这个位置被轻轻拨动了 $dh$，最终的输出 $y$ 会产生多大的波动？—— 这是 $y$ 对 $h$ 的<strong>直接敏感度</strong>。</li>
+    <li><span class="key">$\frac{dy}{dx}$</span>：如果源头 $x$ 被拨动了 $dx$，经过中间所有多米诺骨牌的连锁反应后，最终的 $y$ 会产生多大的波动？—— 这是 $y$ 对 $x$ 的<strong>全路径敏感度</strong>。</li>
+    <li style="margin-top:6px;"><strong>为什么需要"不同的中间增量"来表达？</strong> 因为在实际面对复杂系统时，我们往往无法一眼看穿最底层（$x$）和最顶层（$y$）的关系，但我们<strong>能看清相邻变动的关系</strong>。链式法则就是把这些"相邻片段"串起来。</li>
+  </ul>
+</div>
+
+<div class="insight">
+  <div class="insight-icon">🧩</div>
+  <div><strong>在神经网络中的映射</strong>：$x$ 是输入的图像 → 中间隐藏神经元是无数 $h_1, h_2, ...$ → $y$ 是最终的预测误差 Loss。为了调整网络，我们需要知道"每一个中间的神经元如果产生扰动，对最终的 Loss 会有什么影响"——这正是链式法则解决的问题。</div>
+</div>
+
+<h3>🧮 极简网络举例</h3>
+
+<div class="card">
+  <p>从"每层只有一个神经元"的极简网络开始：</p>
+  <div style="text-align:center;font-size:0.95em;margin:12px 0;padding:10px;background:#e2efe5;border-radius:6px;">
+    $a^{(L-1)} \xrightarrow{\times w^{(L)} + b^{(L)}} z^{(L)} \xrightarrow{\sigma(z)} a^{(L)} \xrightarrow{\text{计算与 } y \text{ 的差距}} C_0$
+  </div>
+  <ul>
+    <li><strong>$a^{(L-1)}$</strong>：前一层神经元的激活值</li>
+    <li><strong>$z^{(L)} = w^{(L)} a^{(L-1)} + b^{(L)}$</strong>：当前的加权输入（Weighted sum）</li>
+    <li><strong>$a^{(L)} = \sigma(z^{(L)})$</strong>：当前层的激活值（$\sigma$ 为激活函数，如 Sigmoid 或 ReLU）</li>
+    <li><strong>$C_0 = (a^{(L)} - y)^2$</strong>：单个样本的代价（$y$ 是标签，即期望输出值）</li>
+  </ul>
+</div>
 
 <div class="card purple">
-  <p>这份笔记的两幕其实在讲述同一件事的两个侧面：</p>
+  <h4 style="color:#5a2a8a;">扰动传导链</h4>
+  <p>如果我们对 $w^{(L)}$ 微调一个极其微小的量 $\partial w^{(L)}$，这个扰动会像水波一样向右传导：</p>
+  <div style="text-align:center;font-size:1em;margin:10px 0;font-weight:bold;color:#5a2a8a;">
+    $\partial w^{(L)} \rightarrow \partial z^{(L)} \rightarrow \partial a^{(L)} \rightarrow \partial C_0$
+  </div>
+  <p>根据<strong>链式法则</strong>，代价 $C_0$ 对权重 $w^{(L)}$ 的偏导数（敏感度）就是这三级跳的乘积：</p>
+  <div style="text-align:center;font-size:1.05em;margin:10px 0;font-weight:bold;color:#5a2a8a;">
+    $\displaystyle \frac{\partial C_0}{\partial w^{(L)}} = \frac{\partial C_0}{\partial a^{(L)}} \cdot \frac{\partial a^{(L)}}{\partial z^{(L)}} \cdot \frac{\partial z^{(L)}}{\partial w^{(L)}}$
+  </div>
+  <p style="font-size:0.93em;color:#4a6b55;margin-top:6px;">推导最后一层到前一层，和前一层到更前一层是类似的——递归地应用同样的逻辑。</p>
+</div>
+
+<div class="highlight">
+  复杂网络的推导跟极简网络也是类似的——只是多写了下标。
+</div>
+
+<div class="takeaway">
+  <div class="takeaway-title">📌 第三幕总结</div>
+  <p>反向传播是神经网络学习的<strong>引擎</strong>：它用微分的链式法则，把输出层的误差信号逐层反向传播到每一个参数，告诉我们"每个权重该往哪个方向调整多少"。直觉层面的三个动作（调 Bias、调 Weight、调前层激活值）和微积分层面的链式法则是同一件事的两种语言——一个让你理解"为什么"，一个让你算出"是多少"。</p>
+</div>
+
+<hr>
+
+<!-- ================================================================ -->
+<!--  占位：Transformers 笔记                                          -->
+<!-- ================================================================ -->
+
+<h2 id="transformer">🏗️ Transformer — 预训练的现代架构（待补充）</h2>
+<div class="card warm">
+  <p><em>Transformer 架构的相关笔记即将补充。届时将涵盖：注意力机制、多头注意力、位置编码、Layer Norm、Transformer 的预训练目标（MLM / CLM）等内容。</em></p>
+</div>
+
+<hr>
+
+<!-- ================================================================ -->
+<!--  总结：三幕合在一起看                                              -->
+<!-- ================================================================ -->
+
+<h2>🎯 贯穿三条线索的主线</h2>
+
+<div class="card purple">
+  <p>这份笔记的三幕其实在讲述同一件事的三个侧面：</p>
   <ul>
     <li><strong>第一幕</strong>从微观出发：<span class="key">每一个函数选择都是一个有意义的决定</span>——ReLU 折纸、偏置平移、归纳偏置注入先验</li>
     <li><strong>第二幕</strong>从宏观出发：<span class="key">架构决定模型能学到什么层次的规律</span>——梯度下降只是工具，CNN 的结构先验才是它成功的本质</li>
+    <li><strong>第三幕</strong>从传播出发：<span class="key">反向传播是学习的引擎</span>——链式法则把输出层的误差逐层传回，告诉你每个参数该往哪调、调多少</li>
   </ul>
-  <p style="margin-top:8px;">两者交汇于同一个洞察：<span class="key">对数据结构和物理世界的理解，才是设计好模型的核心能力</span>。这不仅仅是深度学习，这是"理解问题"的方法论。</p>
+  <p style="margin-top:8px;">三者交汇于同一个洞察：<span class="key">对数据结构和物理世界的理解，才是设计好模型的核心能力</span>。这不仅仅是深度学习，这是"理解问题"的方法论。</p>
 </div>
 
 <div style="text-align:center;color:#6a8f7a;font-size:0.9em;margin-top:20px;padding:14px 0;border-top:1px solid #c3dbcc;">

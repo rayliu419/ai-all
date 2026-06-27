@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微积分基础笔记</title>
+<style>
+:root {
+  --bg: #f5faf6;
+  --card: #e8f5ec;
+  --border: #c3dbcc;
+  --text: #2d3a31;
+  --accent: #3a7a4d;
+  --accent-light: #5ead6e;
+  --highlight: #d4942b;
+  --highlight-bg: #fdf6e3;
+  --code-bg: #dceee2;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+h1 { font-size: 1.35em; color: var(--accent); margin: 20px 0 8px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+h2 { font-size: 1.2em; color: var(--accent); margin: 18px 0 6px; }
+h3 { font-size: 1.02em; color: var(--accent); margin: 14px 0 4px; }
+h4 { font-size: 0.95em; color: var(--accent); margin: 10px 0 4px; }
+p { margin: 6px 0; }
+ul, ol { margin: 4px 0; padding-left: 20px; }
+li { margin: 2px 0; }
+code { font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+pre { font-size: 0.8em; background: var(--card); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); overflow-x: auto; margin: 8px 0; }
+table { font-size: 0.9em; border-collapse: collapse; width: 100%; margin: 8px 0; }
+th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+th { background: var(--accent); color: #fff; font-weight: 600; }
+tr:nth-child(even) { background: var(--card); }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
+.summary { background: var(--highlight-bg); border-left: 4px solid var(--highlight); border-radius: 4px; padding: 12px 16px; margin: 14px 0; }
+.summary strong { color: var(--highlight); }
+.highlight { background: var(--highlight-bg); border-left: 3px solid var(--highlight); padding: 8px 12px; margin: 8px 0; border-radius: 0 4px 4px 0; }
+.tag { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8em; padding: 1px 8px; border-radius: 10px; font-weight: 500; }
+.keyword { color: var(--accent); font-weight: 600; }
+.warm { background: #fdf6e3; border: 1px solid #eedca5; }
+
+.toc { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
+.toc-title { font-weight: 600; color: var(--accent); font-size: 1em; margin-bottom: 6px; }
+.toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+.toc-grid a { color: var(--text); text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
+.toc-grid a:hover { background: var(--bg); color: var(--accent); }
+
+/* KaTeX inline fix */
+.katex { font-size: 1.02em; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+</head>
+<body>
+
+<div class="card" style="text-align:center; margin-bottom:20px;">
+  <h1 style="border:none; margin:4px 0;">📈 微积分基础</h1>
+  <p style="color:var(--accent); margin:2px 0;">聚焦导数与梯度 · 深度学习所需的微积分直觉</p>
+</div>
+
+<div class="toc">
+  <div class="toc-title">📖 目录</div>
+  <div class="toc-grid">
+    <a href="#sec1">一、微积分概览</a>
+    <a href="#sec2">二、导数的本质</a>
+    <a href="#sec3">三、链式法则与乘积法则</a>
+  </div>
+</div>
+
+<!-- ============ SECTION 1 ============ -->
+<h2 id="sec1">一、微积分概览</h2>
+
+<div class="summary">
+<strong>本笔记集中在导数和梯度的部分</strong>，因为在深度学习中用得最多。积分相关的内容暂不涉及。
+</div>
+
+<div class="card">
+<p>微积分为深度学习提供了最核心的两大工具：</p>
+<ul>
+  <li><span class="keyword">导数</span> — 衡量函数在某一点的瞬时变化率，是梯度下降的数学基础</li>
+  <li><span class="keyword">链式法则</span> — 将复合函数的导数逐层分解，是反向传播的理论基石</li>
+</ul>
+<p style="margin-top:6px;">以下内容围绕这两个核心概念展开，目标是建立直观理解，而非陷入严格的数学推导。</p>
+</div>
+
+<!-- ============ SECTION 2 ============ -->
+<h2 id="sec2">二、导数的本质</h2>
+
+<div class="summary">
+<strong>不要把导数理解为"某一瞬间真正的变化率"——因为瞬间无法变化。</strong> 相反，导数是在"这个点周围，对变化率的最佳恒定近似（Best Constant Approximation）"。
+</div>
+
+<h3>2.1 汽车速度盘的矛盾</h3>
+
+<div class="card">
+<p>要给某个时间点一个速度，本身是没法计算的。</p>
+<ul>
+  <li>需要给出<strong>两个时间点</strong>才能计算速度：$v = \frac{\Delta x}{\Delta t}$</li>
+  <li><strong>一个点的某个值却要根据多个点来计算——这是个矛盾。</strong></li>
+  <li>实际上汽车的码表就是用导数的方式计算的（取极短时段内的平均速度）。</li>
+</ul>
+</div>
+
+<h3>2.2 到底什么是导数？</h3>
+
+<div class="card">
+<p>回到汽车的例子：在 $t=0$ 时，汽车是移动的吗？按照导数的严格定义，$v=0$——车不是移动的。但车是什么时候移动的？</p>
+<div class="highlight">
+<strong>核心洞察：</strong>导数并不是在"零时间内算速度"，而是研究<strong>"当时间间隔无限缩小时，平均速度会趋向什么值"</strong>。
+</div>
+<p>例如在 $t=0$ 时，取 $\Delta t = 0.01, 0.000001, 0.0000001\ldots$，可以观察到平均速度趋近于某个值。这个<strong>极限值</strong>就是 $t=0$ 时的导数。</p>
+</div>
+
+<div class="summary">
+<strong>瞬时速度不是一个违反直觉的"零时间里的速度"，而是极限这一数学思想赋予"某一时刻运动状态"的精确定义。</strong> 这也正是微积分最深刻的思想之一——通过研究无限接近的过程，来定义那些不能直接计算的量。
+</div>
+
+<!-- ============ SECTION 3 ============ -->
+<h2 id="sec3">三、直观理解链式法则和乘积法则</h2>
+
+<div class="card">
+<p><strong>资源：</strong></p>
+<div class="highlight">
+  <a href="https://www.bilibili.com/video/BV1qW411N7FU?p=4" target="_blank">📺 B站 — 3Blue1Brown 链式法则与乘积法则</a>
+</div>
+<p style="margin-top:6px;">函数的组合有三种基本方式，每一种都有其对应的求导规则：</p>
+</div>
+
+<h3>3.1 三种组合方式</h3>
+
+<table>
+  <tr><th>组合方式</th><th>直观理解</th><th>求导规则</th><th>DL 中的使用</th></tr>
+  <tr>
+    <td><strong>相加</strong></td>
+    <td>坐标轴上直接叠加</td>
+    <td>$(f+g)' = f' + g'$</td>
+    <td>损失函数 = L1 + L2</td>
+  </tr>
+  <tr>
+    <td><strong>相乘</strong></td>
+    <td>矩形的面积</td>
+    <td>$(fg)' = f'g + fg'$（乘积法则）</td>
+    <td>加权求和</td>
+  </tr>
+  <tr>
+    <td><strong>复合</strong></td>
+    <td>多层变换的串联</td>
+    <td>$(f \circ g)' = f'(g(x)) \cdot g'(x)$（链式法则）</td>
+    <td>反向传播的核心</td>
+  </tr>
+</table>
+
+<h3>3.2 乘积法则的几何直觉</h3>
+
+<div class="card">
+<p>如果要考虑两个东西的乘积（比如 $f(x) = x^2 \cdot \sin(x)$），尝试用<strong>面积</strong>来可视化：</p>
+<ul>
+  <li>想象一个矩形，边长为 $x^2$ 和 $\sin(x)$</li>
+  <li>面积 = $x^2 \cdot \sin(x)$</li>
+  <li>给 $x$ 一个微小增量 $dx$ → 两条边都会变化 → 面积变化是两条边的变化之和</li>
+  <li>这正是乘积法则的几何本质：<strong>总变化 = 第一条边变化 × 第二条边 + 第二条边变化 × 第一条边</strong></li>
+</ul>
+</div>
+
+<h3>3.3 链式法则的"多条数轴联动"直觉</h3>
+
+<div class="summary">
+<strong>极其直观的"多条数轴联动"和"微小扰动（Nudges）"的图像</strong>，深刻地解释了复合函数求导的链式法则（Chain Rule）。
+</div>
+
+<p>3Blue1Brown 的核心思想：通过一层层的<strong>"传导系数"</strong>把最外层的变化和最底层的输入联系起来。</p>
+
+<div class="card">
+<h4>第一种视角：最终的增量取决于中间增量的变化</h4>
+<ul>
+  <li>关注的是<strong>相邻两层之间的直接因果关系</strong></li>
+  <li>$y$ 的变化 $dy$ 源自中间变量 $h$ 的变化 $dh$</li>
+</ul>
+</div>
+
+<div class="card">
+<h4>第二种视角：最终的增量最终取决于最底层增量的变化</h4>
+<ul>
+  <li>宏观的、<strong>整体的因果关系</strong></li>
+  <li>把中间层当成了"隐形"的传导介质</li>
+  <li>最终锁定在："最源头的 $dx$ 究竟如何决定了最末端的 $dy$"</li>
+</ul>
+</div>
+
+<div class="highlight">
+<strong>复合的传导系数（敏感度连锁相乘）：</strong><br>
+从整体来看，整个复合函数对底层输入的敏感度（即总导数），就是各层敏感度的乘积：
+$$\text{总敏感度} = g'(h(x)) \cdot h'(x)$$
+</div>
+
+<div class="card warm" style="margin-top:12px;">
+<p><strong>思考延伸：</strong>链式法则的"多条数轴联动"视角与反向传播的"误差从输出层逐层传回输入层"的机制完全对应。每一层的导数就是该层对误差的"传导系数"——这就是为什么反向传播的本质就是微积分链式法则在神经网络中的应用。</p>
+<p style="margin-top:4px;">↪ 详见 <a href="../llm-basis/pre-training.html#backprop-calc">预训练笔记 — 反向传播的微积分</a></p>
+</div>
+
+</body>
+</html>

@@ -152,16 +152,34 @@
     font-weight: 600;
   }
   tr:nth-child(even) { background: #edf6f0; }
+  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
+  .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
+  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+  .toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
+  .toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
 </style>
 </head>
 <body>
 
 <h1>MIT-MAS-S60 — How2AI 课程笔记</h1>
 
+<div class="toc">
+  <div class="toc-title">📖 目录</div>
+  <div class="toc-grid">
+    <a href="#sec1">课程总览</a>
+    <a href="#sec2">第 2 讲 · 数据为中心</a>
+    <a href="#sec3">第 3 讲 · 模型架构与数据适配</a>
+    <a href="#sec4">第 4 讲 · 多模态与对齐</a>
+    <a href="#sec5">第 6 讲 · 跨模态学习</a>
+    <a href="#sec6">第 x 讲 · 大语言模型</a>
+    <a href="#sec7">第 11 讲 · 强化学习与交互</a>
+  </div>
+</div>
+
 <!-- ============ OVERVIEW ============ -->
 <div class="section-overview">
 <div class="card">
-  <h2 style="margin:0 0 6px;color:#1a4a2a;">课程总览</h2>
+  <h2 id="sec1" style="margin:0 0 6px;color:#1a4a2a;">课程总览</h2>
   <p>AI 的真正价值不在于复制人类能力，而在于<strong>扩展人类体验</strong>。当 AI 可以作用于"任何数据模态"时，核心问题变为：如何将现实世界问题转化为 <strong>"数据 + 结构 + 反馈"</strong> 的形式。</p>
   <p>课程核心观点：<span class="key">真正的门槛在于如何理解问题</span>，而非技术细节。即使不了解模型底层原理，也可以通过对数据和任务的思考来解决问题。</p>
   <ul>
@@ -173,7 +191,7 @@
 </div>
 
 <!-- ============ LEC 2 ============ -->
-<div class="lec-header">📖 第 2 讲 · 数据为中心</div>
+<div class="lec-header" id="sec2">📖 第 2 讲 · 数据为中心</div>
 
 <div class="section-overview">
 <div class="card">
@@ -225,7 +243,7 @@
 <hr>
 
 <!-- ============ LEC 3 ============ -->
-<div class="lec-header">📖 第 3 讲 · 模型架构与数据适配</div>
+<div class="lec-header" id="sec3">📖 第 3 讲 · 模型架构与数据适配</div>
 
 <div class="section-overview">
 <div class="card">
@@ -309,7 +327,7 @@
 <hr>
 
 <!-- ============ LEC 4 ============ -->
-<div class="lec-header">📖 第 4 讲 · 多模态与对齐</div>
+<div class="lec-header" id="sec4">📖 第 4 讲 · 多模态与对齐</div>
 
 <div class="section-overview">
 <div class="card">
@@ -344,7 +362,7 @@
 <hr>
 
 <!-- ============ LEC 6 ============ -->
-<div class="lec-header">📖 第 6 讲 · 跨模态学习</div>
+<div class="lec-header" id="sec5">📖 第 6 讲 · 跨模态学习</div>
 
 <div class="section-overview">
 <div class="card">
@@ -383,7 +401,7 @@
 <hr>
 
 <!-- ============ LEC X - LLM ============ -->
-<div class="lec-header">📖 第 x 讲 · 大语言模型</div>
+<div class="lec-header" id="sec6">📖 第 x 讲 · 大语言模型</div>
 
 <div class="section-overview">
 <div class="card">
@@ -455,7 +473,7 @@
 <hr>
 
 <!-- ============ LEC 11 ============ -->
-<div class="lec-header">📖 第 11 讲 · 强化学习与交互</div>
+<div class="lec-header" id="sec7">📖 第 11 讲 · 强化学习与交互</div>
 
 <div class="section-overview">
 <div class="card">

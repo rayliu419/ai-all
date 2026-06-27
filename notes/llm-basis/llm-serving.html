@@ -154,6 +154,11 @@
     body { padding: 16px 12px; }
     ul, ol { padding-left: 16px; }
   }
+  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
+  .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
+  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+  .toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
+  .toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
 </style>
 </head>
 <body>
@@ -166,12 +171,21 @@
 </div>
 </div>
 
+<div class="toc">
+  <div class="toc-title">📖 目录</div>
+  <div class="toc-grid">
+    <a href="#sec1">Pre-training vs. Serving</a>
+    <a href="#sec2">端到端处理流程</a>
+    <a href="#sec3">KV Cache</a>
+  </div>
+</div>
+
 <hr>
 
 <!-- ============ PRE-TRAINING VS SERVING ============ -->
 <div class="section-detail">
 
-<h2>Pre-training vs. Serving</h2>
+<h2 id="sec1">Pre-training vs. Serving</h2>
 
 <div class="card warm">
   <p>可以把 Pre-training（预训练）和 Serving（推理服务）比喻为<strong>"读书"和"现场答辩"</strong>——前者是默默积累知识，后者是即时回应挑战。</p>
@@ -208,7 +222,7 @@
 <!-- ============ END-TO-END ============ -->
 <div class="section-detail">
 
-<h2>端到端处理流程</h2>
+<h2 id="sec2">端到端处理流程</h2>
 
 <div class="card">
   <p>当用户在客户端点击发送，到屏幕上逐字出现回复，服务端经历了一个完整的生命周期。主流的 Serving 框架（如 vLLM、TensorRT-LLM）都遵循以下两个核心阶段：</p>
@@ -246,7 +260,7 @@
 <!-- ============ KV CACHE ============ -->
 <div class="section-detail">
 
-<h2>KV Cache</h2>
+<h2 id="sec3">KV Cache</h2>
 
 <div class="section-overview">
 <div class="card">
