@@ -174,9 +174,9 @@
 <div class="toc">
   <div class="toc-title">📖 目录</div>
   <div class="toc-grid">
-    <a href="#sec1">Pre-training vs. Serving</a>
-    <a href="#sec2">端到端处理流程</a>
-    <a href="#sec3">KV Cache</a>
+    <a href="#pretraining-vs-serving">Pre-training vs. Serving</a>
+    <a href="#end-to-end-flow">端到端处理流程</a>
+    <a href="#kv-cache">KV Cache</a>
   </div>
 </div>
 
@@ -185,7 +185,7 @@
 <!-- ============ PRE-TRAINING VS SERVING ============ -->
 <div class="section-detail">
 
-<h2 id="sec1">Pre-training vs. Serving</h2>
+<h2 id="pretraining-vs-serving">Pre-training vs. Serving</h2>
 
 <div class="card warm">
   <p>可以把 Pre-training（预训练）和 Serving（推理服务）比喻为<strong>"读书"和"现场答辩"</strong>——前者是默默积累知识，后者是即时回应挑战。</p>
@@ -222,7 +222,7 @@
 <!-- ============ END-TO-END ============ -->
 <div class="section-detail">
 
-<h2 id="sec2">端到端处理流程</h2>
+<h2 id="end-to-end-flow">端到端处理流程</h2>
 
 <div class="card">
   <p>当用户在客户端点击发送，到屏幕上逐字出现回复，服务端经历了一个完整的生命周期。主流的 Serving 框架（如 vLLM、TensorRT-LLM）都遵循以下两个核心阶段：</p>
@@ -260,7 +260,7 @@
 <!-- ============ KV CACHE ============ -->
 <div class="section-detail">
 
-<h2 id="sec3">KV Cache</h2>
+<h2 id="kv-cache">KV Cache</h2>
 
 <div class="section-overview">
 <div class="card">

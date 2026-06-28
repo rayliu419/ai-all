@@ -122,17 +122,11 @@
   .tag.warn { background: #fdebd0; color: #9e6b00; }
   .tag.purple { background: #ede9fe; color: #5b21b6; }
 
-  .toc {
-    background: #e8f5ec;
-    border: 1px solid #c3dbcc;
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin: 10px 0;
-  }
-  .toc ol { margin: 0; padding-left: 20px; }
-  .toc li { margin: 3px 0; }
-  .toc a { color: #1f4a2e; text-decoration: none; font-weight: 500; }
-  .toc a:hover { text-decoration: underline; color: #2a8f4f; }
+  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
+  .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
+  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+  .toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
+  .toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
 
   @media (max-width: 600px) {
     body { padding: 16px 12px; }
@@ -145,14 +139,15 @@
 <h1>Agent 开发环境与框架</h1>
 
 <div class="toc">
-  <ol>
-    <li><a href="#environment">依赖环境</a></li>
-    <li><a href="#framework-compare">LangChain vs LangGraph vs DeepAgent vs CrewAI vs Raw</a></li>
-    <li><a href="#raw">Raw</a></li>
-    <li><a href="#langchain">LangChain</a></li>
-    <li><a href="#langgraph">LangGraph 重点</a></li>
-    <li><a href="#crewai">CrewAI 重点</a></li>
-  </ol>
+  <div class="toc-title">📖 目录</div>
+  <div class="toc-grid">
+    <a href="#environment">依赖环境</a>
+    <a href="#framework-compare">LangChain vs LangGraph vs DeepAgent vs CrewAI vs Raw</a>
+    <a href="#raw">Raw</a>
+    <a href="#langchain">LangChain</a>
+    <a href="#langgraph">LangGraph 重点</a>
+    <a href="#crewai">CrewAI 重点</a>
+  </div>
 </div>
 
 <hr>

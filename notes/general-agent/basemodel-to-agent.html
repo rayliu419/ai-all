@@ -85,15 +85,15 @@ details[open] { margin-bottom: 10px; }
 <div class="toc">
   <div class="toc-title">📖 目录</div>
   <div class="toc-grid">
-    <a href="#sec1">一、LLM → Agent 的完整链路</a>
-    <a href="#sec2">二、Post-training 形成 Agent</a>
-    <a href="#sec3">三、Memory</a>
-    <a href="#sec4">四、长上下文概念的理解</a>
-    <a href="#sec5">五、LLM Agent 架构全景</a>
+    <a href="#llm-to-agent-pipeline">一、LLM → Agent 的完整链路</a>
+    <a href="#post-training-for-agents">二、Post-training 形成 Agent</a>
+    <a href="#memory">三、Memory</a>
+    <a href="#long-context">四、长上下文概念的理解</a>
+    <a href="#agent-architecture">五、LLM Agent 架构全景</a>
   </div>
 </div>
 
-<h2 id="sec1">LLM → Agent 的完整链路</h2>
+<h2 id="llm-to-agent-pipeline">LLM → Agent 的完整链路</h2>
 
 <h3>1️⃣ 预训练（Base Model）</h3>
 <ul>
@@ -163,7 +163,7 @@ details[open] { margin-bottom: 10px; }
 
 <hr>
 
-<h2 id="sec2">为什么通过 post-training 可以形成某种 Agent</h2>
+<h2 id="post-training-for-agents">为什么通过 post-training 可以形成某种 Agent</h2>
 
 <p>LLM 本质是"条件概率机器"，它只是：在给定上下文条件下，预测最可能的下一个 token。</p>
 <p>谁控制了"context 分布"，谁就控制了模型行为。</p>
@@ -206,7 +206,7 @@ details[open] { margin-bottom: 10px; }
 
 <hr>
 
-<h2 id="sec3">Memory</h2>
+<h2 id="memory">Memory</h2>
 <p>长期记忆都是 Agent 在做。</p>
 <p>Agent 的 memory 本质是<strong>选择性地把过去信息重新送入模型</strong>。</p>
 
@@ -216,7 +216,7 @@ details[open] { margin-bottom: 10px; }
 
 <hr>
 
-<h2 id="sec4">长上下文概念的理解</h2>
+<h2 id="long-context">长上下文概念的理解</h2>
 <p>长上下文能力，究竟来自模型结构，还是可以靠 Agent 优化"弥补"？</p>
 <ul>
   <li>真正的"长上下文处理能力"来自模型架构与训练。</li>
@@ -234,7 +234,7 @@ details[open] { margin-bottom: 10px; }
 
 <hr>
 
-<h2 id="sec5">LLM Agent 架构全景</h2>
+<h2 id="agent-architecture">LLM Agent 架构全景</h2>
 
 <h3>核心理解</h3>
 <ul>

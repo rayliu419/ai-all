@@ -90,17 +90,11 @@ th {
   font-weight: 600;
 }
 tr:nth-child(even) { background: #f5faf6; }
-.toc {
-  background: #e8f5ec;
-  border: 1px solid #c3dbcc;
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin: 10px 0;
-}
-.toc ol { margin: 0; padding-left: 20px; }
-.toc li { margin: 3px 0; }
-.toc a { color: #1f4a2e; text-decoration: none; font-weight: 500; }
-.toc a:hover { text-decoration: underline; color: #2a8f4f; }
+.toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
+.toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
+.toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+.toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
+.toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
 @media (max-width: 600px) {
   body { padding: 16px 12px; }
   ul, ol { padding-left: 16px; }
@@ -112,18 +106,19 @@ tr:nth-child(even) { background: #f5faf6; }
 <h1>Agent 核心技术深度面试题</h1>
 
 <div class="toc">
-  <ol>
-    <li><a href="#q1">ReAct 框架的局限性 → 进阶规划方案</a></li>
-    <li><a href="#q2">思维链（CoT）与规划（Planning）的区别</a></li>
-    <li><a href="#q3">多步工具调用的鲁棒规划机制</a></li>
-    <li><a href="#q4">Tree-of-Thoughts / LATS 的工作原理</a></li>
-    <li><a href="#q5">推理断层与结果偏离 —— 解决方案</a></li>
-    <li><a href="#q6">Agent 长期记忆模块设计</a></li>
-    <li><a href="#q7">上下文窗口溢出 —— 记忆压缩与检索策略</a></li>
-    <li><a href="#q8">混合检索（Hybrid Search）</a></li>
-    <li><a href="#q9">Function Calling Schema 优化 —— Description 的艺术</a></li>
-    <li><a href="#q10">多工具场景下的高效工具选择策略</a></li>
-  </ol>
+  <div class="toc-title">目录</div>
+  <div class="toc-grid">
+    <a href="#q1">1. ReAct 框架的局限性 → 进阶规划方案</a>
+    <a href="#q2">2. 思维链（CoT）与规划（Planning）的区别</a>
+    <a href="#q3">3. 多步工具调用的鲁棒规划机制</a>
+    <a href="#q4">4. Tree-of-Thoughts / LATS 的工作原理</a>
+    <a href="#q5">5. 推理断层与结果偏离 —— 解决方案</a>
+    <a href="#q6">6. Agent 长期记忆模块设计</a>
+    <a href="#q7">7. 上下文窗口溢出 —— 记忆压缩与检索策略</a>
+    <a href="#q8">8. 混合检索（Hybrid Search）</a>
+    <a href="#q9">9. Function Calling Schema 优化 —— Description 的艺术</a>
+    <a href="#q10">10. 多工具场景下的高效工具选择策略</a>
+  </div>
 </div>
 
 <hr>

@@ -82,17 +82,17 @@ hr { border: none; border-top: 1px solid #c3dbcc; margin: 16px 0; }
 <div class="toc">
   <div class="toc-title">📖 目录</div>
   <div class="toc-grid">
-    <a href="#sec1">1. 针对代码的底层模型微调（Post-training）</a>
-    <a href="#sec2">2. 环境感知与工具集成（Tool Use）</a>
-    <a href="#sec3">3. 检索与上下文管理（RAG for Code）</a>
-    <a href="#sec4">4. 专有的交互协议（MCP &amp; Specialized Protocols）</a>
-    <a href="#sec5">5. 软件工程思维的编排（Orchestration）</a>
+    <a href="#post-training">1. 针对代码的底层模型微调（Post-training）</a>
+    <a href="#tool-use">2. 环境感知与工具集成（Tool Use）</a>
+    <a href="#rag-for-code">3. 检索与上下文管理（RAG for Code）</a>
+    <a href="#mcp-protocols">4. 专有的交互协议（MCP &amp; Specialized Protocols）</a>
+    <a href="#orchestration">5. 软件工程思维的编排（Orchestration）</a>
   </div>
 </div>
 
 <hr>
 
-<h2 id="sec1">1. 针对代码的底层模型微调（Post-training）</h2>
+<h2 id="post-training">1. 针对代码的底层模型微调（Post-training）</h2>
 <p>基础模型虽然读过 GitHub，但并不代表它懂"如何修 Bug"。</p>
 
 <h3>长文本上下文（Context Window）</h3>
@@ -106,7 +106,7 @@ hr { border: none; border-top: 1px solid #c3dbcc; margin: 16px 0; }
 
 <hr>
 
-<h2 id="sec2">2. 环境感知与工具集成（Tool Use）</h2>
+<h2 id="tool-use">2. 环境感知与工具集成（Tool Use）</h2>
 <p>Agent 和普通 Chatbot 的最大区别在于它有"手"。</p>
 
 <h3>感知能力</h3>
@@ -120,7 +120,7 @@ hr { border: none; border-top: 1px solid #c3dbcc; margin: 16px 0; }
 
 <hr>
 
-<h2 id="sec3">3. 检索与上下文管理（RAG for Code）</h2>
+<h2 id="rag-for-code">3. 检索与上下文管理（RAG for Code）</h2>
 <p>面对几十万行代码，模型塞不下所有内容，必须有精准的"记忆提取"。</p>
 
 <h3>代码索引（Indexing）</h3>
@@ -131,7 +131,7 @@ hr { border: none; border-top: 1px solid #c3dbcc; margin: 16px 0; }
 
 <hr>
 
-<h2 id="sec4">4. 专有的交互协议（MCP &amp; Specialized Protocols）</h2>
+<h2 id="mcp-protocols">4. 专有的交互协议（MCP &amp; Specialized Protocols）</h2>
 <p>Claude Code 背后使用了 MCP（Model Context Protocol）协议。</p>
 
 <h3>标准化标准</h3>
@@ -142,7 +142,7 @@ hr { border: none; border-top: 1px solid #c3dbcc; margin: 16px 0; }
 
 <hr>
 
-<h2 id="sec5">5. 软件工程思维的编排（Orchestration）</h2>
+<h2 id="orchestration">5. 软件工程思维的编排（Orchestration）</h2>
 <p>这是最核心的"灵魂"：让模型像程序员一样思考。</p>
 
 <table>

@@ -260,6 +260,7 @@
   <a class="resource-link" href="https://huggingface.co/learn/llm-course/en/chapter0/1" target="_blank">🤗 Hugging Face LLM Course</a>
   <a class="resource-link" href="https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi" target="_blank">🎬 3Blue1Brown 神经网络系列</a>
   <a class="resource-link" href="https://www.3blue1brown.com/topics/neural-networks" target="_blank">🧮 3B1B 官方页面</a>
+  <a class="resource-link" href="https://www.bilibili.com/video/BV1HNsez5EUo" target="_blank">📺 B站 — 注意力机制详解</a>
 </div>
 
 <p style="color:#4a6b55;margin-top:8px;">3Blue1Brown 的动效视频能帮你建立极强的<strong>"空间几何直觉"</strong>，而不是死记公式。以下笔记围绕视频内容组织，试图讲清"为什么"而非"是什么"。</p>
@@ -268,11 +269,13 @@
   <div class="toc-title">📖 目录</div>
   <div class="toc-grid">
     <a href="#act1">第一幕 · 函数选择</a>
-    <a href="#act4">第四幕 · 总结</a>
+    <a href="#act4">第四幕 · 注意力机制</a>
     <a href="#act2">第二幕 · 梯度下降</a>
+    <a href="#act5">第五幕 · 知识存储</a>
     <a href="#act3">第三幕 · 反向传播</a>
     <a href="#backprop-calc">反向传播的微积分</a>
-    <a href="#transformer">Transformer（待补充）</a>
+    <a href="#math-toolbox">🔧 数学工具箱</a>
+    <a href="#summary">🎯 总结</a>
   </div>
 </div>
 
@@ -624,30 +627,330 @@
 <hr>
 
 <!-- ================================================================ -->
-<!--  占位：Transformers 笔记                                          -->
+<!--  附章：数学工具箱                                                  -->
 <!-- ================================================================ -->
 
-<h2 id="transformer">🏗️ Transformer — 预训练的现代架构（待补充）</h2>
+<div style="margin-bottom:6px;"><span class="section-label">🔧 附章</span></div>
+<h2 id="math-toolbox">📊 数学工具箱 — 矩阵乘法的两种灵魂</h2>
+
+<div class="card">
+  <p>在深入 Transformer 之前，有一个贯穿始终的数学工具需要先建立直觉：<strong>矩阵乘法有两种理解方式</strong>，它们服务于不同的目的。</p>
+  <p>理解这两种视角，是看懂 Attention 和 MLP 数学内在的基础。</p>
+</div>
+
+<h3>🧩 视角一：列向量 —— 线性组合</h3>
+
+<div class="card blue">
+  <h4 style="color:#2a3a7a;">核心思想</h4>
+  <p>矩阵乘以向量，是矩阵各列向量的<strong>线性组合</strong>。</p>
+  <div style="text-align:center;font-size:1em;margin:10px 0;padding:8px;background:#e2efe5;border-radius:6px;">
+    $A = \begin{bmatrix} | & | \\ v_1 & v_2 \\ | & | \end{bmatrix}$,  $x = \begin{bmatrix} x_1 \\ x_2 \end{bmatrix}$ → $Ax = x_1 v_1 + x_2 v_2$
+  </div>
+  <p style="margin-top:8px;">结果向量由矩阵的列向量加权求和得到。权重就是输入向量 $x$ 的对应分量。</p>
+</div>
+
+<div class="card">
+  <h4>为什么需要这个视角？</h4>
+  <ul>
+    <li><strong>空间生成与基底</strong>：结果向量 $b$ 必须处于 $A$ 的列空间（Column Space）中，方程 $Ax=b$ 才有解。这告诉我们结果落在什么空间里。</li>
+    <li><strong>坐标变换</strong>：把 $A$ 的列向量看作一组"新坐标轴"（基底），向量 $x$ 就是在这组新坐标轴下的坐标。$Ax$ 把新坐标系下的向量转换回标准坐标系。</li>
+  </ul>
+</div>
+
+<h3>🎯 视角二：行向量 —— 点积相似度</h3>
+
 <div class="card warm">
-  <p><em>Transformer 架构的相关笔记即将补充。届时将涵盖：注意力机制、多头注意力、位置编码、Layer Norm、Transformer 的预训练目标（MLM / CLM）等内容。</em></p>
+  <h4 style="color:#7c5200;">核心思想</h4>
+  <p>矩阵乘以向量，是矩阵各行向量与该向量的<strong>点积（内积）</strong>。</p>
+  <div style="text-align:center;font-size:1em;margin:10px 0;padding:8px;background:#fef7e6;border-radius:6px;">
+    $A = \begin{bmatrix} — & r_1 & — \\ — & r_2 & — \end{bmatrix}$,  $x$ → $Ax = \begin{bmatrix} r_1 \cdot x \\ r_2 \cdot x \end{bmatrix}$
+  </div>
+  <p style="margin-top:8px;">每个输出的分量分别来自输入向量与矩阵对应行向量的点积——也就是<strong>相似度分数</strong>。</p>
+</div>
+
+<div class="card warm">
+  <h4>为什么需要这个视角？</h4>
+  <p>在深度学习中，计算点积就是计算<strong>语义相似度</strong>：</p>
+  <ul>
+    <li><span class="key">Attention 的 $QK^T$</span> 就是用行向量视角——每个 Query 行向量与所有 Key 列向量计算相似度</li>
+    <li><span class="key">MLP 升维矩阵 $W_1$</span> 也是用行向量视角——每个行向量编码一个"事实的 Key"，与输入做点积来检查匹配度</li>
+  </ul>
+</div>
+
+<div class="insight">
+  <div class="insight-icon">🔗</div>
+  <div><strong>两视角的统一</strong>：同一个矩阵乘法，从行看是"匹配模式"，从列看是"组合基底"。Attention 用前者找谁相关，MLP 用前者检索知识、用后者组装结果。理解了这一点，后面的内容会豁然开朗。</div>
 </div>
 
 <hr>
 
 <!-- ================================================================ -->
-<!--  总结：三幕合在一起看                                              -->
+<!--  第四幕：注意力机制                                                -->
 <!-- ================================================================ -->
 
-<h2>🎯 贯穿三条线索的主线</h2>
+<div style="margin-bottom:6px;"><span class="section-label">第四幕</span></div>
+<h2 id="act4">🔄 注意力机制 — 让每个词看见整个句子</h2>
+
+<h3>🏗️ 前置：把 Transformer 看成一个矩阵工厂</h3>
+
+<div class="card">
+  <p>在最高抽象层，Transformer 做的事情很简单：<strong>把模型看成一组可调参数的矩阵，这些矩阵作用于从待处理数据提取的向量</strong>。</p>
+  <p>所有矩阵都是在预训练阶段通过海量文本学习得到的——它们学会了如何把"词"变成"有上下文的表示"。</p>
+</div>
+
+<h4>📐 重要函数：Softmax</h4>
+<div class="card">
+  <p>Softmax 的作用是把任意一组实数转换为<strong>概率分布</strong>：</p>
+  <ul>
+    <li><span class="key">$e^x$</span>：把正负数都映射为正数</li>
+    <li>分子分母归一化：所有输出之和为 1</li>
+  </ul>
+  <div style="text-align:center;font-size:1em;margin:10px 0;padding:8px;background:#e2efe5;border-radius:6px;">
+    $\text{Probability}_i = \frac{e^{z_i / T}}{\sum_j e^{z_j / T}}$
+  </div>
+</div>
+
+<div class="card warm">
+  <h4>🌡️ Temperature 参数</h4>
+  <p>LLM 在预测下一个词时，会为词表中所有词计算一个概率分布。Temperature $T$ 控制分布的"尖峭"程度：</p>
+  <ul>
+    <li><span class="key">$T$ 很小</span>：原本稍微领先的分数被指数级放大，形成"赢家通吃"——输出确定但呆板</li>
+    <li><span class="key">$T$ 很大</span>：所有词的概率被拉平——输出多样但可能不相关</li>
+  </ul>
+  <p style="font-size:0.9em;color:#6a8f7a;margin-top:4px;">Softmax 之前的输出称为 <strong>Logits</strong>（未归一化的分数）。</p>
+</div>
+
+<h4>📦 嵌入矩阵（Embedding Matrix）$W_E$</h4>
+<div class="card blue">
+  <p>语句中的每个词被转换为一个<strong>高维向量</strong>：</p>
+  <ul>
+    <li>单词被映射为高维空间中的<strong>点</strong></li>
+    <li>空间中的方向编码了语义——"男人" - "女人" 可能就编码了性别信息</li>
+    <li>向量的<strong>最近邻居</strong>往往是语义近似的词</li>
+    <li>向量的<strong>点积</strong>反映了语义相关度</li>
+  </ul>
+  <p style="font-size:0.9em;color:#4a6b55;margin-top:6px;">在后续运算中，每个 token 的 embedding 还会融入丰富的上下文信息。</p>
+</div>
+
+<h4>🔄 去嵌入矩阵（Unembedding Matrix）$W_U$</h4>
+<div class="card">
+  <p>与 $W_E$ 作用相反——把经过多层注意力 + MLP 处理的最终向量<strong>映射回词汇表</strong>，得到每个词作为下一个词的分数（Logits）。</p>
+</div>
+
+<hr style="margin:12px 0;">
+
+<h3>🎯 Attention 的核心直觉</h3>
+
+<div class="card">
+  <p>假设某个 token 有一个原始的高维向量 $E_i$（在进入特定训练批次前，它是固定的初始向量）。它<strong>仅包含它自己的信息</strong>（如果加了位置编码，还包括位置信息）。</p>
+  <p><span class="key">注意力机制的目标</span>：通过加权吸收其他 token 的信息，把 $E_i$ 调整为<strong>包含上下文</strong>的新向量 $E_i'$。</p>
+  <div style="text-align:center;font-size:1.1em;margin:10px 0;font-weight:bold;color:#1a4a2a;">
+    $E_i \rightarrow E_i'$
+  </div>
+</div>
+
+<h3>🔑 QKV：Attention 的三个角色</h3>
+
+<div class="diagnosis-grid" style="grid-template-columns:1fr 1fr 1fr;">
+  <div class="card diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#3a7acf;">Q</div>
+    <h4>Query</h4>
+    <p style="font-size:0.93em;"><strong>"我在找什么？"</strong></p>
+    <p style="font-size:0.9em;color:#4a6b55;">$E_i \rightarrow Q_i$。把当前词向量转成一个"查字典的问题"——一个相对低维的向量。</p>
+  </div>
+  <div class="card diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#b8860b;">K</div>
+    <h4>Key</h4>
+    <p style="font-size:0.93em;"><strong>"我有什么？"</strong></p>
+    <p style="font-size:0.9em;color:#4a6b55;">$E_i \rightarrow K_i$。把每个词向量转成一个"被查的索引"——和 Q 同维度的向量（因为要做点积）。</p>
+  </div>
+  <div class="card diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#7c3a9e;">V</div>
+    <h4>Value</h4>
+    <p style="font-size:0.93em;"><strong>"找到了怎么改？"</strong></p>
+    <p style="font-size:0.9em;color:#4a6b55;">$E_i \rightarrow V_i$。如果被判定"相关"，就贡献自己的内容方向来构造 $\Delta E$。</p>
+  </div>
+</div>
+
+<div class="insight">
+  <div class="insight-icon">💡</div>
+  <div><strong>简单的类比</strong>：你在图书馆查书。Query = 你心里的问题，Key = 书的目录索引，Value = 书的内容。你通过问题和目录的匹配找到相关书，然后把它们的内容加起来形成你的理解。</div>
+</div>
+
+<h3>📐 Attention 公式三步走</h3>
+
+<div style="text-align:center;font-size:1.05em;margin:12px 0;padding:10px;background:#e2efe5;border-radius:6px;font-weight:bold;">
+  $\displaystyle \text{Attention}(Q, K, V) = \text{Softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$
+</div>
+
+<div class="diagnosis-grid" style="grid-template-columns:1fr 1fr 1fr;">
+  <div class="card diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#1f4a2e;">1</div>
+    <h4>相似度评分</h4>
+    <p style="font-size:0.9em;">$Q \times K^T$。向量点积越大，方向越接近，越相关。得到一个注意力分数矩阵——每个字与其它所有字之间的相关程度。</p>
+  </div>
+  <div class="card diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#b8860b;">2</div>
+    <h4>归一化为权重</h4>
+    <p style="font-size:0.9em;">Softmax + $\sqrt{d_k}$ 缩放。除以 $\sqrt{d_k}$ 防止大数梯度消失。Softmax 把分数变成 0–1 的权重系数。</p>
+  </div>
+  <div class="card diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#7c3a9e;">3</div>
+    <h4>加权求和</h4>
+    <p style="font-size:0.9em;">$\text{Score} \times V$。用权重对 Value 加权求和，得到 $\Delta E$。最后加到原始向量上：$E' = E + \Delta E$。</p>
+  </div>
+</div>
+
+<div class="card">
+  <p>经过这三步，初始的词向量 $E$ 不再是"白板"——它把周围相关的 $V$ 向量按比例打包在一起，当作一个"修正包"（$\Delta E$）加到了自己身上。这就是 <span class="key">"让每个词看见整个句子"</span> 的数学本质。</p>
+</div>
+
+<h3>📏 QKV 的维度解释</h3>
+
+<div class="card blue">
+  <ul>
+    <li><span class="key">Q, K 都是降维</span>：$d_{low} \times d_{embedding}$。从 Embedding 的高维降到低维，减少计算量同时聚焦核心特征。</li>
+    <li><span class="key">V 的优化技巧</span>：V 必须输出 $d_{embedding}$ 维度（否则不能加到 $E$ 上），但不一定要用 $d_{emb} \times d_{emb}$ 的大矩阵：<br>
+      → 先降维到 $d_{low}$（$d_{low} \times d_{emb}$），再升维回 $d_{emb}$（$d_{emb} \times d_{low}$）<br>
+      → 参数量从 $d_{emb}^2$ 减少为 $2 \times d_{low} \times d_{emb}$
+    </li>
+  </ul>
+</div>
+
+<h3>🧠 多头注意力（Multi-Head Attention）</h3>
+
+<div class="card">
+  <p>每个头有自己独立的 Q, K, V 矩阵，并行计算，捕捉不同的上下文关系：</p>
+  <ul>
+    <li>一个头可能关注<strong>语法关系</strong>（主谓宾）</li>
+    <li>一个头可能关注<strong>指代关系</strong>（代词指代谁）</li>
+    <li>一个头可能关注<strong>位置距离</strong>（附近的词）</li>
+  </ul>
+  <p>最后，所有头的结果被拼接在一起，通过一个输出矩阵映射回 $d_{embedding}$ 维度。</p>
+</div>
+
+<h3>🔒 掩码（Masking）</h3>
+<div class="card warm">
+  <p>在自回归语言模型（GPT 系）中，每个 token 在预测下一个词时不能看到"未来的词"。Mask 的操作就是把未来位置的注意力分数强行设为 $-\infty$，使得 Softmax 后对应权重为 0。</p>
+  <div class="highlight accent" style="margin-top:6px;padding:6px 10px;font-size:0.92em;">这是自回归和双向模型（如 BERT）最核心的区别——一个看左边，一个看两边。</div>
+</div>
+
+<h3>⚡ Attention 的计算量</h3>
+<div class="card red">
+  <p><span class="key">$O(N^2)$</span> —— 这是大模型推理的主要瓶颈。</p>
+  <p>$N$ 是序列长度。每个 token 要和所有其他 token 计算相似度，序列翻倍，计算量翻四倍。这也是为什么长文本（如 128K 上下文）需要专门优化（如 Flash Attention）。</p>
+</div>
+
+<div class="takeaway">
+  <div class="takeaway-title">📌 第四幕总结</div>
+  <p>注意力机制是 Transformer 的核心创新。它通过 QKV 三矩阵的配合，实现了一个优雅的功能：<span class="key">让每个词能根据相关性吸收整个句子的信息</span>。这个过程本质上是"查字典"——Q 是问题，K 是索引，V 是内容。多头注意力让模型能同时从多个维度理解上下文关系，而掩码则确保了自回归生成的方向性。</p>
+</div>
+
+<hr>
+
+<!-- ================================================================ -->
+<!--  第五幕：知识存储                                                  -->
+<!-- ================================================================ -->
+
+<div style="margin-bottom:6px;"><span class="section-label">第五幕</span></div>
+<h2 id="act5">🗃️ 模型怎么装下整个世界 — MLP 的知识存储与叠加态</h2>
+
+<div class="card">
+  <p>Transformer 的每个基础层有两个模块：<strong>注意力模块 + 多层感知器（MLP）</strong>。多个这样的基础层堆叠而成整个模型。</p>
+  <p>注意力机制负责"谁和谁相关"，而 MLP 负责"<strong>我知道什么</strong>"。有论文指出，模型学到的<strong>事实</strong>主要存储在 MLP 中。</p>
+  <p>MLP 部分结构虽然简单，但参数量占了整个模型的<strong>2/3</strong>——它才是模型真正的知识库。</p>
+</div>
+
+<h3>🔧 MLP 的运算过程</h3>
+
+<div style="text-align:center;font-size:1em;margin:12px 0;padding:10px;background:#e2efe5;border-radius:6px;font-weight:bold;">
+  $\text{MLP}(x) = \sigma(x W_1 + b_1) W_2 + b_2$
+</div>
+
+<div class="diagnosis-grid" style="grid-template-columns:1fr 1fr;">
+  <div class="card blue diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#3a7acf;">1</div>
+    <h4>升维 — 检索知识</h4>
+    <p style="font-size:0.93em;">$x \rightarrow \sigma(x W_1)$</p>
+    <p style="font-size:0.9em;color:#4a6b55;">用行向量视角看 $W_1$：它的每个行向量是一个"事实的 Key"（激活模式）。输入 $x$ 与每个行向量做点积，计算匹配度。</p>
+    <ul style="font-size:0.9em;">
+      <li>升维维度一般是 $4 \times d_{embedding}$</li>
+      <li>激活函数（ReLU）决定哪些知识被"点亮"</li>
+    </ul>
+  </div>
+  <div class="card purple diagnosis-card" style="margin:0;">
+    <div class="num" style="background:#7c3a9e;">2</div>
+    <h4>降维 — 组合输出</h4>
+    <p style="font-size:0.93em;">$\text{activated} \times W_2$</p>
+    <p style="font-size:0.9em;color:#4a6b55;">用列向量视角看 $W_2$：它的每一列是一个"事实的 Value"（影响方向）。前面被激活的知识，按各自强度通过 $W_2$ 的列向量组合回 Embedding 空间。</p>
+    <ul style="font-size:0.9em;">
+      <li>最后加上残差连接：$E' \rightarrow E' + \text{MLP}(E')$</li>
+    </ul>
+  </div>
+</div>
+
+<div class="insight">
+  <div class="insight-icon">💡</div>
+  <div><strong>直观理解</strong>：$W_1$ 的行向量是"你问我什么我就查什么"的词典索引，$W_2$ 的列向量是"查到以后在理解上添加什么方向"。整个过程就是：听懂问题 → 查出知识 → 更新理解。</div>
+</div>
+
+<h3>🌀 叠加态（Superposition）—— 数量级的飞跃</h3>
+
+<div class="card warm">
+  <p>既然模型要记住海量的世界知识，而神经元数量是有限的，模型是怎么装下这一切的？</p>
+  <p><span class="key">答案来自高维空间的奇特几何性质</span>：高维空间中可以存在大量"<strong>几乎正交</strong>"的方向。</p>
+  <ul>
+    <li>在三维空间里，最多只有 3 个互相垂直的方向（xyz 轴）</li>
+    <li>但在高维空间（比如 4096 维）中，可以存在成千上万个"几乎正交"的方向</li>
+    <li>模型利用这一点，通过<strong>不同的线性组合</strong>来同时编码远超神经元数量的特征和事实</li>
+  </ul>
+  <p>这就解释了为什么大模型能成为百科全书——<span class="key">它并不是每个事实占一个神经元，而是叠加在一起、用不同的激活模式来区分</span>。</p>
+</div>
+
+<div class="card red">
+  <h4 style="color:#7a2a2a;">⚠️ 叠加态的一个直接后果</h4>
+  <p>由于叠加态的存在，你没法明确地指出某个 Key 对应哪个具体的事实——一个 Key 可能同时编码了多个知识的叠加。这就是 MLP 被称为"难以解释的模型部分"的根本原因。</p>
+</div>
+
+<h3>📊 Transformer 参数量速查</h3>
+
+<div class="card">
+  <p>一个标准 Transformer 层的主要参数来源：</p>
+  <ul>
+    <li><span class="key">Embedding Matrix $W_E$</span>：词 → 向量</li>
+    <li><span class="key">Unembedding Matrix $W_U$</span>：向量 → 词</li>
+    <li><span class="key">Q / K / V 矩阵</span>：每个注意力头独立</li>
+    <li><span class="key">输出矩阵</span>：拼接多头结果</li>
+    <li><span class="key">MLP Up $W_1$</span>：升维</li>
+    <li><span class="key">MLP Down $W_2$</span>：降维</li>
+  </ul>
+  <p style="font-size:0.9em;color:#4a6b55;margin-top:6px;">更具体的参数量数值会在后续笔记中补充（与具体模型配置相关）。</p>
+</div>
+
+<div class="takeaway">
+  <div class="takeaway-title">📌 第五幕总结</div>
+  <p>MLP 是 Transformer 的事实数据库。它通过"升维检索 → 激活 → 降维组合"的三段结构，以 Key/Value 的形式存储了海量的世界知识。而叠加态则解释了为什么有限数量的神经元能胜任百科全书式的知识容量——<span class="key">高维空间的"几乎正交"方向提供了惊人的扩展性</span>。这是模型"知道"与模型"注意"（Attention）的分工。</p>
+</div>
+
+<hr>
+
+<!-- ================================================================ -->
+<!--  总结：五幕 + 附章合在一起看                                        -->
+<!-- ================================================================ -->
+
+<h2 id="summary">🎯 贯穿五条线索的主线</h2>
 
 <div class="card purple">
-  <p>这份笔记的三幕其实在讲述同一件事的三个侧面：</p>
+  <p>这份笔记的五幕 + 附章其实在讲述同一件事的多个侧面：</p>
   <ul>
     <li><strong>第一幕</strong>从微观出发：<span class="key">每一个函数选择都是一个有意义的决定</span>——ReLU 折纸、偏置平移、归纳偏置注入先验</li>
     <li><strong>第二幕</strong>从宏观出发：<span class="key">架构决定模型能学到什么层次的规律</span>——梯度下降只是工具，CNN 的结构先验才是它成功的本质</li>
     <li><strong>第三幕</strong>从传播出发：<span class="key">反向传播是学习的引擎</span>——链式法则把输出层的误差逐层传回，告诉你每个参数该往哪调、调多少</li>
+    <li><strong>🔧 附章</strong>夯实数学基础：<span class="key">矩阵乘法的两种视角</span>——行向量"匹配模式"、列向量"组合基底"，是所有后续机制的数学透镜</li>
+    <li><strong>第四幕</strong>进入现代架构：<span class="key">注意力机制让每个词看见整个句子</span>——QKV 三矩阵配合实现上下文感知，多头并行捕捉多维关系</li>
+    <li><strong>第五幕</strong>揭示知识存储：<span class="key">MLP 是模型的百科全书</span>——升维检索、降维组合、叠加态让有限神经元编码海量知识</li>
   </ul>
-  <p style="margin-top:8px;">三者交汇于同一个洞察：<span class="key">对数据结构和物理世界的理解，才是设计好模型的核心能力</span>。这不仅仅是深度学习，这是"理解问题"的方法论。</p>
+  <p style="margin-top:8px;">六者交汇于同一个洞察：<span class="key">对数据结构和物理世界的理解，才是设计好模型的核心能力</span>。这不仅仅是深度学习，这是"理解问题"的方法论。</p>
 </div>
 
 <div style="text-align:center;color:#6a8f7a;font-size:0.9em;margin-top:20px;padding:14px 0;border-top:1px solid #c3dbcc;">

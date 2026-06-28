@@ -63,17 +63,17 @@ tr:nth-child(even) { background: var(--card); }
 <div class="toc">
   <div class="toc-title">📖 目录</div>
   <div class="toc-grid">
-    <a href="#sec1">一、概述</a>
-    <a href="#sec2">二、核心流程与机制</a>
-    <a href="#sec3">三、LLM vs Embedding 模型</a>
-    <a href="#sec4">四、RAG 后训练</a>
-    <a href="#sec5">五、注入上下文</a>
-    <a href="#sec6">六、总结</a>
+    <a href="#overview">一、概述</a>
+    <a href="#core-flow">二、核心流程与机制</a>
+    <a href="#llm-vs-embedding">三、LLM vs Embedding 模型</a>
+    <a href="#rag-post-training">四、RAG 后训练</a>
+    <a href="#long-context-vs-rag">五、注入上下文</a>
+    <a href="#summary">六、总结</a>
   </div>
 </div>
 
 <!-- ============ OVERVIEW ============ -->
-<h2 id="sec1">一、概述</h2>
+<h2 id="overview">一、概述</h2>
 
 <div class="summary">
 <strong>RAG</strong> 的核心思路是：在向大模型提问前，先从外部知识库中检索相关文档，将检索到的内容作为上下文注入 prompt，让模型基于给定知识而非自身记忆来生成答案。
@@ -82,7 +82,7 @@ tr:nth-child(even) { background: var(--card); }
 <p>RAG 解决了纯 LLM 的两个根本缺陷：<span class="keyword">知识截止期</span>（预训练数据有时间点）和 <span class="keyword">幻觉</span>（模型在缺乏知识时胡编乱造）。企业落地时，RAG 是实现知识库问答最成熟也是成本最低的方案。</p>
 
 <!-- ============ DETAILS ============ -->
-<h2 id="sec2">二、核心流程与机制</h2>
+<h2 id="core-flow">二、核心流程与机制</h2>
 
 <!-- 运作流程 -->
 <h3>2.1 运作流程</h3>
@@ -113,7 +113,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ KEY DIFF ============ -->
-<h2 id="sec3">三、LLM vs Embedding 模型：本质区别</h2>
+<h2 id="llm-vs-embedding">三、LLM vs Embedding 模型：本质区别</h2>
 
 <div class="card">
 <table>
@@ -127,7 +127,7 @@ tr:nth-child(even) { background: var(--card); }
 
 
 <!-- ============ POST-TRAINING ============ -->
-<h2 id="sec4">四、RAG 后训练（Post-Training）</h2>
+<h2 id="rag-post-training">四、RAG 后训练（Post-Training）</h2>
 
 <p>RAG 的 Embedding 模型不是从零训练的，而是以 <span class="keyword">基座 LLM 的 Embedding 矩阵</span> 作为初始化底子，再经过 <strong>三个阶段的特训</strong>：</p>
 
@@ -178,7 +178,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ CONTEXT INJECTION ============ -->
-<h2 id="sec5">五、注入上下文：Long-Context vs RAG</h2>
+<h2 id="long-context-vs-rag">五、注入上下文：Long-Context vs RAG</h2>
 
 <p>给大模型注入上下文有两种主流方式：<span class="keyword">长上下文直读</span> 和 <span class="keyword">检索增强生成（RAG）</span>。各有适用场景。</p>
 
@@ -246,7 +246,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ CONCLUSIONS ============ -->
-<h2 id="sec6">六、总结</h2>
+<h2 id="summary">六、总结</h2>
 
 <div class="summary">
 <p><strong>RAG 的本质：</strong>用外挂知识库为大模型提供"开卷考试"环境，而非让模型做"闭卷考试"。</p>

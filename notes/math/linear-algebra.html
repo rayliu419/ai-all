@@ -69,26 +69,26 @@ tr:nth-child(even) { background: var(--card); }
 <div class="toc">
   <div class="toc-title">📖 目录</div>
   <div class="toc-grid">
-    <a href="#sec1">一、线性代数是为了解决什么问题？</a>
-    <a href="#sec5">五、基与线性相关</a>
-    <a href="#sec2">二、几何直觉：理解线性代数的关键</a>
-    <a href="#sec6">六、矩阵与线性变换</a>
-    <a href="#sec3">三、几何直觉 vs 数值计算</a>
-    <a href="#sec7">七、矩阵乘法与线性变换复合关系</a>
-    <a href="#sec4">四、向量</a>
-    <a href="#sec8">八、三维空间</a>
-    <a href="#sec9">九、行列式</a>
-    <a href="#sec10">十、非方阵</a>
-    <a href="#sec11">十一、点积与对偶性</a>
-    <a href="#sec12">十二、基变换</a>
-    <a href="#sec13">十三、特征向量和特征值</a>
-    <a href="#sec14">十四、抽象向量空间</a>
-    <a href="#sec15">十五、推荐资源</a>
+    <a href="#purpose-of-linear-algebra">一、线性代数是为了解决什么问题？</a>
+    <a href="#basis-linear-independence">五、基与线性相关</a>
+    <a href="#geometric-intuition">二、几何直觉：理解线性代数的关键</a>
+    <a href="#matrices-linear-transformations">六、矩阵与线性变换</a>
+    <a href="#geometry-vs-computation">三、几何直觉 vs 数值计算</a>
+    <a href="#matrix-multiplication-composition">七、矩阵乘法与线性变换复合关系</a>
+    <a href="#vectors">四、向量</a>
+    <a href="#three-dimensions">八、三维空间</a>
+    <a href="#determinants">九、行列式</a>
+    <a href="#non-square-matrices">十、非方阵</a>
+    <a href="#dot-product-duality">十一、点积与对偶性</a>
+    <a href="#change-of-basis">十二、基变换</a>
+    <a href="#eigenvectors-eigenvalues">十三、特征向量和特征值</a>
+    <a href="#abstract-vector-spaces">十四、抽象向量空间</a>
+    <a href="#resources">十五、推荐资源</a>
   </div>
 </div>
 
 <!-- ============ SECTION 1 ============ -->
-<h2 id="sec1">一、线性代数是为了解决什么问题？</h2>
+<h2 id="purpose-of-linear-algebra">一、线性代数是为了解决什么问题？</h2>
 
 <div class="summary">
 <strong>线性代数是为了解决高维空间并发问题而诞生的数学语言。</strong> 它让我们能用高度简洁的符号体系，去操作和求解超越三维直觉的复杂系统。
@@ -107,7 +107,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 2 ============ -->
-<h2 id="sec2">二、几何直觉：理解线性代数的关键</h2>
+<h2 id="geometric-intuition">二、几何直觉：理解线性代数的关键</h2>
 
 <div class="summary">
 <strong>要想真正学懂线性代数，你必须建立几何直觉。</strong> 不要把矩阵看成数字表格，不要把向量看成一列数字。
@@ -159,7 +159,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 3 ============ -->
-<h2 id="sec3">三、几何直觉 vs 数值计算</h2>
+<h2 id="geometry-vs-computation">三、几何直觉 vs 数值计算</h2>
 
 <table>
   <tr><th>角色</th><th>作用</th></tr>
@@ -172,7 +172,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 4 ============ -->
-<h2 id="sec4">四、向量</h2>
+<h2 id="vectors">四、向量</h2>
 
 <p>看待向量有两种不同的视角，取决于你是在学数学还是在编程：</p>
 
@@ -194,7 +194,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 5 ============ -->
-<h2 id="sec5">五、基与线性相关</h2>
+<h2 id="basis-linear-independence">五、基与线性相关</h2>
 
 <h3>5.1 线性组合与线性空间</h3>
 <p>取两个向量 v₁, v₂，则它们的<strong>线性组合</strong> <code>a·v₁ + b·v₂</code>（a, b 为任意实数）可以生成的<strong>所有</strong>向量的集合，构成一个<strong>线性空间</strong>。</p>
@@ -221,7 +221,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 6 ============ -->
-<h2 id="sec6">六、矩阵与线性变换</h2>
+<h2 id="matrices-linear-transformations">六、矩阵与线性变换</h2>
 
 <div class="summary">
 <strong>不要把矩阵乘法看作是枯燥的"行乘列"公式，而要将其视为发生的几何变换。</strong> 线性变换的关键在于跟踪基向量 <strong>î</strong> 和 <strong>ĵ</strong> 的去向。
@@ -261,7 +261,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 7 ============ -->
-<h2 id="sec7">七、矩阵乘法与线性变换复合关系</h2>
+<h2 id="matrix-multiplication-composition">七、矩阵乘法与线性变换复合关系</h2>
 
 <div class="summary">
 <strong>A·B 有两种几何视角：列组合视角（每列分别变换）、变换复合视角（先 B 再 A）。</strong>
@@ -314,7 +314,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 8 ============ -->
-<h2 id="sec8">八、三维空间</h2>
+<h2 id="three-dimensions">八、三维空间</h2>
 
 <p>以上二维空间的变换和几何视角，同样适用于<strong>三维空间</strong>。基向量从 î, ĵ 变为 î, ĵ, <strong>k̂</strong>，矩阵从 2×2 变为 3×3，但核心思想完全一致：</p>
 
@@ -328,7 +328,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 9 ============ -->
-<h2 id="sec9">九、行列式</h2>
+<h2 id="determinants">九、行列式</h2>
 
 <div class="summary">
 <strong>行列式描述了一个线性变换对空间拉伸或压缩的尺度。</strong> 对二维来说就是面积缩放因子，对三维来说就是体积缩放因子。
@@ -376,7 +376,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 10 ============ -->
-<h2 id="sec10">十、非方阵</h2>
+<h2 id="non-square-matrices">十、非方阵</h2>
 
 <p>前面讨论的都是方阵（二维→二维，三维→三维）。非方阵的几何含义是什么？</p>
 
@@ -416,7 +416,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 11 ============ -->
-<h2 id="sec11">十一、点积与对偶性</h2>
+<h2 id="dot-product-duality">十一、点积与对偶性</h2>
 
 <div class="summary">
 <strong>点积有两种等价的视角：投影几何与线性变换。</strong> 前者直观，后者则揭示了点积与线性代数核心概念的深刻联系——对偶性。
@@ -474,7 +474,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 12 ============ -->
-<h2 id="sec12">十二、基变换</h2>
+<h2 id="change-of-basis">十二、基变换</h2>
 
 <div class="summary">
 <strong>基变换就是用不同的"镜头"（坐标系）来观察同一个几何对象（向量或线性变换）。</strong> 平面上的那个物理点就在那里，一动不动——改变的只是我们描述它的"数字"。
@@ -643,12 +643,12 @@ tr:nth-child(even) { background: var(--card); }
 <p><strong>思考题：</strong></p>
 <ul>
   <li>如果小明想在他的坐标系中做"A 后再做 B"两个连续变换，对应的矩阵应该是什么？</li>
-  <li>相似对角化要找一个特殊的基，让变换矩阵变成对角矩阵——这个"特殊基"有什么几何意义？（见 <a href="#sec13">十三、特征向量和特征值</a>）</li>
+  <li>相似对角化要找一个特殊的基，让变换矩阵变成对角矩阵——这个"特殊基"有什么几何意义？（见 <a href="#eigenvectors-eigenvalues">十三、特征向量和特征值</a>）</li>
 </ul>
 </div>
 
 <!-- ============ SECTION 13 ============ -->
-<h2 id="sec13">十三、特征向量和特征值</h2>
+<h2 id="eigenvectors-eigenvalues">十三、特征向量和特征值</h2>
 
 <div class="summary">
 <strong>特征向量就是在矩阵变换后方向保持完全不变（或者恰好完全相反）的那些特殊向量。</strong> 特征值则描述了这些向量在变换中被拉伸或压缩的比例。
@@ -731,7 +731,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 14 ============ -->
-<h2 id="sec14">十四、抽象向量空间</h2>
+<h2 id="abstract-vector-spaces">十四、抽象向量空间</h2>
 
 <div class="summary">
 <strong>抽象向量空间将"向量"的概念从几何箭头推广到了更广泛的数学对象上。</strong> 只要一个集合里的元素满足加法和数乘的规则，它们就可以被称为"向量"——无论它们长得像箭头、函数、矩阵、还是多项式。
@@ -777,7 +777,7 @@ tr:nth-child(even) { background: var(--card); }
 </div>
 
 <!-- ============ SECTION 15 ============ -->
-<h2 id="sec15">十五、推荐资源</h2>
+<h2 id="resources">十五、推荐资源</h2>
 <ul>
   <li><a href="https://www.zhihu.com/question/358244660/answer/2016914765264462940" target="_blank">知乎：线性代数到底是为了解决什么问题被发明的？</a></li>
   <li>MIT 18.06 线性代数课程</li>
