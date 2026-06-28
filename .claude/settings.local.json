@@ -1,9 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "mcp__plugin_claude-mem_mcp-search__search",
-      "Bash(mkdir -p /Users/liurui/.claude/skills/grill-me)",
-      "Bash(cp /Users/liurui/workspace/ai-all/.claude/skills/grill-me/SKILL.md /Users/liurui/.claude/skills/grill-me/SKILL.md)"
+      "mcp__plugin_claude-mem_mcp-search__search"
     ]
   }
 }
