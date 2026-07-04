@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方向导数与梯度 · 渐进式讲解</title>
+<style>
+:root { --bg: #f5faf6; --border: #c3dbcc; --text: #2d3a31; --accent: #3a7a4d; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 14px 16px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+h3 { font-size: 1.08em; color: var(--accent); margin-bottom: 1px; }
+.sub { font-size: 0.8em; color: #5a7a65; margin-bottom: 8px; }
+
+/* Tabs */
+.tab-bar { display: flex; gap: 3px; margin-bottom: 6px; }
+.tab-btn {
+  padding: 6px 14px; border: 1px solid var(--border); background: #fff;
+  color: var(--text); cursor: pointer; font-size: 0.88em; border-radius: 5px 5px 0 0;
+}
+.tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.tab-btn:hover:not(.active) { background: #e8f5ec; }
+
+/* Lesson text */
+.lesson {
+  background: #fff; border: 1px solid var(--border); border-radius: 6px;
+  padding: 10px 12px; margin-bottom: 6px; font-size: 0.9em; line-height: 1.55;
+}
+.lesson .formula {
+  display: inline-block; background: #e8f5ec; padding: 2px 8px;
+  border-radius: 3px; font-family: 'Times New Roman', serif; font-size: 1.05em;
+  margin: 2px 0;
+}
+.lesson .key { color: var(--accent); font-weight: bold; }
+.lesson .hl-grad { color: #3a6b9f; font-weight: bold; }
+.lesson .hl-dir { color: #c0392b; font-weight: bold; }
+
+/* Layout for partial mode with side-by-side plots */
+.plot-row {
+  display: flex; gap: 6px; margin-bottom: 4px;
+}
+.plot-main { flex: 1; min-height: 420px; }
+.plot-side { width: 370px; min-height: 420px; flex-shrink: 0; }
+.plot-full { width: 100%; min-height: 460px; }
+.plot-wrap { width: 100%; height: 100%; }
+
+/* Controls */
+.controls-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  margin-bottom: 4px; padding: 6px 8px; background: #fff;
+  border: 1px solid var(--border); border-radius: 4px;
+}
+.ctrl-group { display: flex; align-items: center; gap: 4px; }
+.ctrl-group label { font-size: 0.85em; white-space: nowrap; min-width: 28px; }
+.ctrl-group input[type="range"] { width: 100px; accent-color: var(--accent); }
+.ctrl-group .val {
+  font-family: monospace; font-size: 0.82em; min-width: 38px; color: var(--accent);
+}
+.toggle-btn {
+  padding: 2px 10px; font-size: 0.82em; border: 1px solid var(--border);
+  background: #fff; color: var(--text); cursor: pointer; border-radius: 4px;
+}
+.toggle-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.toggle-btn:hover:not(.active) { background: #e8f5ec; }
+.btn-play {
+  padding: 2px 10px; font-size: 0.82em; border: 1px solid var(--border);
+  background: #fff; color: var(--text); cursor: pointer; border-radius: 4px;
+}
+.btn-play.playing { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* Info */
+.info-box {
+  font-size: 0.85em; padding: 6px 10px; background: #fff;
+  border: 1px solid var(--border); border-radius: 4px; line-height: 1.5;
+}
+.info-box .hl-grad { color: #3a6b9f; font-weight: bold; }
+.info-box .hl-dir { color: #c0392b; font-weight: bold; }
+.info-box .hl-res { color: #1a7a3a; font-weight: bold; }
+.info-box .hl-dim { color: #888; }
+
+.vis-hidden { display: none !important; }
+.example-box {
+  background: #fff; border: 1px solid var(--border); border-radius: 6px;
+  padding: 10px 12px; margin-top: 8px; font-size: 0.9em; line-height: 1.55;
+}
+.example-box .ex-title {
+  font-weight: bold; color: var(--accent); font-size: 1.02em; margin-bottom: 4px;
+}
+.example-box p { margin: 4px 0; }
+.example-box .highlight { background: #e8f5ec; padding: 1px 5px; border-radius: 3px; font-family: 'Times New Roman',serif; }
+.example-box table {
+  width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 0.88em;
+}
+.example-box th {
+  background: var(--accent); color: #fff; padding: 5px 8px; text-align: left;
+  font-weight: 600; font-size: 0.92em;
+}
+.example-box td {
+  padding: 5px 8px; border-bottom: 1px solid #e0eae4; vertical-align: top;
+}
+.example-box tr:last-child td { border-bottom: none; }
+.example-box tr:hover td { background: #f0f8f2; }
+.example-box .dir-label { font-weight: bold; color: #2d3a31; white-space: nowrap; }
+.example-box .formula-cell { font-family: 'Times New Roman',serif; color: #3a6b9f; }
+.example-box .result-cell { font-weight: bold; color: #1a7a3a; }
+.example-box .meta {
+  font-size: 0.82em; color: #666; margin-top: 2px;
+}
+</style>
+</head>
+<body>
+
+<h3>方向导数与梯度 · 渐进式讲解</h3>
+<div class="sub">z = x² + y² &nbsp;·&nbsp; 从偏导到方向导数再到梯度</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" data-mode="partial">① 偏导数</button>
+  <button class="tab-btn" data-mode="directional">② 方向导数</button>
+  <button class="tab-btn" data-mode="gradient">③ 梯度</button>
+</div>
+
+<div class="lesson" id="lesson"></div>
+
+<!-- Plot area: partial mode uses row layout, others use full -->
+<div class="plot-row" id="plotRow">
+  <div class="plot-main" id="plotMain"><div class="plot-wrap" id="plot3d"></div></div>
+  <div class="plot-side vis-hidden" id="plotSide"><div class="plot-wrap" id="plot2d"></div></div>
+</div>
+
+<div class="controls-bar" id="controlsBar"></div>
+<div class="controls-bar" id="animBar" style="display:none">
+  <button class="btn-play" id="playBtn">▶ 旋转</button>
+</div>
+<div class="info-box" id="infoBox"></div>
+<div class="example-box">
+  <div class="ex-title">🎯 实例：碗壁上的行走</div>
+  <p>假设你现在站在碗 <span class="highlight">z = x² + y²</span> 上的点 <span class="highlight">(1, 2)</span>，此时的高度 <span class="highlight">z = 1² + 2² = 5</span>。</p>
+  <p>该点的梯度为：<span class="highlight">∇<i>f</i>(1, 2) = (2·1, 2·2) = (2, 4)</span>。
+  模长（最陡坡度）：<span class="highlight">|∇<i>f</i>| = √(2²+4²) = √20 ≈ 4.47</span>。</p>
+  <p style="font-size:0.88em;color:#666;">如果你选择不同的方向 <span style="font-family:'Times New Roman',serif">u⃗</span> 迈出一步：</p>
+  <table>
+    <tr>
+      <th style="width:22%">你的选择（方向 u）</th>
+      <th style="width:40%">方向导数计算（D<sub>u</sub>f = ∇f · u）</th>
+      <th style="width:38%">直观物理意义</th>
+    </tr>
+    <tr>
+      <td class="dir-label">⬆ 沿最陡方向往碗口爬</td>
+      <td class="formula-cell">u = (1/√5, 2/√5)<br>
+        (2,4)·(1/√5,2/√5) = 10/√5 = <span class="result-cell">√20</span></td>
+      <td>你迎着梯度走，感受到了当前位置<strong>最陡的坡度</strong>（约 4.47），每步上升最多。</td>
+    </tr>
+    <tr>
+      <td class="dir-label">🔄 顺着碗壁绕圈（等高线）</td>
+      <td class="formula-cell">u = (−2/√5, 1/√5)<br>
+        (2,4)·(−2/√5,1/√5) = <span class="result-cell">0</span></td>
+      <td>你和梯度垂直，相当于在碗壁上<strong>水平绕圈</strong>。高度不随这一步发生任何改变。</td>
+    </tr>
+    <tr>
+      <td class="dir-label">⬇ 沿最陡方向往碗底滑</td>
+      <td class="formula-cell">u = (−1/√5, −2/√5)<br>
+        (2,4)·(−1/√5,−2/√5) = <span class="result-cell">−√20</span></td>
+      <td>你背离梯度走，迎来了<strong>最陡的下坡</strong>，直接冲向碗底，每步下降最多。</td>
+    </tr>
+    <tr>
+      <td class="dir-label">➡ 正 x 轴方向</td>
+      <td class="formula-cell">u = (1, 0)<br>
+        (2,4)·(1,0) = <span class="result-cell">2</span></td>
+      <td>你斜着切上去，坡度变缓了。<span class="meta">（偏导数 ∂z/∂x 其实就是沿 x 轴方向的方向导数。）</span></td>
+    </tr>
+  </table>
+  <div style="margin-top:6px;padding:5px 8px;background:#f5faf6;border-radius:4px;font-size:0.88em;">
+    💡 <strong>核心关系</strong>：方向导数 D<sub>u</sub>f = ∇f · u = |∇f|·cos α。<br>
+    当 α = 0°（与梯度同向）→ <strong style="color:#1a7a3a;">D = |∇f| = 4.47</strong>（最大上升）<br>
+    当 α = 90°（与梯度垂直）→ <strong style="color:#1a7a3a;">D = 0</strong>（等高线方向，无升降）<br>
+    当 α = 180°（与梯度反向）→ <strong style="color:#1a7a3a;">D = −|∇f| = −4.47</strong>（最大下降）
+  </div>
+</div>
+
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  // ---- State ----
+  const S = {
+    mode: 'partial',
+    partialAxis: 'x',   // 'x' = ∂z/∂x (fix y), 'y' = ∂z/∂y (fix x)
+    x0: 0.6,
+    y0: 0.6,
+    thetaDeg: 45,
+    playing: false
+  };
+  let animId = null;
+
+  // ---- DOM refs ----
+  const $ = id => document.getElementById(id);
+  const lesson = $('lesson');
+  const plot3d = $('plot3d');
+  const plot2d = $('plot2d');
+  const plotSide = $('plotSide');
+  const controlsBar = $('controlsBar');
+  const infoBox = $('infoBox');
+
+  // ---- Math ----
+  function f(x, y) { return x*x + y*y; }
+  function fx(x) { return 2*x; }
+  function fy(y) { return 2*y; }
+
+  // ---- Helpers ----
+  function arrowTraces(ox, oy, oz, dx, dy, dz, color, name) {
+    const len = Math.sqrt(dx*dx + dy*dy + dz*dz);
+    if (len < 1e-10) return [];
+    const ex = ox + dx, ey = oy + dy, ez = oz + dz;
+    return [
+      { type: 'scatter3d', mode: 'lines', x: [ox, ex], y: [oy, ey], z: [oz, ez],
+        line: { color, width: 3 }, name, showlegend: true },
+      { type: 'scatter3d', mode: 'markers', x: [ex], y: [ey], z: [ez],
+        marker: { size: 5, color, symbol: 'diamond' }, name, showlegend: false }
+    ];
+  }
+
+  function lineTrace3d(pts, color, width, name, dash) {
+    return { type: 'scatter3d', mode: 'lines',
+      x: pts.map(p => p[0]), y: pts.map(p => p[1]), z: pts.map(p => p[2]),
+      line: { color, width: width||3, dash: dash||'solid' }, name, showlegend: !!name };
+  }
+
+  function surfaceMesh(R, n, opacity) {
+    n = n || 35; opacity = opacity || 0.3;
+    const X=[], Y=[], Z=[], ti=[], tj=[], tk=[];
+    for (let i=0; i<n; i++) for (let j=0; j<n; j++) {
+      const x=-R+2*R*i/(n-1), y=-R+2*R*j/(n-1);
+      X.push(x); Y.push(y); Z.push(f(x,y));
+    }
+    for (let i=0; i<n-1; i++) for (let j=0; j<n-1; j++) {
+      const idx=i*n+j;
+      ti.push(idx, idx+1, idx+n); tj.push(idx+1, idx+n+1, idx+n+1); tk.push(idx+n, idx+n, idx+1);
+    }
+    return { X, Y, Z, ti, tj, tk };
+  }
+
+  function defaultLayout3d(title, xRange, yRange, zRange) {
+    return {
+      autosize: true, margin: {l:30,r:10,b:20,t:30,pad:0},
+      paper_bgcolor: '#f5faf6',
+      scene: {
+        xaxis: {title:'x', range: xRange || [-2.6,2.6]},
+        yaxis: {title:'y', range: yRange || [-2.6,2.6]},
+        zaxis: {title:'z', range: zRange || [-0.2, 5.5]},
+        camera: {eye:{x:1.8,y:1.8,z:1.0}},
+        aspectmode: 'cube'
+      },
+      legend: {font:{size:9}, x:0.02, y:0.98, bgcolor:'rgba(255,255,255,0.7)'}
+    };
+  }
+
+  // ========== LESSON TEXT ==========
+  const LESSONS = {};
+
+  LESSONS.partial = `
+    <div style="margin-bottom:4px;font-weight:bold;color:var(--accent);">偏导数：沿坐标轴方向的变化率</div>
+    <p>对于二元函数 <i>z</i> = <i>x</i>² + <i>y</i>²，如果我们<strong>固定其中一个变量</strong>，函数就退化为一元函数——它的导数就是<strong>偏导数</strong>。</p>
+    <div style="display:flex;gap:16px;margin:4px 0;">
+      <div><span class="formula">∂z/∂x = 2<i>x</i></span> &nbsp;（固定 <i>y</i>，沿 <i>x</i> 方向看）</div>
+      <div><span class="formula">∂z/∂y = 2<i>y</i></span> &nbsp;（固定 <i>x</i>，沿 <i>y</i> 方向看）</div>
+    </div>
+    <p><strong>几何意义</strong>：用平面 <span class="hl-grad" id="planeDescX">y = y₀</span> 去截曲面，截口是一条抛物线。
+    偏导数 <span class="hl-grad" id="pdValLabel">∂z/∂x</span> 就是这条抛物线在 <i>x</i> = <i>x</i>₀ 处的<strong>切线斜率</strong>。</p>
+    <p style="font-size:0.88em;color:#666;">💡 试试点选下方「∂z/∂x」和「∂z/∂y」切换观察。拖动滑块改变截切位置。</p>
+  `;
+
+  LESSONS.directional = `
+    <div style="margin-bottom:4px;font-weight:bold;color:var(--accent);">方向导数：沿任意方向的变化率</div>
+    <p>偏导数只能沿坐标轴方向移动。<strong>方向导数</strong> 让我们能沿<strong>任意方向</strong> <span class="formula">u = (cos θ, sin θ)</span> 度量函数的变化率。</p>
+    <div style="margin:4px 0;"><span class="formula">D<sub>u</sub>f = ∂z/∂x · cos θ + ∂z/∂y · sin θ = 2x₀·cos θ + 2y₀·sin θ</span></div>
+    <p>🔹 θ = 0° → <span class="hl-grad">D<sub>u</sub>f = ∂z/∂x</span>（沿 x 轴）<br>
+    🔹 θ = 90° → <span class="hl-grad">D<sub>u</sub>f = ∂z/∂y</span>（沿 y 轴）</p>
+    <p>图中：红色箭头为方向 u，红色曲线为曲面沿 u 方向的截面，<span style="color:#d4942b;font-weight:bold;">橙色虚线</span> 是该点处的切线——<strong>斜率 = D<sub>u</sub>f</strong>。</p>
+  `;
+
+  LESSONS.gradient = `
+    <div style="margin-bottom:4px;font-weight:bold;color:var(--accent);">梯度：方向导数的最大值</div>
+    <p>把两个偏导数组合成一个向量——<strong>梯度</strong>：<span class="formula">∇f = (∂z/∂x, ∂z/∂y) = (2x, 2y)</span></p>
+    <p>方向导数可以写成梯度与方向向量的<strong>点积</strong>：</p>
+    <div style="margin:4px 0;"><span class="formula">D<sub>u</sub>f = ∇f · u = |∇f| · cos α</span> &nbsp;其中 α = ∠(∇f, u)</div>
+    <p>由此可得梯度的核心性质：</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:3px 0;">
+      <span style="background:#e8f5ec;padding:1px 7px;border-radius:3px;">α = 0° → <strong>Dₘₐₓ = |∇f|</strong>（最陡上升）</span>
+      <span style="background:#e8f5ec;padding:1px 7px;border-radius:3px;">α = 90° → <strong>D = 0</strong>（等高线方向）</span>
+      <span style="background:#e8f5ec;padding:1px 7px;border-radius:3px;">α = 180° → <strong>D = −|∇f|</strong>（最陡下降）</span>
+    </div>
+    <p style="font-size:0.88em;color:#666;">💡 蓝色箭头 = 梯度方向（始终指向最陡上升），红色箭头 = 选定的方向 u。<br>点击「▶ 旋转」观察 D<sub>u</sub>f 随方向变化的规律。</p>
+  `;
+
+  // ========== BUILD SCENE ==========
+  function buildScene() {
+    switch (S.mode) {
+      case 'partial': buildPartial(); break;
+      case 'directional': buildDirectional(); break;
+      case 'gradient': buildGradient(); break;
+    }
+  }
+
+  // ========== MODE: PARTIAL ==========
+  function buildPartial() {
+    const { x0, y0, partialAxis } = S;
+    const z0 = f(x0, y0);
+
+    // ---- Lesson update ----
+    lesson.innerHTML = LESSONS.partial;
+    const isFx = partialAxis === 'x';
+    document.getElementById('planeDescX').textContent = isFx ? 'y = y₀' : 'x = x₀';
+    document.getElementById('pdValLabel').textContent = isFx ? '∂z/∂x' : '∂z/∂y';
+    document.getElementById('pdValLabel').className = isFx ? 'hl-grad' : 'hl-dir';
+
+    // ---- Controls ----
+    const fixedVal = partialAxis === 'x' ? y0 : x0;
+    const freeVal = partialAxis === 'x' ? x0 : y0;
+    const freeLabel = partialAxis === 'x' ? 'x₀' : 'y₀';
+    const fixedLabel = partialAxis === 'x' ? 'y₀' : 'x₀';
+
+    controlsBar.innerHTML =
+      '<button class="toggle-btn'+(isFx?' active':'')+'" id="pdFxBtn">∂z/∂x</button>' +
+      '<button class="toggle-btn'+(isFx?'':' active')+'" id="pdFyBtn">∂z/∂y</button>' +
+      '<div class="ctrl-group"><label>'+freeLabel+'</label>' +
+      '<input type="range" id="pFreeSlider" min="-2" max="2" step="0.04" value="'+freeVal+'">' +
+      '<span class="val" id="pFreeVal">'+freeVal.toFixed(2)+'</span></div>' +
+      '<div class="ctrl-group" style="opacity:0.7"><label style="font-size:0.78em">'+fixedLabel+'</label>' +
+      '<button class="toggle-btn" id="pFixDec" style="padding:0 6px;font-size:0.82em">−</button>' +
+      '<span class="val" id="pFixVal" style="min-width:32px;text-align:center">'+fixedVal.toFixed(2)+'</span>' +
+      '<button class="toggle-btn" id="pFixInc" style="padding:0 6px;font-size:0.82em">+</button></div>';
+
+    $('pFreeSlider').addEventListener('input', function() {
+      const v = parseFloat(this.value);
+      if (partialAxis === 'x') { S.x0 = v; } else { S.y0 = v; }
+      $('pFreeVal').textContent = v.toFixed(2);
+      buildPartial();
+    });
+    const stepFixed = function(delta) {
+      return function() {
+        const cur = partialAxis === 'x' ? S.y0 : S.x0;
+        const nv = Math.max(-2, Math.min(2, cur + delta));
+        if (partialAxis === 'x') { S.y0 = nv; } else { S.x0 = nv; }
+        buildPartial();
+      };
+    };
+    $('pFixDec').addEventListener('click', stepFixed(-0.1));
+    $('pFixInc').addEventListener('click', stepFixed(0.1));
+    $('pdFxBtn').addEventListener('click', function() { S.partialAxis = 'x'; buildPartial(); });
+    $('pdFyBtn').addEventListener('click', function() { S.partialAxis = 'y'; buildPartial(); });
+
+    // ---- Show side plot, hide anim button ----
+    plotSide.classList.remove('vis-hidden');
+    var ab = $('animBar'); if (ab) ab.style.display = 'none';
+
+    // ---- 3D scene ----
+    const mesh = surfaceMesh(2.4, 30, 0.25);
+    const traces3d = [];
+
+    // Surface
+    traces3d.push({ type:'mesh3d', x:mesh.X, y:mesh.Y, z:mesh.Z,
+      i:mesh.ti, j:mesh.tj, k:mesh.tk, opacity:0.25, color:'#5ead6e', name:'z=x²+y²' });
+
+    // Cutting plane
+    const R = 2.4;
+    cutPlaneTrace(traces3d, partialAxis, fixedVal, R);
+
+    // Intersection curve (highlight on surface)
+    const curvePts = [];
+    const steps = 60;
+    for (let i = 0; i <= steps; i++) {
+      const t = -R + 2*R * i / steps;
+      const x = partialAxis === 'x' ? t : fixedVal;
+      const y = partialAxis === 'x' ? fixedVal : t;
+      curvePts.push([x, y, f(x, y)]);
+    }
+    traces3d.push(lineTrace3d(curvePts, '#d4942b', 6, '截口曲线'));
+
+    // Point P
+    traces3d.push({ type:'scatter3d', mode:'markers',
+      x:[x0], y:[y0], z:[z0],
+      marker:{size:12,color:'#2d3a31',line:{color:'#fff',width:2}}, name:'P' });
+
+    // Tangent line on surface (along the partial direction)
+    const pd = partialAxis === 'x' ? fx(x0) : fy(y0);
+    const tanLen = 0.6;
+    const tx = partialAxis === 'x' ? x0 + tanLen : x0;
+    const ty = partialAxis === 'x' ? y0 : y0 + tanLen;
+    const tz = z0 + pd * tanLen;
+    traces3d.push(lineTrace3d([[x0,y0,z0],[tx,ty,tz]], '#c0392b', 5, '切线 (斜率='+pd.toFixed(2)+')', 'dash'));
+
+    // Projection line
+    traces3d.push({ type:'scatter3d', mode:'lines',
+      x:[x0,x0], y:[y0,y0], z:[0,z0],
+      line:{color:'#999',width:1,dash:'dot'}, showlegend:false });
+
+    const layout3d = defaultLayout3d();
+    layout3d.title = { text:'', font:{size:11} };
+    Plotly.react('plot3d', traces3d, layout3d, {responsive:true});
+
+    // ---- 2D slice plot ----
+    const varVals = [], zVals = [];
+    for (let i = 0; i <= 100; i++) {
+      const t = -R + 2*R * i / 100;
+      if (partialAxis === 'x') {
+        varVals.push(t);
+        zVals.push(f(t, fixedVal));
+      } else {
+        varVals.push(t);
+        zVals.push(f(fixedVal, t));
+      }
+    }
+    const varAt = partialAxis === 'x' ? x0 : y0;
+    const zAt = partialAxis === 'x' ? f(x0, fixedVal) : f(fixedVal, y0);
+
+    // Tangent line at point
+    const tanLineX = [varAt - 0.8, varAt + 0.8];
+    const tanLineZ = [zAt + pd * (-0.8), zAt + pd * 0.8];
+
+    const trace2d = [
+      { type:'scatter', mode:'lines', x:varVals, y:zVals,
+        line:{color:'#d4942b',width:3}, name:'截口曲线 z='+(partialAxis==='x'?'x²+y₀²':'x₀²+y²') },
+      { type:'scatter', mode:'lines', x:tanLineX, y:tanLineZ,
+        line:{color:'#c0392b',width:2,dash:'dash'}, name:'切线 斜率='+pd.toFixed(2) },
+      { type:'scatter', mode:'markers', x:[varAt], y:[zAt],
+        marker:{size:12,color:'#2d3a31',line:{color:'#fff',width:2}}, name:'P' }
+    ];
+
+    const layout2d = {
+      autosize:true, margin:{l:35,r:10,b:25,t:30,pad:0},
+      paper_bgcolor:'#f5faf6', plot_bgcolor:'#f5faf6',
+      title:{text:'截口视图（'+(partialAxis==='x'?'固定 y':'固定 x')+'='+fixedVal.toFixed(2)+'）',
+             font:{size:11}},
+      xaxis:{title:partialAxis==='x'?'x':'y', range:[-R,R]},
+      yaxis:{title:'z', range:[-0.3, 5.8]},
+      showlegend:true, legend:{font:{size:9}, x:0.03, y:0.97}
+    };
+    Plotly.react('plot2d', trace2d, layout2d, {responsive:true});
+
+    // ---- Info ----
+    const pdSym = partialAxis === 'x' ? '∂z/∂x' : '∂z/∂y';
+    const pdSym2 = partialAxis === 'x' ? '∂z/∂y' : '∂z/∂x';
+    const pdVal = partialAxis === 'x' ? fx(x0) : fy(y0);
+    const pdVal2 = partialAxis === 'x' ? fy(y0) : fx(x0);
+    infoBox.innerHTML =
+      '<span class="hl-grad">' + pdSym + '</span> = ' + pdVal.toFixed(2) +
+      ' &nbsp;|&nbsp; <span class="hl-dim">' + pdSym2 + '</span> = ' + pdVal2.toFixed(2) +
+      ' &nbsp;|&nbsp; <span class="hl-dim">点 P = (' + x0.toFixed(2) + ', ' + y0.toFixed(2) + ', ' + z0.toFixed(2) + ')</span>';
+  }
+
+  function cutPlaneTrace(traces, axis, val, R) {
+    const n = 20;
+    const zMax = 5.5;
+    function planeMesh() {
+      const Xp=[], Yp=[], Zp=[], ti=[], tj=[], tk=[];
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        if (axis === 'x') {
+          Xp.push(val);
+          Yp.push(-R + 2*R * i / (n-1));
+        } else {
+          Xp.push(-R + 2*R * i / (n-1));
+          Yp.push(val);
+        }
+        Zp.push(zMax * j / (n-1));
+      }
+      for (let i = 0; i < n-1; i++) for (let j = 0; j < n-1; j++) {
+        const idx = i * n + j;
+        ti.push(idx, idx+1, idx+n); tj.push(idx+1, idx+n+1, idx+n+1); tk.push(idx+n, idx+n, idx+1);
+      }
+      return { Xp, Yp, Zp, ti, tj, tk };
+    }
+    const pm = planeMesh();
+    traces.push({
+      type:'mesh3d', x:pm.Xp, y:pm.Yp, z:pm.Zp, i:pm.ti, j:pm.tj, k:pm.tk,
+      opacity:0.2, color:'#3a6b9f', name:'平面 '+(axis==='x'?'x':'y')+'='+val.toFixed(2), showlegend:true
+    });
+    // Grid lines on the plane for clarity
+    const gridSteps = 12;
+    for (let i = 0; i <= gridSteps; i++) {
+      const t = -R + 2*R * i / gridSteps;
+      const pts = [];
+      for (let j = 0; j <= 10; j++) {
+        const z = zMax * j / 10;
+        if (axis === 'x') pts.push([val, t, z]);
+        else pts.push([t, val, z]);
+      }
+      traces.push({ type:'scatter3d', mode:'lines',
+        x:pts.map(p=>p[0]), y:pts.map(p=>p[1]), z:pts.map(p=>p[2]),
+        line:{color:'#8ab8db', width:1}, showlegend:false });
+    }
+    for (let j = 0; j <= 10; j++) {
+      const z = zMax * j / 10;
+      const pts = [];
+      for (let i = 0; i <= gridSteps; i++) {
+        const t = -R + 2*R * i / gridSteps;
+        if (axis === 'x') pts.push([val, t, z]);
+        else pts.push([t, val, z]);
+      }
+      traces.push({ type:'scatter3d', mode:'lines',
+        x:pts.map(p=>p[0]), y:pts.map(p=>p[1]), z:pts.map(p=>p[2]),
+        line:{color:'#8ab8db', width:1}, showlegend:false });
+    }
+  }
+
+  // ========== MODE: DIRECTIONAL ==========
+  function buildDirectional() {
+    const { x0, y0, thetaDeg } = S;
+    lesson.innerHTML = LESSONS.directional;
+
+    const theta = thetaDeg * Math.PI / 180;
+    const ux = Math.cos(theta), uy = Math.sin(theta);
+    const z0 = f(x0, y0);
+    const Duf = fx(x0)*ux + fy(y0)*uy;
+
+    // ---- Controls ----
+    controlsBar.innerHTML =
+      '<div class="ctrl-group"><label>x₀</label><input type="range" id="dxSlider" min="-2" max="2" step="0.04" value="'+x0+'"><span class="val" id="dxVal">'+x0.toFixed(2)+'</span></div>' +
+      '<div class="ctrl-group"><label>y₀</label><input type="range" id="dySlider" min="-2" max="2" step="0.04" value="'+y0+'"><span class="val" id="dyVal">'+y0.toFixed(2)+'</span></div>' +
+      '<div class="ctrl-group"><label>θ</label><input type="range" id="dtSlider" min="0" max="360" step="1" value="'+thetaDeg+'"><span class="val" id="dtVal">'+thetaDeg+'°</span></div>';
+
+    $('dxSlider').addEventListener('input', function() { S.x0=parseFloat(this.value); buildDirectional(); });
+    $('dySlider').addEventListener('input', function() { S.y0=parseFloat(this.value); buildDirectional(); });
+    $('dtSlider').addEventListener('input', function() { S.thetaDeg=parseFloat(this.value); buildDirectional(); });
+
+    plotSide.classList.add('vis-hidden');
+    var ab = $('animBar'); if (ab) ab.style.display = 'none';
+    const traces = directionalTraces(x0, y0, theta, z0, Duf, ux, uy);
+    const layout = defaultLayout3d();
+    layout.title = {text:'方向导数演示', font:{size:11}};
+    Plotly.react('plot3d', traces, layout, {responsive:true});
+
+    infoBox.innerHTML =
+      '<span class="hl-dir">u</span> = (' + ux.toFixed(3) + ', ' + uy.toFixed(3) + ') &nbsp;θ = ' + thetaDeg + '°' +
+      ' &nbsp;|&nbsp; <span class="hl-grad">∂z/∂x</span> = ' + fx(x0).toFixed(2) +
+      ' &nbsp;<span class="hl-grad">∂z/∂y</span> = ' + fy(y0).toFixed(2) +
+      '<br><span class="hl-res">D<sub>u</sub>f</span> = ' + fx(x0).toFixed(2) + '×' + ux.toFixed(3) +
+      ' + ' + fy(y0).toFixed(2) + '×' + uy.toFixed(3) +
+      ' = <span class="hl-res">' + Duf.toFixed(3) + '</span>';
+  }
+
+  function directionalTraces(x0, y0, theta, z0, Duf, ux, uy) {
+    const traces = [];
+    const R = 2.4;
+    const mesh = surfaceMesh(R, 30, 0.25);
+    traces.push({ type:'mesh3d', x:mesh.X, y:mesh.Y, z:mesh.Z,
+      i:mesh.ti, j:mesh.tj, k:mesh.tk, opacity:0.25, color:'#5ead6e', name:'z=x²+y²' });
+
+    // Point P
+    traces.push({ type:'scatter3d', mode:'markers',
+      x:[x0], y:[y0], z:[z0],
+      marker:{size:12,color:'#2d3a31',line:{color:'#fff',width:2}}, name:'P' });
+
+    // Direction arrow on xy-plane
+    const aLen = 0.9;
+    traces.push.apply(traces, arrowTraces(x0, y0, 0, ux*aLen, uy*aLen, 0, '#c0392b', 'u (方向)'));
+
+    // Surface path along u
+    const pathPts = [];
+    for (let t = -1.3; t <= 1.3; t += 0.04) {
+      const px = x0 + t*ux, py = y0 + t*uy;
+      pathPts.push([px, py, f(px,py)]);
+    }
+    traces.push(lineTrace3d(pathPts, '#c0392b', 4, '沿 u 方向截面'));
+
+    // Tangent line (Duf slope)
+    const ts = 0.5;
+    traces.push(lineTrace3d([[x0,y0,z0],[x0+ts*ux,y0+ts*uy,z0+ts*Duf]], '#d4942b', 4, '切线 (Duf)', 'dash'));
+
+    // Projection line
+    traces.push({ type:'scatter3d', mode:'lines', x:[x0,x0], y:[y0,y0], z:[0,z0],
+      line:{color:'#999',width:1,dash:'dot'}, showlegend:false });
+
+    // Partial derivative arrow hints on xy-plane (small, dim)
+    const pLen = 0.4;
+    traces.push.apply(traces, arrowTraces(x0, y0, 0, pLen, 0, 0, 'rgba(58,107,159,0.4)', ''));
+    const lastIdx = traces.length - 2;
+    if (lastIdx >= 0) traces[lastIdx].showlegend = false;
+    traces.push.apply(traces, arrowTraces(x0, y0, 0, 0, pLen, 0, 'rgba(58,107,159,0.4)', ''));
+    const lastIdx2 = traces.length - 2;
+    if (lastIdx2 >= 0) traces[lastIdx2].showlegend = false;
+
+    return traces;
+  }
+
+  // ========== MODE: GRADIENT ==========
+  function buildGradient() {
+    const { x0, y0, thetaDeg, playing } = S;
+    lesson.innerHTML = LESSONS.gradient;
+
+    const theta = thetaDeg * Math.PI / 180;
+    const ux = Math.cos(theta), uy = Math.sin(theta);
+    const z0 = f(x0, y0);
+    const gx = fx(x0), gy = fy(y0);
+    const gradMag = Math.sqrt(gx*gx + gy*gy);
+    const Duf = gx*ux + gy*uy;
+
+    // ---- Controls ----
+    controlsBar.innerHTML =
+      '<div class="ctrl-group"><label>x₀</label><input type="range" id="gxSlider" min="-2" max="2" step="0.04" value="'+x0+'"><span class="val" id="gxVal">'+x0.toFixed(2)+'</span></div>' +
+      '<div class="ctrl-group"><label>y₀</label><input type="range" id="gySlider" min="-2" max="2" step="0.04" value="'+y0+'"><span class="val" id="gyVal">'+y0.toFixed(2)+'</span></div>' +
+      '<div class="ctrl-group"><label>θ</label><input type="range" id="gtSlider" min="0" max="360" step="1" value="'+thetaDeg+'"><span class="val" id="gtVal">'+thetaDeg+'°</span></div>';
+
+    $('gxSlider').addEventListener('input', function() { S.x0=parseFloat(this.value); buildGradient(); });
+    $('gySlider').addEventListener('input', function() { S.y0=parseFloat(this.value); buildGradient(); });
+    $('gtSlider').addEventListener('input', function() { S.thetaDeg=parseFloat(this.value); buildGradient(); });
+
+    // Show persistent play button
+    var pb = $('playBtn'), ab = $('animBar');
+    if (ab) ab.style.display = '';
+    if (pb) {
+      if (playing) { pb.textContent='⏸ 暂停'; pb.classList.add('playing'); }
+      else { pb.textContent='▶ 旋转'; pb.classList.remove('playing'); }
+    }
+
+    plotSide.classList.add('vis-hidden');
+    const traces = gradientTraces(x0, y0, theta, z0, gx, gy, gradMag, Duf, ux, uy);
+    const layout = defaultLayout3d();
+    layout.title = {text:'梯度与方向导数的关系', font:{size:11}};
+    Plotly.react('plot3d', traces, layout, {responsive:true});
+
+    // ---- Info ----
+    const cosAlpha = gradMag > 1e-8 ? Duf / gradMag : 0;
+    const alphaRad = Math.acos(Math.max(-1, Math.min(1, cosAlpha)));
+    const alphaDeg = (alphaRad * 180 / Math.PI).toFixed(1);
+    const relDesc = cosAlpha > 0.999 ? '↑ 同向（最大上升）' :
+                    cosAlpha < -0.999 ? '↓ 反向（最大下降）' :
+                    Math.abs(cosAlpha) < 0.01 ? '⊥ 垂直（无变化）' :
+                    cosAlpha > 0 ? '↗ 锐角（上升）' : '↘ 钝角（下降）';
+
+    infoBox.innerHTML =
+      '<span class="hl-grad">∇f</span> = (' + gx.toFixed(2) + ', ' + gy.toFixed(2) + ')' +
+      ' &nbsp;|∇f| = ' + gradMag.toFixed(3) +
+      ' &nbsp;<span class="hl-dim">(最大方向导数)</span>' +
+      '<br><span class="hl-dir">u</span> = (' + ux.toFixed(3) + ', ' + uy.toFixed(3) + ')' +
+      ' &nbsp;θ = ' + thetaDeg + '°' +
+      ' &nbsp;α = ' + alphaDeg + '° ' + relDesc +
+      '<br><span class="hl-res">D<sub>u</sub>f</span> = ∇f · u = |∇f|·cos α = ' + gradMag.toFixed(3) + ' × ' + cosAlpha.toFixed(3) +
+      ' = <span class="hl-res">' + Duf.toFixed(3) + '</span>';
+  }
+
+  function gradientTraces(x0, y0, theta, z0, gx, gy, gradMag, Duf, ux, uy) {
+    const traces = [];
+    const R = 2.4;
+    const mesh = surfaceMesh(R, 30, 0.25);
+    traces.push({ type:'mesh3d', x:mesh.X, y:mesh.Y, z:mesh.Z,
+      i:mesh.ti, j:mesh.tj, k:mesh.tk, opacity:0.25, color:'#5ead6e', name:'z=x²+y²' });
+
+    // Point P
+    traces.push({ type:'scatter3d', mode:'markers',
+      x:[x0], y:[y0], z:[z0],
+      marker:{size:12,color:'#2d3a31',line:{color:'#fff',width:2}}, name:'P' });
+
+    // Gradient arrow on xy-plane
+    const aLen = 0.9;
+    if (gradMag > 1e-8) {
+      traces.push.apply(traces, arrowTraces(x0, y0, 0, (gx/gradMag)*aLen, (gy/gradMag)*aLen, 0, '#3a6b9f', '∇f (梯度)'));
+    }
+
+    // Direction arrow on xy-plane
+    traces.push.apply(traces, arrowTraces(x0, y0, 0, ux*aLen, uy*aLen, 0, '#c0392b', 'u (方向)'));
+
+    // Surface path along u
+    const pathPts = [];
+    for (let t = -1.3; t <= 1.3; t += 0.04) {
+      const px = x0 + t*ux, py = y0 + t*uy;
+      pathPts.push([px, py, f(px,py)]);
+    }
+    traces.push(lineTrace3d(pathPts, '#c0392b', 4, '沿 u 方向截面'));
+
+    // Tangent line
+    const ts = 0.5;
+    traces.push(lineTrace3d([[x0,y0,z0],[x0+ts*ux,y0+ts*uy,z0+ts*Duf]], '#d4942b', 4, '切线 (Duf)', 'dash'));
+
+    // Angle arc (on xy-plane)
+    if (gradMag > 0.01) {
+      const gAngle = Math.atan2(gy, gx);
+      const arcR = 0.35;
+      const steps = 20;
+      let diff = theta - gAngle;
+      if (diff > Math.PI) diff -= 2*Math.PI;
+      if (diff < -Math.PI) diff += 2*Math.PI;
+      const arcPts = [];
+      for (let i = 0; i <= steps; i++) {
+        const a = gAngle + diff * i / steps;
+        arcPts.push([x0 + arcR*Math.cos(a), y0 + arcR*Math.sin(a), 0]);
+      }
+      traces.push(lineTrace3d(arcPts, '#666', 2, '夹角 α', 'solid'));
+    }
+
+    // Projection line
+    traces.push({ type:'scatter3d', mode:'lines', x:[x0,x0], y:[y0,y0], z:[0,z0],
+      line:{color:'#999',width:1,dash:'dot'}, showlegend:false });
+
+    return traces;
+  }
+
+  // ========== ANIMATION ==========
+  function animLoop() {
+    if (!S.playing || S.mode !== 'gradient') { S.playing = false; return; }
+    S.thetaDeg = (S.thetaDeg + 1) % 360;
+    buildGradient();
+    animId = requestAnimationFrame(animLoop);
+  }
+
+  // ========== TAB SWITCHING ==========
+  function switchMode(mode) {
+    S.mode = mode;
+    // Stop animation if leaving gradient
+    if (mode !== 'gradient' && S.playing) {
+      S.playing = false;
+      if (animId) { cancelAnimationFrame(animId); animId = null; }
+    }
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    buildScene();
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      switchMode(this.dataset.mode);
+    });
+  });
+
+  // ========== INIT ==========
+  // Persistent play button handler (not recreated each frame)
+  var pb = $('playBtn');
+  if (pb) {
+    pb.addEventListener('click', function() {
+      S.playing = !S.playing;
+      if (S.playing) { this.textContent='⏸ 暂停'; this.classList.add('playing'); animLoop(); }
+      else { this.textContent='▶ 旋转'; this.classList.remove('playing'); if(animId){cancelAnimationFrame(animId);animId=null;} }
+    });
+  }
+  buildScene();
+
+})();
+</script>
+</body>
+</html>

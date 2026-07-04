@@ -70,12 +70,12 @@ tr:nth-child(even) { background: var(--card); }
   <div class="toc-title">📖 目录</div>
   <div class="toc-grid">
     <a href="#purpose-of-linear-algebra">一、线性代数是为了解决什么问题？</a>
-    <a href="#basis-linear-independence">五、基与线性相关</a>
     <a href="#geometric-intuition">二、几何直觉：理解线性代数的关键</a>
-    <a href="#matrices-linear-transformations">六、矩阵与线性变换</a>
     <a href="#geometry-vs-computation">三、几何直觉 vs 数值计算</a>
-    <a href="#matrix-multiplication-composition">七、矩阵乘法与线性变换复合关系</a>
     <a href="#vectors">四、向量</a>
+    <a href="#basis-linear-independence">五、基与线性相关</a>
+    <a href="#matrices-linear-transformations">六、矩阵与线性变换</a>
+    <a href="#matrix-multiplication-composition">七、矩阵乘法与线性变换复合关系</a>
     <a href="#three-dimensions">八、三维空间</a>
     <a href="#determinants">九、行列式</a>
     <a href="#non-square-matrices">十、非方阵</a>
@@ -84,8 +84,8 @@ tr:nth-child(even) { background: var(--card); }
     <a href="#eigenvectors-eigenvalues">十三、特征向量和特征值</a>
     <a href="#abstract-vector-spaces">十四、抽象向量空间</a>
     <a href="#resources">十五、推荐资源</a>
+    <a href="#directional-derivative-gradient">十六、方向导数和梯度</a>
   </div>
-</div>
 
 <!-- ============ SECTION 1 ============ -->
 <h2 id="purpose-of-linear-algebra">一、线性代数是为了解决什么问题？</h2>
@@ -783,6 +783,22 @@ tr:nth-child(even) { background: var(--card); }
   <li>MIT 18.06 线性代数课程</li>
   <li>3Blue1Brown B站「线性代数的本质」视频系列</li>
 </ul>
+
+<!-- ============ SECTION 16 ============ -->
+<h2 id="directional-derivative-gradient">十六、方向导数和梯度</h2>
+
+<p>参考视频：<a href="https://www.bilibili.com/video/BV1sB9EYMEJ4" target="_blank">3Blue1Brown — 梯度与方向导数</a></p>
+
+<p>以 <code>z = x² + y²</code>（碗形曲面）为例：</p>
+<ul>
+  <li><strong>偏导</strong>就是锁定截面截取这个碗形的曲面，在那个截面上看做是 xy 平面的切线。</li>
+  <li><strong>方向导数</strong>则是代表以某个点为例，可以任意的朝任何方向走动。</li>
+  <li><strong>梯度</strong>是按照函数最大变化的方向走动。</li>
+</ul>
+
+<div class="demo-frame-wrap">
+  <iframe src="demos/directional-derivative.html" style="height:680px;" title="方向导数和梯度动态演示"></iframe>
+</div>
 
 </body>
 </html>
