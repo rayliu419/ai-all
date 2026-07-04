@@ -370,7 +370,8 @@ h3 { font-size: 1.08em; color: var(--accent); margin-bottom: 1px; }
 
     // Cutting plane
     const R = 2.4;
-    cutPlaneTrace(traces3d, partialAxis, fixedVal, R);
+    const fixedAxis = partialAxis === 'x' ? 'y' : 'x';
+    cutPlaneTrace(traces3d, fixedAxis, fixedVal, R);
 
     // Intersection curve (highlight on surface)
     const curvePts = [];
