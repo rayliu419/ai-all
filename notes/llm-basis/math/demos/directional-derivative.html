@@ -137,51 +137,7 @@ h3 { font-size: 1.08em; color: var(--accent); margin-bottom: 1px; }
 <div class="controls-bar" id="animBar" style="display:none">
   <button class="btn-play" id="playBtn">▶ 旋转</button>
 </div>
-<div class="info-box" id="infoBox"></div>
-<div class="example-box">
-  <div class="ex-title">🎯 实例：碗壁上的行走</div>
-  <p>假设你现在站在碗 <span class="highlight">z = x² + y²</span> 上的点 <span class="highlight">(1, 2)</span>，此时的高度 <span class="highlight">z = 1² + 2² = 5</span>。</p>
-  <p>该点的梯度为：<span class="highlight">∇<i>f</i>(1, 2) = (2·1, 2·2) = (2, 4)</span>。
-  模长（最陡坡度）：<span class="highlight">|∇<i>f</i>| = √(2²+4²) = √20 ≈ 4.47</span>。</p>
-  <p style="font-size:0.88em;color:#666;">如果你选择不同的方向 <span style="font-family:'Times New Roman',serif">u⃗</span> 迈出一步：</p>
-  <table>
-    <tr>
-      <th style="width:22%">你的选择（方向 u）</th>
-      <th style="width:40%">方向导数计算（D<sub>u</sub>f = ∇f · u）</th>
-      <th style="width:38%">直观物理意义</th>
-    </tr>
-    <tr>
-      <td class="dir-label">⬆ 沿最陡方向往碗口爬</td>
-      <td class="formula-cell">u = (1/√5, 2/√5)<br>
-        (2,4)·(1/√5,2/√5) = 10/√5 = <span class="result-cell">√20</span></td>
-      <td>你迎着梯度走，感受到了当前位置<strong>最陡的坡度</strong>（约 4.47），每步上升最多。</td>
-    </tr>
-    <tr>
-      <td class="dir-label">🔄 顺着碗壁绕圈（等高线）</td>
-      <td class="formula-cell">u = (−2/√5, 1/√5)<br>
-        (2,4)·(−2/√5,1/√5) = <span class="result-cell">0</span></td>
-      <td>你和梯度垂直，相当于在碗壁上<strong>水平绕圈</strong>。高度不随这一步发生任何改变。</td>
-    </tr>
-    <tr>
-      <td class="dir-label">⬇ 沿最陡方向往碗底滑</td>
-      <td class="formula-cell">u = (−1/√5, −2/√5)<br>
-        (2,4)·(−1/√5,−2/√5) = <span class="result-cell">−√20</span></td>
-      <td>你背离梯度走，迎来了<strong>最陡的下坡</strong>，直接冲向碗底，每步下降最多。</td>
-    </tr>
-    <tr>
-      <td class="dir-label">➡ 正 x 轴方向</td>
-      <td class="formula-cell">u = (1, 0)<br>
-        (2,4)·(1,0) = <span class="result-cell">2</span></td>
-      <td>你斜着切上去，坡度变缓了。<span class="meta">（偏导数 ∂z/∂x 其实就是沿 x 轴方向的方向导数。）</span></td>
-    </tr>
-  </table>
-  <div style="margin-top:6px;padding:5px 8px;background:#f5faf6;border-radius:4px;font-size:0.88em;">
-    💡 <strong>核心关系</strong>：方向导数 D<sub>u</sub>f = ∇f · u = |∇f|·cos α。<br>
-    当 α = 0°（与梯度同向）→ <strong style="color:#1a7a3a;">D = |∇f| = 4.47</strong>（最大上升）<br>
-    当 α = 90°（与梯度垂直）→ <strong style="color:#1a7a3a;">D = 0</strong>（等高线方向，无升降）<br>
-    当 α = 180°（与梯度反向）→ <strong style="color:#1a7a3a;">D = −|∇f| = −4.47</strong>（最大下降）
-  </div>
-</div>
+  <div class="info-box" id="infoBox"></div>
 
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <script>
