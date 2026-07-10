@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML Basis — 机器学习基础笔记</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML" defer></script>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #2d3a31;
+    background: #f5faf6;
+  }
+
+  /* ── Container ── */
+  .container {
+    max-width: 920px;
+    margin: 0 auto;
+  }
+
+  /* ── Typography ── */
+  h1 {
+    font-size: 1.35em;
+    margin: 0 0 8px 0;
+    padding: 0;
+    color: #1c2b24;
+    border-bottom: 2px solid #c3dbcc;
+    padding-bottom: 8px;
+  }
+  h2 {
+    font-size: 1.2em;
+    margin: 28px 0 10px 0;
+    padding: 0;
+    color: #1c2b24;
+    border-bottom: 1px solid #c3dbcc;
+    padding-bottom: 4px;
+  }
+  h3 {
+    font-size: 1.02em;
+    margin: 20px 0 8px 0;
+    padding: 0;
+    color: #24422f;
+  }
+  h4 {
+    font-size: 0.95em;
+    margin: 16px 0 6px 0;
+    padding: 0;
+    color: #2d5c3c;
+  }
+  p { margin: 6px 0; }
+  ul, ol { margin: 4px 0; padding-left: 20px; }
+  li { margin: 2px 0; }
+  a { color: #2d7a4a; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  strong { color: #1c3a28; }
+
+  /* ── Blockquote (highlight card) ── */
+  blockquote {
+    margin: 10px 0;
+    padding: 8px 14px;
+    background: #e8f5ec;
+    border-left: 4px solid #2d7a4a;
+    border-radius: 4px;
+    color: #2d3a31;
+  }
+  blockquote p { margin: 4px 0; }
+
+  /* ── Code ── */
+  code {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: #dcefe2;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #24422f;
+  }
+  pre {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.8em;
+    background: #dcefe2;
+    padding: 10px 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    line-height: 1.4;
+    color: #2d3a31;
+    border: 1px solid #c3dbcc;
+    margin: 8px 0;
+  }
+  pre code {
+    font-size: inherit;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  /* ── Tables ── */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 8px 0;
+    font-size: 0.9em;
+  }
+  th, td {
+    border: 1px solid #c3dbcc;
+    padding: 5px 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #dcefe2;
+    font-weight: 600;
+    color: #1c3a28;
+  }
+  tr:nth-child(even) td {
+    background: #f0f8f2;
+  }
+
+  /* ── Horizontal rule ── */
+  hr {
+    border: none;
+    border-top: 1px solid #c3dbcc;
+    margin: 24px 0;
+  }
+
+  /* ── Card sections ── */
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin: 12px 0;
+  }
+  .card p { margin: 4px 0; }
+
+  /* ── Tag / Badge ── */
+  .tag {
+    display: inline-block;
+    background: #2d7a4a;
+    color: #fff;
+    font-size: 0.78em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+
+  /* ── Formula placeholder ── */
+  .img-placeholder {
+    display: block;
+    background: #dcefe2;
+    border: 1px dashed #8ab89a;
+    border-radius: 4px;
+    padding: 20px 16px;
+    margin: 10px 0;
+    text-align: center;
+    color: #4d7059;
+    font-size: 0.88em;
+    font-style: italic;
+  }
+
+  /* ── Summary/Details ── */
+  details {
+    margin: 12px 0;
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 6px;
+    padding: 6px 12px;
+  }
+  details summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #1c3a28;
+    padding: 4px 0;
+  }
+  details[open] summary {
+    border-bottom: 1px solid #c3dbcc;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    body { padding: 16px 10px; font-size: 12px; }
+    table { font-size: 0.82em; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ═══ Header ═══ -->
+<h1>ML Basis — 机器学习基础笔记</h1>
+<blockquote>
+  机器学习核心概念速查，覆盖评估指标、模型调优、经典算法、常见问题与应对策略。
+</blockquote>
+<p style="color:#4d7059; font-size:0.9em; margin-top:4px;">最后更新：2026-07-09</p>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  Regression Evaluation                    -->
+<!-- ══════════════════════════════════════════ -->
+<h2>回归问题评估</h2>
+
+<table>
+  <tr>
+    <th>指标</th>
+    <th>公式</th>
+    <th>说明</th>
+    <th>单位敏感</th>
+  </tr>
+  <tr>
+    <td><strong>MAE</strong></td>
+    <td>\(\frac{1}{n}\sum_{i=1}^n \|y_i - \hat{y}_i\|\)</td>
+    <td>平均绝对误差，直观，对异常值不敏感</td>
+    <td>是</td>
+  </tr>
+  <tr>
+    <td><strong>MSE</strong></td>
+    <td>\(\frac{1}{n}\sum_{i=1}^n (y_i - \hat{y}_i)^2\)</td>
+    <td>均方误差，放大较大误差，对异常值敏感</td>
+    <td>是</td>
+  </tr>
+  <tr>
+    <td><strong>RMSE</strong></td>
+    <td>\(\sqrt{MSE}\)</td>
+    <td>MSE 开根，量纲与原始数据一致</td>
+    <td>是</td>
+  </tr>
+  <tr>
+    <td><strong>MAPE</strong></td>
+    <td>\(\frac{100\%}{n}\sum_{i=1}^n \frac{\|y_i - \hat{y}_i\|}{\|y_i\|}\)</td>
+    <td>平均绝对百分比误差，无量纲，便于跨问题比较</td>
+    <td>否</td>
+  </tr>
+  <tr>
+    <td><strong>R²</strong></td>
+    <td>\(1 - \frac{\sum (y_i - \hat{y}_i)^2}{\sum (y_i - \bar{y})^2}\)</td>
+    <td>决定系数，模型解释了多少方差，越接近 1 越好</td>
+    <td>否</td>
+  </tr>
+</table>
+
+<div class="card">
+  <strong>选用建议：</strong>
+  <ul>
+    <li>MAE 和 RMSE 反映不同侧重点——MAE 对每个误差一视同仁，RMSE 惩罚大误差。</li>
+    <li>有异常值时优先 MAE 或 Huber Loss；平滑优化时 MSE 可微更方便。</li>
+    <li>R² 可辅助判断模型拟合程度，但单独使用容易过拟合。</li>
+  </ul>
+</div>
+
+<hr>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  Classification Evaluation                -->
+<!-- ══════════════════════════════════════════ -->
+<h2>分类问题评估</h2>
+
+<h3>混淆矩阵</h3>
+
+<pre>
+                Predict 1    Predict 0
+Actual 1        TP (真阳)      FN (假阴)
+Actual 0        FP (假阳)      TN (真阴)
+</pre>
+
+<img src="images/confusion-matrix.png" alt="混淆矩阵" style="display:block; margin:10px auto; max-width:420px;">
+
+<details>
+  <summary>怎么记忆 True/False + Positive/Negative？</summary>
+  <ol>
+    <li>分类器<strong>分类正确</strong>的为 <strong>True</strong>，否则 <strong>False</strong>。</li>
+    <li>分类器<strong>分为 1</strong> 的为 <strong>Positive</strong>，否则 <strong>Negative</strong>。</li>
+  </ol>
+</details>
+
+<p><strong>示例数字</strong>（手写数字识别，1 为正例）：</p>
+<pre>
+           Predict 1    Predict 0
+Actual 1      48           98
+Actual 0      25          229
+</pre>
+<ul>
+  <li><strong>TP</strong> = 48（正确识别为 1）</li>
+  <li><strong>FN</strong> = 98（实际是 1 但被漏掉）</li>
+  <li><strong>FP</strong> = 25（误把 0 识别成 1）</li>
+  <li><strong>TN</strong> = 229（正确识别为 0）</li>
+</ul>
+
+<hr>
+
+<!-- ═══ Recall & Precision ═══ -->
+<h3>召回率（Recall）和精确率（Precision）</h3>
+<blockquote>一般来说，更关注<strong>正例</strong>的召回率和精确率。</blockquote>
+
+<table>
+  <tr><th>指标</th><th>公式</th><th>含义</th><th>示例值</th></tr>
+  <tr><td>Accuracy</td><td>(TP+TN) / 总数</td><td>整体正确率</td><td>69.25%</td></tr>
+  <tr><td>Error Rate</td><td>(FP+FN) / 总数</td><td>整体错误率，= 1 - Accuracy</td><td>30.75%</td></tr>
+  <tr><td><strong>Recall (TPR)</strong></td><td>TP / (TP+FN)</td><td>正例被正确找出的比例（覆盖率）</td><td>32.88%</td></tr>
+  <tr><td><strong>Precision</strong></td><td>TP / (TP+FP)</td><td>预测为正例中真正是正例的比例（可信度）</td><td>65.75%</td></tr>
+  <tr><td>Specificity (TNR)</td><td>TN / (TN+FP)</td><td>负例被正确识别的比例</td><td>90.16%</td></tr>
+</table>
+
+<div class="card">
+  <strong>直觉理解：</strong>
+  <ul>
+    <li><strong>贪婪模型</strong>：想覆盖更多正例 → 门槛低 → <strong>Recall 高，Precision 低</strong>。</li>
+    <li><strong>保守模型</strong>：只对很确信的样本预测 → 门槛高 → <strong>Precision 高，Recall 低</strong>。</li>
+  </ul>
+</div>
+
+<hr>
+
+<!-- ═══ F1 ═══ -->
+<h3>F1 Score</h3>
+
+<p>\[
+F1 = \frac{2 \cdot Precision \cdot Recall}{Precision + Recall}
+\]</p>
+<ul>
+  <li>Precision 和 Recall 的<strong>调和平均数</strong>。</li>
+  <li>两个模型一个 Pre 极高 / Rec 极低，另一个 Rec 极高 / Pre 极低时，F1 可能相近，需结合场景判断。</li>
+</ul>
+
+<img src="images/pr-curve.png" alt="PR曲线" style="display:block; margin:10px auto; max-width:480px;">
+
+<h4>Fβ Score（加权 F 值）</h4>
+<p>\[
+F_\beta = (1 + \beta^2) \cdot \frac{Precision \cdot Recall}{\beta^2 \cdot Precision + Recall}
+\]</p>
+<ul>
+  <li>\(\beta &lt; 1\)：更重视 Precision。</li>
+  <li>\(\beta &gt; 1\)：更重视 Recall。</li>
+</ul>
+
+<hr>
+
+<!-- ═══ ROC & AUC ═══ -->
+<h3>ROC 与 AUC</h3>
+
+<p><strong>核心思想：</strong> 遍历所有阈值，对每个阈值计算两个指标：</p>
+<ul>
+  <li><strong>TPR（真正率）</strong> = Recall = TP / (TP + FN)</li>
+  <li><strong>FPR（假正率）</strong> = FP / (FP + TN)</li>
+</ul>
+
+<p>这两个值基于<strong>混淆矩阵的行</strong>来算，所以<strong>不受数据分布（正负例比例）影响</strong>。</p>
+
+<img src="images/roc-curve.png" alt="ROC曲线" style="display:block; margin:10px auto; max-width:480px;">
+
+<div class="card">
+  <strong>AUC 含义：</strong>
+  <ul>
+    <li>AUC = 1 → 完美分类器。</li>
+    <li>AUC = 0.5 → 随机猜测。</li>
+    <li>AUC 回答的问题：<strong>"不论数据分布怎么样，模型 in general 能表现得多好？"</strong></li>
+  </ul>
+</div>
+
+<p><strong>最佳阈值选择：</strong> TPR 高，FPR 低——即左上角 (0,1) 最近的点。</p>
+
+<h4>ROC vs PR 曲线</h4>
+<table>
+  <tr><th>特性</th><th>ROC</th><th>PR Curve</th></tr>
+  <tr><td>受数据分布影响</td><td>小（TPR/FPR 分属行列，独立）</td><td>大（Precision 依赖先验分布）</td></tr>
+  <tr><td>适合场景</td><td>各类分布比较均衡时</td><td><strong>正负例高度不平衡时更敏感</strong></td></tr>
+</table>
+
+<hr>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  Bias & Variance                          -->
+<!-- ══════════════════════════════════════════ -->
+<h2>Bias 和 Variance</h2>
+
+<p><strong>偏差-方差权衡：</strong></p>
+<pre>
+欠拟合 ←———→ 过拟合
+High Bias     High Variance
+</pre>
+
+<ul>
+  <li><strong>High Bias（欠拟合）</strong>：模型过于简单 / 数据太少 → 预测值偏离真实值，训练误差和测试误差都高。</li>
+  <li><strong>High Variance（过拟合）</strong>：模型过于复杂 → 过度学习了训练数据的噪声，训练误差低但测试误差高。</li>
+</ul>
+
+<img src="images/bias-variance.png" alt="Bias-Variance靶心图" style="display:block; margin:10px auto; max-width:660px;">
+
+<table>
+  <tr><th>问题</th><th>症状</th><th>解决方向</th></tr>
+  <tr><td>High Bias</td><td>训练误差高</td><td>增加模型复杂度、更多特征、减少正则化</td></tr>
+  <tr><td>High Variance</td><td>训练误差低，测试误差高</td><td>简化模型、更多数据、增加正则化、早停</td></tr>
+</table>
+
+<hr>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  L1 / L2 Regularization                   -->
+<!-- ══════════════════════════════════════════ -->
+<h2>L1 正则化 / L2 正则化</h2>
+
+<h3>数学形式</h3>
+<p>线性回归损失函数加入正则项：</p>
+<ul>
+  <li><strong>L1 (Lasso)</strong>：\(\text{Loss} = \text{MSE} + \lambda \sum_{j=1}^p |w_j|\)</li>
+  <li><strong>L2 (Ridge)</strong>：\(\text{Loss} = \text{MSE} + \lambda \sum_{j=1}^p w_j^2\)</li>
+</ul>
+
+<h3>为什么 L1 产生稀疏解？</h3>
+<p>L1 约束的解空间是<strong>菱形</strong>（与坐标轴相交），最优点容易落在坐标轴上，对应系数为 0。L2 约束的解空间是<strong>圆形</strong>，难以恰好落在轴上。</p>
+
+<img src="images/l1-l2-contour.png" alt="L1_L2约束对比" style="display:block; margin:10px auto; max-width:660px;">
+
+<h3>实际选择</h3>
+<table>
+  <tr><th>正则化</th><th>特点</th><th>适合场景</th></tr>
+  <tr><td>L1</td><td>自动特征选择，产生稀疏解</td><td>高维数据，特征数量 >> 样本量</td></tr>
+  <tr><td>L2</td><td>数值稳定，<strong>实际效果通常更好</strong></td><td>大多数通用场景</td></tr>
+  <tr><td><strong>ElasticNet</strong></td><td>L1 + L2 混合</td><td>特征有关联时效果更好</td></tr>
+</table>
+
+<hr>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  Decision Tree Pruning                    -->
+<!-- ══════════════════════════════════════════ -->
+<h2>决策树剪枝</h2>
+
+<h3>预剪枝（Pre-pruning）</h3>
+<ul>
+  <li><strong>时机</strong>：在决策树生成过程中剪枝。</li>
+  <li><strong>做法</strong>：提前停止分裂——设置最大深度、最小样本数、最小信息增益等。</li>
+  <li><strong>优点</strong>：效率高，避免生成复杂子树。</li>
+  <li><strong>缺点</strong>：可能欠拟合（过早停止错过好分裂）。</li>
+</ul>
+
+<h3>后剪枝（Post-pruning）</h3>
+<ul>
+  <li><strong>时机</strong>：决策树完全生长之后再剪枝。</li>
+  <li><strong>做法</strong>：合并父节点下子节点，如果<strong>熵增加不大</strong>则合并。</li>
+  <li><strong>常见方法</strong>：错误率降低剪枝（REP）、代价复杂度剪枝（CCP）。</li>
+  <li><strong>优点</strong>：效果通常比预剪枝好。</li>
+  <li><strong>缺点</strong>：计算开销大。</li>
+</ul>
+
+<hr>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  Imbalanced Data                          -->
+<!-- ══════════════════════════════════════════ -->
+<h2>样本不平衡</h2>
+
+<table>
+  <tr><th>方法</th><th>说明</th></tr>
+  <tr><td>1. 收集更多数据</td><td>最直接的方法，但有时不可行</td></tr>
+  <tr><td>2. 下采样（Undersampling）</td><td>减少多数类样本，可能丢失重要信息</td></tr>
+  <tr><td>3. <strong>SMOTE</strong></td><td>人工合成少数类新样本（在特征空间插值）</td></tr>
+  <tr><td>4. 加权损失函数</td><td>对少数类误判给予更高的惩罚权重</td></tr>
+  <tr><td>5. 采用不敏感的模型</td><td>树模型（RF/GBDT）对不平衡相对鲁棒</td></tr>
+  <tr><td>6. 集成方法</td><td>Balanced Random Forest, EasyEnsemble 等</td></tr>
+  <tr><td>7. 调整阈值</td><td>根据业务需求调整分类阈值（从默认 0.5 改为更低或更高）</td></tr>
+</table>
+
+<blockquote><strong>关键原则</strong>：在不平衡场景下，不要只看 Accuracy——关注 Precision、Recall、F1、AUC。</blockquote>
+
+<hr>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  Overfitting                              -->
+<!-- ══════════════════════════════════════════ -->
+<h2>过拟合</h2>
+
+<h3>原因</h3>
+<ul>
+  <li>模型过于复杂（参数太多）</li>
+  <li>训练数据太少或噪声太大</li>
+  <li>训练时间太长（迭代过多）</li>
+</ul>
+
+<h3>应对策略</h3>
+<table>
+  <tr><th>策略</th><th>具体做法</th></tr>
+  <tr><td>1. 更多数据</td><td>数据增强、收集更多真实样本</td></tr>
+  <tr><td>2. 简化模型</td><td>减少层数/神经元/特征</td></tr>
+  <tr><td>3. 正则化</td><td>L1/L2 正则化、Dropout（神经网络）</td></tr>
+  <tr><td>4. 早停</td><td>划分验证集，验证集性能不再提升时停止训练</td></tr>
+  <tr><td>5. 交叉验证</td><td>K-Fold CV 让评估更稳定</td></tr>
+  <tr><td>6. 集成学习</td><td>Bagging / Dropout 本身也是一种集成</td></tr>
+</table>
+
+<hr>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  Bayesian Theory                          -->
+<!-- ══════════════════════════════════════════ -->
+<h2>贝叶斯理论</h2>
+
+<p>\[
+P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)}
+\]</p>
+
+<ul>
+  <li>\(P(A)\)：<strong>先验概率</strong>（Prior）——看到数据前对 A 的信念。</li>
+  <li>\(P(B|A)\)：<strong>似然</strong>（Likelihood）——在 A 假设下数据 B 出现的概率。</li>
+  <li>\(P(B)\)：<strong>证据</strong>（Evidence）——数据的边际概率，归一化因子。</li>
+  <li>\(P(A|B)\)：<strong>后验概率</strong>（Posterior）——看到数据后对 A 的信念更新。</li>
+</ul>
+
+<p><strong>直观理解：</strong></p>
+<p>\[
+\text{后验概率} = \text{先验概率} \times \text{调整因子}
+\]</p>
+<p>调整因子 = \(\frac{P(B|A)}{P(B)}\)，表示新信息 B 对假设 A 的支持程度。</p>
+
+<img src="images/bayes-formula.png" alt="贝叶斯公式解释" style="display:block; margin:10px auto; max-width:600px;">
+
+<h3>MLE vs MAP</h3>
+<table>
+  <tr><th>方法</th><th>全称</th><th>含义</th><th>公式</th></tr>
+  <tr><td>MLE</td><td>最大似然估计</td><td>找使数据出现概率最大的参数</td><td>\(\arg\max_\theta P(\text{data}|\theta)\)</td></tr>
+  <tr><td>MAP</td><td>最大后验估计</td><td>结合先验，找后验概率最大的参数</td><td>\(\arg\max_\theta P(\theta|\text{data})\)</td></tr>
+</table>
+<ul>
+  <li>MLE = MAP 当先验为均匀分布时。</li>
+  <li>MAP 可以理解为带正则化的 MLE（L2 正则对应高斯先验，L1 正则对应拉普拉斯先验）。</li>
+</ul>
+
+<hr>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  Naive Bayes                              -->
+<!-- ══════════════════════════════════════════ -->
+<h2>朴素贝叶斯（Naive Bayes）</h2>
+
+<h3>核心假设</h3>
+<p><strong>特征条件独立假设：</strong> 在给定类别 \(c_k\) 的条件下，各个特征之间相互独立。</p>
+<p>\[
+P(x_1, x_2, ..., x_d | c_k) = \prod_{i=1}^d P(x_i | c_k)
+\]</p>
+
+<h3>计算流程</h3>
+<ol>
+  <li>计算每个类别的<strong>先验概率</strong> \(P(c_k)\)。</li>
+  <li>对每个类别，计算每个特征在该类别下的<strong>条件概率</strong> \(P(x_i | c_k)\)。</li>
+  <li>对新样本，计算各 \(P(c_k) \prod P(x_i | c_k)\)，取概率最大者。</li>
+</ol>
+
+<img src="images/naive-bayes-flow.png" alt="朴素贝叶斯流程" style="display:block; margin:10px auto; max-width:600px;">
+
+<h3>平滑问题（Laplace Smoothing）</h3>
+
+<p><strong>问题背景：</strong> 训练集中某个词语 K₁ 在某类别下从未出现过，概率为 0，导致整个乘积为 0。</p>
+<p><strong>示例：</strong> 3 个类别 C₁/C₂/C₃，1000 个样本中词语 K₁ 出现计数为 0/990/10。不加平滑时概率为 0/0.99/0.01，C₁ 概率永远为 0。</p>
+
+<p><strong>Laplace 平滑（加 1 平滑）：</strong></p>
+<p>\[
+P(K_1 | C_k) = \frac{\text{count}(K_1, C_k) + 1}{\text{count}(C_k) + |V|}
+\]</p>
+
+<p>简化示例（假设 \(|V| = 3\)）：</p>
+<pre>
+C1 = (0 + 1) / (1000 + 3) ≈ 0.001
+C2 = (990 + 1) / (1000 + 3) ≈ 0.988
+C3 = (10 + 1) / (1000 + 3) ≈ 0.011
+</pre>
+
+
+<p><strong>通用形式：</strong></p>
+<p>\[
+P(x_i | c_k) = \frac{N_{ki} + \alpha}{N_k + \alpha \cdot d}
+\]</p>
+<ul>
+  <li>\(\alpha = 1\) 为 Laplace 平滑。</li>
+  <li>\(\alpha &lt; 1\) 为 Lidstone 平滑。</li>
+</ul>
+
+<hr>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  Accuracy vs Performance                  -->
+<!-- ══════════════════════════════════════════ -->
+<h2>模型的准确性（Accuracy）和性能（Performance）哪个更重要？</h2>
+
+<p><strong>关键理解：</strong> 准确性是性能的一部分，性能包括多种衡量指标（F1、AUC、Precision、Recall、Log Loss 等）。</p>
+
+<table>
+  <tr><th>场景</th><th>核心指标</th><th>原因</th></tr>
+  <tr><td>医疗诊断</td><td>Recall（灵敏度）</td><td>宁可误报，不可漏诊</td></tr>
+  <tr><td>垃圾邮件过滤</td><td>Precision</td><td>宁可漏掉垃圾邮件，也不要误删正常邮件</td></tr>
+  <tr><td>搜索引擎</td><td>Precision@K, MAP</td><td>用户只看前几条结果的准确性</td></tr>
+  <tr><td>信贷违约预测</td><td>AUC, KS</td><td>需要排序能力，关注整体排序质量</td></tr>
+  <tr><td>自动驾驶</td><td>安全性指标</td><td>错误代价极大，需极低假阴性率</td></tr>
+</table>
+
+<blockquote><strong>结论：</strong> 不要盲目追求 Accuracy，根据业务场景选择合适的指标。</blockquote>
+
+<hr>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  Ensemble                                  -->
+<!-- ══════════════════════════════════════════ -->
+<h2>Ensemble（集成学习）</h2>
+
+<h3>Bagging（并行训练）</h3>
+<pre>
+训练集
+   ↓
+子集1 → 弱分类器1 ┐
+子集2 → 弱分类器2 ─ → 投票/平均 → 最终模型
+子集3 → 弱分类器3 ┘
+...并行训练...
+</pre>
+<ul>
+  <li>每个弱分类器<strong>并行</strong>训练，相互独立。</li>
+  <li>基学习器<strong>低偏差、高方差</strong>时效果最好（Bagging 降低方差）。</li>
+  <li><strong>代表算法：</strong> Random Forest（在 Bagging 基础上引入随机特征选择）。</li>
+</ul>
+
+<h3>Boosting（串行训练）</h3>
+<pre>
+原始权重 → 弱分类器1 → 调整权重(错误样本加大权重)
+                     → 弱分类器2 → 调整权重(错误样本加大权重)
+                                  → 弱分类器3 → ... → 加权组合
+</pre>
+<ul>
+  <li>弱分类器<strong>串行</strong>训练，当前分类器更关注上一个分类器做错的样本。</li>
+  <li>基学习器<strong>高偏差、低方差</strong>时效果最好（Boosting 降低偏差）。</li>
+  <li><strong>代表算法：</strong> AdaBoost、GBDT、XGBoost、LightGBM、CatBoost。</li>
+</ul>
+
+<h3>Stacking（模型堆叠）</h3>
+<ul>
+  <li>用多个不同模型作为第一层，输出作为第二层（meta-learner）的输入。</li>
+  <li>关键在于第一层模型要<strong>多样性足够</strong>，meta-learner 不宜太复杂。</li>
+</ul>
+
+<h3>对比总结</h3>
+<table>
+  <tr><th>方法</th><th>训练方式</th><th>目标</th><th>代表算法</th><th>降低</th></tr>
+  <tr><td>Bagging</td><td>并行</td><td>降低方差</td><td>Random Forest</td><td>Variance</td></tr>
+  <tr><td>Boosting</td><td>串行</td><td>降低偏差</td><td>XGBoost, LightGBM</td><td>Bias</td></tr>
+  <tr><td>Stacking</td><td>分层</td><td>结合异质模型优势</td><td>自定义</td><td>Bias + Variance</td></tr>
+</table>
+
+<hr>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  Interview Q&A                            -->
+<!-- ══════════════════════════════════════════ -->
+<h2>常见面试问题速查</h2>
+
+<table>
+  <tr><th>问题</th><th>一句话回答</th></tr>
+  <tr><td>L1 为什么产生稀疏解？</td><td>L1 约束解空间为菱形，最优点落在坐标轴上</td></tr>
+  <tr><td>Bagging vs Boosting 区别？</td><td>Bagging 并行降低方差，Boosting 串行降低偏差</td></tr>
+  <tr><td>ROC 好还是 PR 好？</td><td>数据均衡用 ROC，不平衡用 PR</td></tr>
+  <tr><td>类别不平衡怎么处理？</td><td>SMOTE、加权损失、调整阈值、不敏感模型</td></tr>
+  <tr><td>Bias vs Variance 怎么权衡？</td><td>高 Bias 欠拟合 → 加复杂度；高 Variance 过拟合 → 加数据/正则/简化</td></tr>
+  <tr><td>朴素贝叶斯的假设是什么？</td><td>特征在给定类别下条件独立</td></tr>
+  <tr><td>过拟合怎么解决？</td><td>更多数据、简化模型、正则化、早停、交叉验证</td></tr>
+</table>
+
+<hr>
+
+<!-- ═══ Footer ═══ -->
+<footer style="text-align:center; color:#6a8f7a; font-size:0.85em; padding: 12px 0;">
+  <p>持续更新中…</p>
+  <p>Ray Liu &middot; 2026</p>
+</footer>
+
+</div><!-- /.container -->
+</body>
+</html>

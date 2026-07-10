@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DB 切换笔记</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", Roboto, Helvetica, Arial, sans-serif;
+    background: #f5faf6;
+    color: #2d3a31;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 24px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 1.5em; color: #1a4f2e; margin-bottom: 6px; border-bottom: 2px solid #c3dbcc; padding-bottom: 6px; }
+  .subtitle { color: #4a6b57; margin-bottom: 12px; font-style: italic; }
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 12px 0 16px;
+  }
+  .toc h2 { font-size: 1em; color: #1a4f2e; margin: 0 0 8px; border: none; padding: 0; background: none; }
+  .toc ol { margin: 0 0 0 18px; }
+  .toc > ol { margin-left: 0; list-style: none; counter-reset: toc-counter; }
+  .toc > ol > li { counter-increment: toc-counter; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc-counter) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc ol ol { margin: 2px 0 2px 20px; list-style: none; counter-reset: toc-sub; }
+  .toc ol ol > li { counter-increment: toc-sub; margin: 1px 0; }
+  .toc ol ol > li::before { content: counter(toc-counter) "." counter(toc-sub) " "; color: #2d6e44; font-size: 0.88em; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.9em; }
+  .toc a:hover { text-decoration: underline; color: #1a4f2e; }
+  h2 {
+    font-size: 1.2em;
+    color: #1f5c36;
+    margin: 20px 0 8px;
+    padding: 4px 0 4px 10px;
+    border-left: 4px solid #2d8a4e;
+    background: #e8f5ec;
+  }
+  h3 { font-size: 1.02em; color: #236b3e; margin: 14px 0 6px; }
+  h4 { font-size: 0.95em; color: #2d6e44; margin: 10px 0 4px; }
+  p { margin: 6px 0; }
+  ul, ol { margin: 4px 0 4px 18px; }
+  li { margin: 2px 0; }
+  code {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: #e8f5ec;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4f2e;
+  }
+  pre {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.8em;
+    background: #e8f5ec;
+    padding: 10px 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #c3dbcc;
+    margin: 6px 0;
+  }
+  .tag {
+    display: inline-block;
+    font-size: 0.78em;
+    background: #2d8a4e;
+    color: #fff;
+    padding: 1px 8px;
+    border-radius: 10px;
+    margin-right: 4px;
+  }
+  .tag-blue { background: #2a6e9e; }
+  .tag-amber { background: #b8860b; }
+  .tag-red { background: #b33a3a; }
+  .tag-purple { background: #6a3d99; }
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card-title { font-weight: 600; color: #1a4f2e; margin-bottom: 4px; }
+  .warn-card {
+    background: #fef9e7;
+    border: 1px solid #e6c952;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .warn-card .card-title { color: #8a6d0b; }
+  .info-card {
+    background: #e5f0fa;
+    border: 1px solid #8bb8d6;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .info-card .card-title { color: #1f5680; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    margin: 6px 0;
+  }
+  th, td {
+    border: 1px solid #c3dbcc;
+    padding: 6px 10px;
+    text-align: left;
+  }
+  th { background: #d4e8da; color: #1a4f2e; font-weight: 600; }
+  tr:nth-child(even) { background: #f0f8f2; }
+  .summary-box {
+    background: #d4e8da;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 14px 0;
+  }
+  .summary-box h3 { margin-top: 0; }
+  hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+  a { color: #1a6b3a; }
+  a:hover { text-decoration: underline; }
+  .step-list { counter-reset: step; list-style: none; padding-left: 0; }
+  .step-list > li { counter-increment: step; position: relative; padding-left: 30px; margin: 6px 0; }
+  .step-list > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 22px; height: 22px; background: #2d8a4e; color: #fff; border-radius: 50%; text-align: center; line-height: 22px; font-size: 0.8em; font-weight: 600; }
+  .db-tabs { display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap; }
+  .db-tab { display: inline-block; padding: 4px 14px; border-radius: 6px; font-size: 0.85em; font-weight: 600; }
+  .db-tab.mysql { background: #f59b23; color: #fff; }
+  .db-tab.redis { background: #dc382d; color: #fff; }
+  .db-tab.es { background: #00bfb3; color: #fff; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>🔄 DB 切换笔记</h1>
+<p class="subtitle">MySQL / Redis / Elasticsearch 的主备切换方案系统性总结</p>
+
+<nav class="toc">
+  <h2>📑 索引</h2>
+  <ol>
+    <li><a href="#sec1">背景</a></li>
+    <li><a href="#sec2">通用解决思路</a></li>
+    <li><a href="#sec3">MySQL 切换</a>
+      <ol>
+        <li><a href="#sec31">Switchover</a></li>
+        <li><a href="#sec32">Failover</a></li>
+        <li><a href="#sec33">GTID</a></li>
+      </ol>
+    </li>
+    <li><a href="#sec4">Redis 切换</a>
+      <ol>
+        <li><a href="#sec41">Switchover</a></li>
+        <li><a href="#sec42">Sentinel 自动故障转移</a></li>
+        <li><a href="#sec43">Redis Cluster</a></li>
+      </ol>
+    </li>
+    <li><a href="#sec5">ES 切换</a>
+      <ol>
+        <li><a href="#sec51">跨集群复制 (CCR)</a></li>
+        <li><a href="#sec52">切换策略</a></li>
+      </ol>
+    </li>
+    <li><a href="#sec6">只读模式与业务降级</a></li>
+    <li><a href="#sec7">关键挑战与应对</a></li>
+    <li><a href="#sec8">最佳实践</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================ -->
+<h2 id="sec1">1. 背景</h2>
+
+<p>DB 切换的解决方案，分为 <strong>Switchover</strong>（计划内切换）和 <strong>Failover</strong>（计划外切换）。</p>
+
+<p>这里的 DB 可能包含多种类型：Redis、MySQL、ES 等。不同数据库的复制机制和切换策略有显著差异。</p>
+
+<p><strong>核心问题</strong>：</p>
+<ul>
+  <li>怎么执行数据复制和保证数据一致？</li>
+  <li>怎么保证切换中间不会出现数据不一致？</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="sec2">2. 通用解决思路</h2>
+
+<p><strong>核心步骤</strong>：</p>
+<ol class="step-list">
+  <li><strong>建立备集群</strong> — 准备好目标集群/实例。</li>
+  <li><strong>建立数据复制通路</strong> — 建立从主到备的数据同步通道。</li>
+  <li><strong>根据情况决定是否将老库置为只读模式</strong> — MySQL、Redis、ES 均支持只读模式。</li>
+  <li><strong>清除主备模式</strong> — 解除原主备关系，使备库可以接受写入。</li>
+  <li><strong>切换</strong> — 将流量切换到新主库。</li>
+</ol>
+<p>如果要保证严格的数据一致性，多半中间都要设置只读模式，有一段时间会有业务降级。</p>
+
+<h3>关于"写冲突"的思考</h3>
+<div class="card">
+  <p>以前有点陷入死胡同了，总是在考虑处理复制数据流和新写数据流的冲突处理。实际上对于关系数据库这种，处理写冲突太复杂了，基本不可能实现。</p>
+  <p>实际的操作是在某个时间点直接将主数据库设成只读模式，让短时间的写操作失败。这样反而更简单，因为其实只读模式的时间很短。</p>
+</div>
+
+<h3>关于复制方式</h3>
+<ul>
+  <li>MySQL 有 GTID 来保证主备数据是一致的。</li>
+  <li>Redis 和 ES 似乎没有一种很靠谱的方式来保证数据严格一致。这两种 DB 一般对数据的严格一致性没有那么高的要求。</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="sec3">3. MySQL 切换</h2>
+
+<div class="db-tabs">
+  <span class="db-tab mysql">MySQL</span>
+  <span class="db-tab">Switchover ✓ 成熟</span>
+  <span class="db-tab">Failover ✓ 有方案</span>
+  <span class="db-tab">GTID ✓ 推荐</span>
+</div>
+
+<h3 id="sec31">3.1 MySQL Switchover</h3>
+<p>对于计划内切换（switchover），有成熟的解决方案。</p>
+
+<div class="card">
+  <div class="card-title">标准流程</div>
+  <ol class="step-list">
+    <li><strong>确认复制状态</strong>：确保从库已追上主库（<code>Seconds_Behind_Master = 0</code>），所有 relay log 已消费完。</li>
+    <li><strong>设置主库只读</strong>：<code>SET GLOBAL read_only = ON</code>，等待已有事务完成。</li>
+    <li><strong>等待从库追上</strong>：确认从库的 <code>Seconds_Behind_Master = 0</code>。</li>
+    <li><strong>解除主从关系</strong>：在从库上执行 <code>STOP REPLICA</code>，然后 <code>RESET MASTER</code>。</li>
+    <li><strong>切换流量</strong>：修改应用的数据库连接配置，指向新主。</li>
+    <li><strong>重建反向复制</strong>（如需切换回来）：将原主变成新主的从库，<code>CHANGE REPLICATION SOURCE TO</code>。</li>
+    <li><strong>恢复写入</strong>：在新主上关闭只读模式。</li>
+  </ol>
+</div>
+
+<h3 id="sec32">3.2 MySQL Failover</h3>
+<p>计划外切换，主库不可用时自动或手动执行。</p>
+
+<div class="warn-card">
+  <div class="card-title">流程</div>
+  <ol class="step-list">
+    <li><strong>检测故障</strong>：健康检查或仲裁机制判定主库不可用。</li>
+    <li><strong>选择新主</strong>：从从库中选择数据最新的（<code>SHOW REPLICA STATUS</code> 确认 <code>Exec_Master_Log_Pos</code> 最大）。</li>
+    <li><strong>晋升新主</strong>：<code>STOP REPLICA</code> → <code>RESET MASTER</code> → 关闭 <code>read_only</code>。</li>
+    <li><strong>重建拓扑</strong>：其余从库执行 <code>CHANGE REPLICATION SOURCE TO</code> 指向新主。</li>
+    <li><strong>重定向应用</strong>：更新连接配置或使用 DNS/Proxy 切换。</li>
+  </ol>
+</div>
+
+<p><strong>风险</strong>：</p>
+<ul>
+  <li>异步复制下，新主可能缺少主库最后的一些事务（数据丢失）。</li>
+  <li>脑裂风险：主库并未真正故障，两个节点都接受写入。需要通过强化故障检测（多路心跳、STONITH）防止。</li>
+</ul>
+
+<h3 id="sec33">3.3 GTID</h3>
+<p>GTID（Global Transaction Identifier）是 MySQL 5.6+ 引入的全局事务标识符。</p>
+
+<div class="info-card">
+  <div class="card-title">核心价值</div>
+  <ul>
+    <li>每个事务有全局唯一 ID（<code>server_uuid:transaction_id</code>），简化了主从切换。</li>
+    <li>GTID-based 复制不需要指定 binlog 文件名和位置，自动定位（Auto-Positioning）。</li>
+    <li>主从切换时，新主直接通过 GTID 集合与从库对齐，无需手动计算 binlog 位置。</li>
+  </ul>
+</div>
+
+<table>
+  <thead>
+    <tr><th>特性</th><th>基于文件位置</th><th>基于 GTID</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>切换时指定位置</td><td>需手动计算 <code>MASTER_LOG_FILE</code> 和 <code>MASTER_LOG_POS</code></td><td>自动定位，无需指定</td></tr>
+    <tr><td>数据一致性检查</td><td>需手动比对</td><td>通过 GTID 集合自动保证</td></tr>
+    <tr><td>重复事务处理</td><td>可能重复应用</td><td>GTID 相同的事务自动跳过</td></tr>
+    <tr><td>拓扑重构复杂度</td><td>高</td><td>低</td></tr>
+  </tbody>
+</table>
+
+<p><strong>生产建议</strong>：强烈建议开启 GTID + Row-Based Replication。</p>
+
+<!-- ============================================================ -->
+<h2 id="sec4">4. Redis 切换</h2>
+
+<div class="db-tabs">
+  <span class="db-tab redis">Redis</span>
+  <span class="db-tab">Sentinel HA</span>
+  <span class="db-tab">Cluster</span>
+  <span class="db-tab">Cache 场景简单</span>
+</div>
+
+<h3 id="sec41">4.1 Redis Switchover</h3>
+<ul>
+  <li><strong>不使用分布式锁和 Lua 脚本</strong>：比 MySQL 更简单。Cache 场景下，直接 warm up 备库再切换即可。因为 Redis 作为缓存，即使丢一小部分数据也可以容忍。</li>
+  <li><strong>使用了分布式锁或者 Lua 脚本</strong>：这个会麻烦很多，因为锁状态和脚本执行结果在复制中没有保证。需要确认备库已完全追上（<code>INFO replication</code> 确认 <code>master_repl_offset</code> 对齐）。</li>
+  <li><strong>双写</strong>：切换期间同时写入主备，然后逐步切换到新主。</li>
+</ul>
+
+<div class="card">
+  <div class="card-title">手动切换步骤（Sentinel 管理下）</div>
+  <ol>
+    <li>确认备库复制状态正常（<code>master_link_status:up</code>，offset 接近）。</li>
+    <li>可选：将主库设为只读（通过 ACL 或 RENAME_COMMAND 限制写入）。</li>
+    <li>执行 <code>SENTINEL FAILOVER &lt;master-name&gt;</code> 触发 Sentinel 切换。</li>
+    <li>Sentinel 会自动晋升一个备库为新主，并更新其他备库的复制关系。</li>
+    <li>应用通过 Sentinel 发现新主地址。</li>
+  </ol>
+</div>
+
+<h3 id="sec42">4.2 Sentinel 自动故障转移</h3>
+<p>Redis Sentinel 是 Redis 官方提供的高可用方案。</p>
+
+<div class="info-card">
+  <div class="card-title">部署要求</div>
+  <ul>
+    <li>至少 3 个 Sentinel 实例（奇数个），分布在不同故障域。</li>
+    <li>Sentinel 之间通过 Gossip 通信，使用 Raft 风格的选举做故障决策。</li>
+    <li>Quorum 数量决定几个 Sentinel 同意才能判定主库下线。</li>
+  </ul>
+</div>
+
+<table>
+  <thead>
+    <tr><th>步骤</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Monitoring</strong></td><td>每个 Sentinel 定期 PING 所有已知节点。</td></tr>
+    <tr><td><strong>SDOWN</strong></td><td>主观下线：单个 Sentinel 发现节点不可达。</td></tr>
+    <tr><td><strong>ODOWN</strong></td><td>客观下线：多个 Sentinel 都报告不可达，达到 Quorum 数量。</td></tr>
+    <tr><td><strong>Leader 选举</strong></td><td>Sentinel 集群选举一个 Leader 负责执行故障切换。</td></tr>
+    <tr><td><strong>晋升</strong></td><td>Leader 选择备库晋升（优先级最高 → offset 最新 → runid 最小）。</td></tr>
+    <tr><td><strong>重新配置</strong></td><td>Leader 通知其他备库复制新主，更新配置。</td></tr>
+    <tr><td><strong>通知客户端</strong></td><td>客户端通过 Sentinel API 获取新主地址。</td></tr>
+  </tbody>
+</table>
+
+<div class="warn-card">
+  <div class="card-title">注意事项</div>
+  <ul>
+    <li>异步复制导致切换时可能丢失写入数据。</li>
+    <li>Sentinel 网络分区时不能保证安全切换。</li>
+    <li>Sentinel + Docker 有 NAT/端口映射问题，需用 <code>--net=host</code>。</li>
+  </ul>
+</div>
+
+<h3 id="sec43">4.3 Redis Cluster 自动切换</h3>
+<p>Redis Cluster 提供自动分片和高可用。</p>
+
+<div class="card">
+  <div class="card-title">核心概念</div>
+  <ul>
+    <li>16384 个 hash slots，每台 Master 负责一部分。</li>
+    <li>每个 Master 可以有多个 Replica。</li>
+    <li>节点间通过 Cluster Bus（端口 +10000）通信。</li>
+  </ul>
+</div>
+
+<p><strong>故障切换流程</strong>：</p>
+<ol>
+  <li>节点定期 Ping-Pong 检查健康状态。</li>
+  <li>如果某 Master 超过 <code>cluster-node-timeout</code> 不可达，其 Replica 发起选举。</li>
+  <li>超过半数的 Master 投票同意后，Replica 晋升为新 Master。</li>
+  <li>集群自动更新 slot 映射。</li>
+</ol>
+
+<div class="warn-card">
+  <div class="card-title">一致性保证</div>
+  <ul>
+    <li>Redis Cluster <strong>不保证强一致性</strong>。</li>
+    <li>异步复制：Master 回复 OK → 传播到 Replica → 如果 Master 在传播前崩溃，写入丢失。</li>
+    <li>网络分区：客户端被隔离到 minority 分区时写入被丢弃。</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec5">5. ES 切换</h2>
+
+<div class="db-tabs">
+  <span class="db-tab es">Elasticsearch</span>
+  <span class="db-tab">CCR</span>
+  <span class="db-tab">Active-Passive</span>
+</div>
+
+<h3 id="sec51">5.1 跨集群复制 (CCR)</h3>
+<p>Elasticsearch 的 Cross-Cluster Replication 采用 <strong>Active-Passive 模式</strong>。</p>
+
+<div class="card">
+  <div class="card-title">架构特点</div>
+  <ul>
+    <li><strong>Leader index</strong>（主动索引）：接受写入的源索引。</li>
+    <li><strong>Follower index</strong>（从索引）：只读的副本索引，从 Leader 拉取变更。</li>
+    <li>从索引通过 <strong>Pull 模式</strong>从远程集群拉取数据，与 MySQL/Redis 的 Push 模式不同。</li>
+  </ul>
+</div>
+
+<p><strong>拓扑模式</strong>：</p>
+<ul>
+  <li><strong>单向复制</strong>：一个集群只有 Leader，另一个只有 Follower。</li>
+  <li><strong>双向复制</strong>：每个集群同时有 Leader 和 Follower，实现互备。</li>
+  <li><strong>链式复制</strong>：A → B → C 形成复制链。</li>
+  <li><strong>一对多</strong>：一个 Leader 复制到多个 Follower 集群做灾备。</li>
+</ul>
+
+<p><strong>版本要求</strong>：Follower 集群必须运行与 Leader 集群相同或更新的版本。</p>
+
+<h3 id="sec52">5.2 切换策略</h3>
+<p>同 Redis，ES 切换相对简单。</p>
+
+<div class="card">
+  <div class="card-title">手动切换</div>
+  <ol>
+    <li>确认 CCR 同步正常（<code>/_ccr/stats</code> API 检查 lag 和读写情况）。</li>
+    <li>停止写入到 Leader。</li>
+    <li>等待 Follower 追上（<code>follower_indexing_checkpoint</code> 对齐）。</li>
+    <li>将 Follower index 设为可写（移除 <code>index.blocks.read_only</code> 限制）。</li>
+    <li>修改应用连接指向 Follower。</li>
+    <li>如需切换回来，重建反向 CCR（原 Leader 变成 Follower）。</li>
+  </ol>
+</div>
+
+<div class="info-card">
+  <div class="card-title">注意事项</div>
+  <ul>
+    <li>ES 的 CCR 使用 Pull 模式，数据从 Leader 主动拉取，因此备集群的 CCU 和带宽需要提前规划。</li>
+    <li>版本兼容性需要提前确认。</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec6">6. 只读模式与业务降级</h2>
+
+<p>为了保证严格的数据一致性，大多数切换方案需要在某个时间点将老库设为只读。</p>
+
+<table>
+  <thead>
+    <tr><th>数据库</th><th>只读设置方式</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>MySQL</strong></td>
+      <td><code>SET GLOBAL read_only = ON</code></td>
+      <td>超级用户仍可写，完全阻断需额外 <code>super_read_only = ON</code></td>
+    </tr>
+    <tr>
+      <td><strong>Redis</strong></td>
+      <td>通过 ACL 或 <code>RENAME_COMMAND</code> 限制</td>
+      <td>无原生 read_only；Sentinel 切换不存在只读中间态</td>
+    </tr>
+    <tr>
+      <td><strong>ES</strong></td>
+      <td><code>index.blocks.read_only_allow_delete: true</code></td>
+      <td>全局只读；<code>index.blocks.write: true</code> 精确控制</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>业务降级时间</strong>：只读窗口一般控制在秒级，但以下因素会延长：</p>
+<ul>
+  <li>大事务未完成（MySQL）。</li>
+  <li>慢查询阻塞切换。</li>
+  <li>备库追赶延迟过大（跨 Region 场景明显）。</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="sec7">7. 关键挑战与应对</h2>
+
+<h3>7.1 切换时的数据丢失</h3>
+<div class="warn-card">
+  <div class="card-title">问题与应对</div>
+  <p><strong>问题</strong>：异步复制下，主库最后几笔写入可能尚未到达备库。切换后这些写入丢失。</p>
+  <p><strong>应对</strong>：</p>
+  <ul>
+    <li>MySQL：开启 <code>sync_binlog = 1</code> + <code>innodb_flush_log_at_trx_commit = 1</code>；半同步复制（<code>rpl_semi_sync_master_wait_point = AFTER_SYNC</code>）。</li>
+    <li>Redis：使用 <code>WAIT</code> 命令同步复制关键写入。</li>
+    <li>ES：等待 follower checkpoint 对齐后再切换。</li>
+  </ul>
+</div>
+
+<h3>7.2 主备数据不一致</h3>
+<div class="card">
+  <div class="card-title">问题与应对</div>
+  <p><strong>问题</strong>：复制延迟导致主备数据差异。</p>
+  <p><strong>应对</strong>：</p>
+  <ul>
+    <li>MySQL GTID 自动检测不一致并跳过或修复。</li>
+    <li>Redis <code>ROLE</code> / <code>INFO replication</code> 监控 offset。</li>
+    <li>ES <code>/_ccr/info</code> API 监控 checkpoint。</li>
+  </ul>
+</div>
+
+<h3>7.3 切换期间的业务降级</h3>
+<div class="info-card">
+  <div class="card-title">问题与应对</div>
+  <p><strong>问题</strong>：只读窗口导致写失败，影响用户体验。</p>
+  <p><strong>应对</strong>：</p>
+  <ul>
+    <li>设计重试机制和队列缓冲。</li>
+    <li>尽量缩短只读窗口（自动化切换步骤）。</li>
+    <li>使用灰度切换逐步迁移流量。</li>
+  </ul>
+</div>
+
+<h3>7.4 脑裂 (Split-Brain)</h3>
+<div class="warn-card">
+  <div class="card-title">问题与应对</div>
+  <p><strong>问题</strong>：网络分区导致两边都认为自己是主，都接受写入。</p>
+  <p><strong>应对</strong>：</p>
+  <ul>
+    <li>MySQL：使用仲裁工具（Orchestrator + 多路心跳）或 STONITH。</li>
+    <li>Redis Sentinel：少数派分区不会自动切换，保证至少 Quorum 个 Sentinel 可达。</li>
+    <li>Redis Cluster：Master 在 <code>cluster-node-timeout</code> 内无法与大多数 Master 通信则进入 FAIL 状态。</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="sec8">8. 最佳实践</h2>
+
+<div class="summary-box">
+<h3>📋 Checklist</h3>
+<ol>
+  <li><strong>自动化切换流程</strong>：手工切换容易出错，所有切换步骤应脚本化、自动化。</li>
+  <li><strong>开启只读模式时做好超时</strong>：设置较短的 <code>lock_wait_timeout</code>（MySQL），避免被长时间运行的事务阻塞切换。</li>
+  <li><strong>Switchover 优先</strong>：计划内切换尽量用 switchover 而非 failover，可控性强。</li>
+  <li><strong>预留冗余容量</strong>：备库/从集群需要足够的资源承载切换后的流量。</li>
+  <li><strong>DNS/Proxy 层解耦</strong>：应用不直接连接数据库 IP，通过 DNS（修改 TTL）或 Proxy（如 ProxySQL / HAProxy / Envoy）切换，减少应用重启。</li>
+  <li><strong>DR 演练</strong>：定期执行真正的切换演练（而非只在测试环境），验证流程并暴露隐患。</li>
+  <li><strong>监控切换关键指标</strong>：
+    <ul>
+      <li>Replication Lag（秒级）</li>
+      <li>只读窗口时间（毫秒级）</li>
+      <li>切换失败率</li>
+      <li>数据一致性校验结果</li>
+    </ul>
+  </li>
+  <li><strong>考虑最终一致的影响</strong>：切换完成后，应用层要能处理"写新库读不到旧库数据"的情况，做好补偿机制。</li>
+</ol>
+</div>
+
+<hr>
+<p style="color:#4a6b57; text-align:center; font-size:0.85em;">
+  参考资料：MySQL GTID Docs / Redis Sentinel & Cluster Docs / Elasticsearch CCR Docs
+</p>
+
+</div>
+</body>
+</html>

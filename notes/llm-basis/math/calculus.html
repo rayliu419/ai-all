@@ -73,6 +73,7 @@ tr:nth-child(even) { background: var(--card); }
     <a href="#overview">一、微积分概览</a>
     <a href="#essence-of-derivatives">二、导数的本质</a>
     <a href="#chain-rule-product-rule">三、链式法则与乘积法则</a>
+    <a href="#directional-derivative-gradient">四、方向导数和梯度</a>
   </div>
 </div>
 
@@ -205,6 +206,22 @@ $$\text{总敏感度} = g'(h(x)) \cdot h'(x)$$
 <div class="card warm" style="margin-top:12px;">
 <p><strong>思考延伸：</strong>链式法则的"多条数轴联动"视角与反向传播的"误差从输出层逐层传回输入层"的机制完全对应。每一层的导数就是该层对误差的"传导系数"——这就是为什么反向传播的本质就是微积分链式法则在神经网络中的应用。</p>
 <p style="margin-top:4px;">↪ 详见 <a href="../llm-basis/pre-training.html#backprop-calc">预训练笔记 — 反向传播的微积分</a></p>
+</div>
+
+<!-- ============ SECTION 4 ============ -->
+<h2 id="directional-derivative-gradient">四、方向导数和梯度</h2>
+
+<p>参考视频：<a href="https://www.bilibili.com/video/BV1sB9EYMEJ4" target="_blank">3Blue1Brown — 梯度与方向导数</a></p>
+
+<p>以 <code>z = x² + y²</code>（碗形曲面）为例：</p>
+<ul>
+  <li><strong>偏导</strong>就是锁定截面截取这个碗形的曲面，在那个截面上看做是 xy 平面的切线。</li>
+  <li><strong>方向导数</strong>则是代表以某个点为例，可以任意的朝任何方向走动。</li>
+  <li><strong>梯度</strong>是按照函数最大变化的方向走动。</li>
+</ul>
+
+<div class="demo-frame-wrap">
+  <iframe src="demos/directional-derivative.html" style="height:680px;" title="方向导数和梯度动态演示"></iframe>
 </div>
 
 </body>
