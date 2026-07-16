@@ -347,7 +347,46 @@ row₂: [3, 4]  →  [3 − 3·1, 4 − 3·2] = [0, -2]
   $$E = \begin{bmatrix}1 & 0 \\ -3 & 1\end{bmatrix}$$
 </div>
 
-<p>验证计算：</p>
+<h4>E 针对方程组的含义</h4>
+
+<div class="card warm">
+  <p><strong>操作的本质：</strong> 将其中一个方程替换为
+该方程自身减去另一方程的若干倍，从而消去一个未知数。</p>
+
+  <p><strong>在本例中：</strong></p>
+  <div style="text-align:center; margin:8px 0;">
+    $$
+    \begin{cases}
+    x + 2y = 5 \quad \text{(eq1)}\\
+    3x + 4y = 6 \quad \text{(eq2)}
+    \end{cases}
+    $$
+  </div>
+  <p>操作 $\text{eq}_2 \gets \text{eq}_2 - 3 \cdot \text{eq}_1$：</p>
+  <ul>
+    <li>新 eq₂ = (3x + 4y) − 3·(x + 2y) = 6 − 3·5</li>
+    <li>化简：$0x - 2y = -9$，即 $y = 4.5$</li>
+  </ul>
+
+  <p><strong>E 的角色：</strong> $E = \begin{bmatrix}1&0\\-3&1\end{bmatrix}$ 左乘方程组 $A\mathbf{x} = \mathbf{b}$ 的两边：</p>
+  <div style="text-align:center; margin:8px 0;">
+    $$E(A\mathbf{x}) = E\mathbf{b} \quad\Longrightarrow\quad (EA)\mathbf{x} = E\mathbf{b} \quad\Longrightarrow\quad U\mathbf{x} = \mathbf{c}$$
+  </div>
+  <ul>
+    <li>$E$ 同时作用于 $A$ 和 $\mathbf{b}$，<strong>保证了新方程组与原方程组同解</strong>。</li>
+    <li>因为 $E$ 可逆（消元操作可逆），所以解集不变。</li>
+    <li>$E$ 的第 $i$ 行 <strong>直接对应</strong> 第 $i$ 个新方程如何由原方程组合而成：</li>
+    <li style="list-style:none; margin-top:4px;">第 1 行 $(1, 0)$ → 新 eq₁ = 1·eq₁ + 0·eq₂（不变）</li>
+    <li style="list-style:none;">第 2 行 $(-3, 1)$ → 新 eq₂ = (-3)·eq₁ + 1·eq₂（eq₂ 减去 3 倍 eq₁）</li>
+  </ul>
+
+  <div class="highlight" style="margin-top:8px;">
+    <strong>一句话：</strong> $E$ 就是
+对原方程组做消元操作的矩阵表示——左乘 $E$ 等价于对等式两边做相同的行变换，解不变。</p>
+  </div>
+</div>
+
+<h4>验证计算</h4>
 
 <div class="card" style="text-align:center;">
   $$E \cdot A = \begin{bmatrix}1 & 0 \\ -3 & 1\end{bmatrix}
