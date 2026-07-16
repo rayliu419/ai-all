@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方程组的几何解释 — MIT 18.06</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]});"></script>
+<style>
+:root {
+  --bg: #f5faf6;
+  --card: #e8f5ec;
+  --border: #c3dbcc;
+  --text: #2d3a31;
+  --accent: #3a7a4d;
+  --accent-light: #5ead6e;
+  --highlight: #d4942b;
+  --highlight-bg: #fdf6e3;
+  --code-bg: #dceee2;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+h1 { font-size: 1.35em; color: var(--accent); margin: 20px 0 8px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+h2 { font-size: 1.2em; color: var(--accent); margin: 18px 0 6px; }
+h3 { font-size: 1.02em; color: var(--accent); margin: 14px 0 4px; }
+h4 { font-size: 0.95em; color: var(--accent); margin: 10px 0 4px; }
+p { margin: 6px 0; }
+ul, ol { margin: 4px 0; padding-left: 20px; }
+li { margin: 2px 0; }
+code { font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+pre { font-size: 0.8em; background: var(--card); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); overflow-x: auto; margin: 8px 0; line-height: 1.3; }
+table { font-size: 0.9em; border-collapse: collapse; width: 100%; margin: 8px 0; }
+th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+th { background: var(--accent); color: #fff; font-weight: 600; }
+tr:nth-child(even) { background: var(--card); }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
+.summary { background: var(--highlight-bg); border-left: 4px solid var(--highlight); border-radius: 4px; padding: 12px 16px; margin: 14px 0; }
+.summary strong { color: var(--highlight); }
+.highlight { background: var(--highlight-bg); border-left: 3px solid var(--highlight); padding: 8px 12px; margin: 8px 0; border-radius: 0 4px 4px 0; }
+.tag { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8em; padding: 1px 8px; border-radius: 10px; font-weight: 500; }
+.keyword { color: var(--accent); font-weight: 600; }
+.warm { background: #fdf6e3; border: 1px solid #eedca5; }
+
+/* ---- Demo iframe containers ---- */
+.demo-frame-wrap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 12px 0; background: var(--bg); }
+.demo-frame-wrap iframe { display: block; width: 100%; border: none; }
+
+/* ---- Table of contents ---- */
+.toc { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
+.toc-title { font-weight: 600; color: var(--accent); font-size: 1em; margin-bottom: 6px; }
+.toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+.toc-grid a { color: var(--text); text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
+.toc-grid a:hover { background: var(--bg); color: var(--accent); }
+
+/* KaTeX display math spacing */
+.katex-display { margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<div class="card" style="text-align:center; margin-bottom:20px;">
+  <h1 style="border:none; margin:4px 0;">📐 方程组的几何解释</h1>
+  <p style="color:var(--accent); margin:2px 0;">MIT 18.06 · Row Picture &amp; Column Picture · 消元法</p>
+</div>
+
+<div class="toc">
+  <div class="toc-title">📖 目录</div>
+  <div class="toc-grid">
+    <a href="#matrix-form">一、矩阵形式</a>
+    <a href="#row-picture">二、Row Picture（行图像）</a>
+    <a href="#column-picture">三、Column Picture（列图像）</a>
+    <a href="#comparison">四、Row vs Column 对比</a>
+    <a href="#solvability">五、对于任意 b，是否都有解？</a>
+    <a href="#matrix-vector-multiplication">六、矩阵与向量相乘的计算方式</a>
+    <a href="#elimination">七、消元法</a>
+    <a href="#summary">八、总结</a>
+  </div>
+</div>
+
+<!-- ============ SECTION 1 ============ -->
+<h2 id="matrix-form">一、矩阵形式</h2>
+
+<p>线性方程组的核心问题：求解一组线性方程。而看待这组方程的方式，决定了你理解线性代数的深度。</p>
+
+<p>将方程组写成矩阵形式，是理解的第一步：</p>
+
+$$
+\begin{cases}
+2x -  y =  0 \\
+-x + 2y =  3
+\end{cases}
+$$
+
+<p>等价于矩阵形式：</p>
+
+$$A \mathbf{x} = \mathbf{b}$$
+
+<p>其中：</p>
+
+<div class="card">
+  $$A = \begin{bmatrix}2 & -1 \\ -1 & 2\end{bmatrix},\quad
+  \mathbf{x} = \begin{bmatrix}x \\ y\end{bmatrix},\quad
+  \mathbf{b} = \begin{bmatrix}0 \\ 3\end{bmatrix}$$
+</div>
+
+<p>矩阵形式的优势：</p>
+<ul>
+  <li><strong>简化表示</strong>：无论多少个方程，都写成 Ax = b 这一个式子。</li>
+  <li><strong>容易手工求解</strong>：消元法直接在矩阵上进行操作。</li>
+  <li><strong>揭示结构</strong>：矩阵 A 的列向量结构决定了方程组的解空间性质。</li>
+</ul>
+
+<!-- ============ SECTION 2 ============ -->
+<h2 id="row-picture">二、Row Picture（行图像）</h2>
+
+<div class="summary">
+<strong>从"方程（行）"的角度出发</strong>，将每一个方程视为几何空间中的一个"几何形状"，而整个方程组的解就是这些几何形状的"交点"。
+</div>
+
+<h3>2.1 二维例子</h3>
+
+<pre>
+2x -  y = 0     → 一条直线
+-x + 2y = 3     → 另一条直线
+</pre>
+
+<img src="images/row-picture-2d.png" alt="Row Picture — 两条直线的交点" style="width:100%; max-width:480px; display:block; margin:10px auto; border-radius:8px; border:1px solid var(--border);">
+
+<p>每一条直线代表一个方程，两条直线的交点 (1, 2) 就是方程组的解。</p>
+
+<h3>2.2 三维例子</h3>
+
+$$
+\begin{cases}
+ x + 2y +  z = 2 \\
+3x + 8y +  z = 12 \\
+     4y +  z = 2
+\end{cases}
+$$
+
+<p>在 Row Picture 下，每个方程代表三维空间中的一个<strong>平面</strong>。三个平面的交点就是方程组的解。</p>
+
+<div class="card warm">
+<h4 style="margin-top:0; margin-bottom:4px;">Row Picture 的局限</h4>
+<ul>
+  <li>三维以上无法可视化。</li>
+  <li>对于大方程组（几十、几百万个方程），这种视角毫无帮助。</li>
+</ul>
+</div>
+
+<!-- ============ SECTION 3 ============ -->
+<h2 id="column-picture">三、Column Picture（列图像）</h2>
+
+<div class="summary">
+<strong>这是理解线性代数最重要的视角。</strong> 将方程组左边的系数按列拆分成多个向量，右边也看成一个向量，那么求解方程组等价于：寻找一组系数，使得左边这些向量的线性组合等于右边的向量。
+</div>
+
+<h3>3.1 2D 例子</h3>
+
+$$A \mathbf{x} = \begin{bmatrix}2 & -1 \\ -1 & 2\end{bmatrix}
+\begin{bmatrix}x \\ y\end{bmatrix}
+= \begin{bmatrix}0 \\ 3\end{bmatrix}$$
+
+<p>按列拆分：</p>
+
+$$x\begin{bmatrix}2 \\ -1\end{bmatrix}
++ y\begin{bmatrix}-1 \\ 2\end{bmatrix}
+= \begin{bmatrix}0 \\ 3\end{bmatrix}$$
+
+<div class="card">
+  <h4 style="margin-top:0;">几何意义</h4>
+  <ul>
+    <li>有两个向量：<strong>col₁</strong> = (2, -1), <strong>col₂</strong> = (-1, 2)</li>
+    <li>我们要找一组系数 (x, y)，使得 x·col₁ + y·col₂ 恰好等于目标向量 b = (0, 3)</li>
+    <li>答案是 x = 1, y = 2：1·(2, -1) + 2·(-1, 2) = (0, 3)</li>
+  </ul>
+</div>
+
+<img src="images/column-picture-2d.png" alt="Column Picture — 向量的线性组合" style="width:100%; max-width:480px; display:block; margin:10px auto; border-radius:8px; border:1px solid var(--border);">
+
+<h3>3.2 3D 例子</h3>
+
+<div class="card" style="text-align:center;">
+  <p>考虑三对角矩阵系统：</p>
+  $$A = \begin{bmatrix}2 & -1 & 0 \\ -1 & 2 & -1 \\ 0 & -1 & 2\end{bmatrix},\quad
+  \mathbf{b} = \begin{bmatrix}0 \\ 3 \\ 0\end{bmatrix}$$
+</div>
+
+<p>按列拆分：</p>
+
+$$x\begin{bmatrix}2 \\ -1 \\ 0\end{bmatrix}
++ y\begin{bmatrix}-1 \\ 2 \\ -1\end{bmatrix}
++ z\begin{bmatrix}0 \\ -1 \\ 2\end{bmatrix}
+= \begin{bmatrix}0 \\ 3 \\ 0\end{bmatrix}$$
+
+<div class="card">
+  <ul>
+    <li>col₁ = (2, -1, 0), col₂ = (-1, 2, -1), col₃ = (0, -1, 2)</li>
+    <li>我们要找到 x, y, z 使得这三个向量的线性组合等于 (0, 3, 0)</li>
+    <li>答案是 (x, y, z) = <strong>(1, 2, 1)</strong></li>
+  </ul>
+</div>
+
+<div class="highlight">
+  <strong>验证：</strong> 1·(2,-1,0) + 2·(-1,2,-1) + 1·(0,-1,2) = (2-2+0, -1+4-1, 0-2+2) = (0, 3, 0) ✓
+</div>
+
+<h3>3.3 Column Picture 为什么重要？</h3>
+
+<div class="card">
+  <ol>
+    <li><strong>自然对应矩阵乘法</strong>：A×x 的计算方式就是从列的角度看的——结果向量的每个分量 = 对应系数与列向量的组合。</li>
+    <li><strong>揭示了解的存在性条件</strong>：问题从"求交"变成了"能否组合出目标向量"。</li>
+    <li><strong>与后续概念（列空间、秩、基）直接挂钩</strong>：所有列向量张成的空间决定了方程组的可能性。</li>
+  </ol>
+</div>
+
+<!-- ============ SECTION 4 ============ -->
+<h2 id="comparison">四、Row Picture vs Column Picture 对比</h2>
+
+<table>
+  <tr><th>视角</th><th>几何解释</th><th>二维例子</th><th>核心问题</th></tr>
+  <tr>
+    <td><span class="keyword">Row Picture</span></td>
+    <td>每行 = 一条直线 / 一个平面</td>
+    <td>两条直线求交点</td>
+    <td>形状的交点在哪？</td>
+  </tr>
+  <tr>
+    <td><span class="keyword">Column Picture</span></td>
+    <td>每列 = 一个向量</td>
+    <td>两个向量组合成目标向量</td>
+    <td>能否组合出 b？</td>
+  </tr>
+</table>
+
+<div class="highlight">
+<strong>核心区别：</strong>Row Picture 侧重于<strong>求解</strong>，Column Picture 侧重于<strong>理解解的结构</strong>。
+</div>
+
+<!-- ============ SECTION 5 ============ -->
+<h2 id="solvability">五、对于任意 b，是否都有解？</h2>
+
+$$A \mathbf{x} = \mathbf{b}$$
+
+<div class="card">
+  <h4 style="margin-top:0;">二维情况</h4>
+  <p>如果两个列向量 col₁, col₂ 不在同一条直线上（<strong>线性无关</strong>），那么它们的线性组合可以到达平面上的<strong>任意位置 b</strong>——此时一定有解。</p>
+</div>
+
+<div class="card">
+  <h4 style="margin-top:0;">三维情况</h4>
+  <p>如果三个列向量 col₁, col₂, col₃ 属于同一个平面（<strong>线性相关</strong>），那么它们的线性组合也只能在这个平面内，不可能组成三维空间中任意的 b。</p>
+</div>
+
+<img src="images/column-space-3d.png" alt="列空间 — 共面向量" style="width:100%; max-width:520px; display:block; margin:10px auto; border-radius:8px; border:1px solid var(--border);">
+
+<div class="summary">
+<strong>关键概念：列空间（Column Space）</strong>——所有列向量的线性组合构成的集合。方程组有解 <strong>当且仅当</strong> b 属于 A 的列空间。
+</div>
+
+<!-- ============ SECTION 6 ============ -->
+<h2 id="matrix-vector-multiplication">六、重新思考矩阵与向量相乘的计算方式</h2>
+
+<p>矩阵与向量相乘 Ax 有两种计算方式：</p>
+
+<div class="card">
+  <h4 style="margin-top:0;">1. 行向量的点积（对应 Row Picture）</h4>
+  <p>结果向量的每个分量 = A 的对应行与 x 的点积。</p>
+  $$(A\mathbf{x})_i = \sum_{j} a_{ij} x_j$$
+</div>
+
+<div class="card">
+  <h4 style="margin-top:0;">2. 列向量的组合（对应 Column Picture）</h4>
+  <p>结果向量 = A 的每一列乘以对应的 x 分量，再求和。</p>
+  $$A\mathbf{x} = x_1 \cdot \text{col}_1 + x_2 \cdot \text{col}_2 + \cdots + x_n \cdot \text{col}_n$$
+</div>
+
+<div class="highlight">
+<strong>在线性代数的视角下，最好用列向量的组合这种方式，尤其是大矩阵。</strong>
+</div>
+
+<div class="card warm">
+  <h4 style="margin-top:0; margin-bottom:4px;">推荐使用列视角的原因</h4>
+  <ul>
+    <li>它对应了线性变换的几何直觉：坐标是"导航指令"，矩阵的列是变换后的基向量。</li>
+    <li>在后续学习列空间、零空间、特征向量等概念时，列视角提供了统一的几何框架。</li>
+    <li>在大规模数值计算中（如机器学习中的批处理矩阵运算），列视角帮助理解数据维度的含义。</li>
+  </ul>
+</div>
+
+<!-- ============ SECTION 7 ============ -->
+<h2 id="elimination">七、消元法</h2>
+
+<div class="summary">
+<strong>消元法（Gaussian Elimination）</strong>是将矩阵 A 化为上三角矩阵 U 的过程。从矩阵视角看，每一次消元操作都对应一个<strong>初等矩阵</strong>在前面左乘。
+</div>
+
+<p>消元法有可能成功，也有可能不成功——不成功时，矩阵是<strong>奇异的</strong>（Singular），即行列式为 0，不可逆。</p>
+
+<h3>7.1 传统视角 vs 矩阵视角</h3>
+
+<p>传统消元法是从行操作的角度去看：从第二行减去第一行的某个倍数，消掉第二行的主元。但线性代数给了我们一个更统一的视角——<strong>矩阵乘法</strong>。</p>
+
+<div class="card">
+  <h4 style="margin-top:0;">具体例子</h4>
+  <p>考虑方程组：</p>
+  $$
+\begin{cases}
+x + 2y = 5 \\
+3x + 4y = 6
+\end{cases}
+$$
+  <p>写成矩阵形式 Ax = b：</p>
+  $$A = \begin{bmatrix}1 & 2 \\ 3 & 4\end{bmatrix},\quad
+  \mathbf{b} = \begin{bmatrix}5 \\ 6\end{bmatrix}$$
+  <p>消元目标：用 row₁ 消掉 row₂ 的第一个元素（主元 x）。</p>
+</div>
+
+<h3>7.2 初等矩阵 E</h3>
+
+<p>传统做法：row₂ ← row₂ − 3·row₁，得到：</p>
+
+<pre>
+row₁: [1, 2]  →  不变
+row₂: [3, 4]  →  [3 − 3·1, 4 − 3·2] = [0, -2]
+</pre>
+
+<p>从矩阵视角看，这个操作等价于<strong>左乘一个初等矩阵 E</strong>：</p>
+
+<div class="card" style="text-align:center;">
+  $$E \cdot A = U$$
+  <p>其中 E 是"从第二行减去 3 倍的第一行"的初等矩阵：</p>
+  $$E = \begin{bmatrix}1 & 0 \\ -3 & 1\end{bmatrix}$$
+</div>
+
+<p>验证计算：</p>
+
+<div class="card" style="text-align:center;">
+  $$E \cdot A = \begin{bmatrix}1 & 0 \\ -3 & 1\end{bmatrix}
+  \begin{bmatrix}1 & 2 \\ 3 & 4\end{bmatrix}$$
+  <p style="margin:6px 0;">第一行：1·[1,2] + 0·[3,4] = [1, 2]</p>
+  <p style="margin:6px 0;">第二行：(-3)·[1,2] + 1·[3,4] = [-3, -6] + [3, 4] = [0, -2]</p>
+  <div class="highlight" style="margin-top:8px;">
+    <strong>结果：</strong>$U = \begin{bmatrix}1 & 2 \\ 0 & -2\end{bmatrix}$ ✓ 成功得到上三角矩阵。
+  </div>
+</div>
+
+<h3>7.3 消元法对应的矩阵操作</h3>
+
+<div class="summary">
+<strong>关键视角转变：</strong>消元法不仅仅是行操作技巧，更是<strong>矩阵乘法</strong>——找到合适的矩阵 X，使得 X·A = U（上三角矩阵）。每一步消元操作都对应一个<strong>初等矩阵</strong>左乘 A。
+</div>
+
+<p>例如前面的例子，从第二行减去 3 倍的第一行，相当于找到矩阵 E：</p>
+
+<div class="card" style="text-align:center;">
+  $$E \cdot A = U, \quad E = \begin{bmatrix}1 & 0 \\ -3 & 1\end{bmatrix}$$
+  <p>使 U 的第二行第一列主元被消去。</p>
+</div>
+
+<p>这个视角回答了一个根本问题：<strong>要达到消元的效果，在前面要左乘一个什么样的矩阵？</strong> 左乘矩阵的每一行如何作用到原矩阵的每一行上，就是行操作的本质。</p>
+
+<h4>置换矩阵（Permutation Matrix）</h4>
+
+<p>除了消元矩阵，另一种重要的初等矩阵是<strong>置换矩阵</strong>——负责交换行或列。例如，交换两行：</p>
+
+<div class="card" style="text-align:center;">
+  $$P = \begin{bmatrix}0 & 1 \\ 1 & 0\end{bmatrix}, \quad
+  P \cdot \begin{bmatrix}a & b \\ c & d\end{bmatrix} =
+  \begin{bmatrix}c & d \\ a & b\end{bmatrix}$$
+  <p>P 左乘矩阵 = 交换两行。右乘则交换列。</p>
+</div>
+
+<p>消元法中可能出现需要置换行的情况（例如主元为 0 时，需要交换行找到非零主元），此时就用置换矩阵 P：</p>
+
+<div class="highlight">
+  <strong>完整表达：</strong> P · Eₙ ··· E₂ · E₁ · A = U，先置换（如果需要），再消元。
+</div>
+
+<p>所有这些参与左乘的矩阵都是<strong>初等矩阵</strong>（elementary matrices），它们构成了矩阵乘法的基石。</p>
+
+<h3>7.4 消元过程的完整矩阵表达</h3>
+
+<p>对于需要多步消元的方程组，每一步对应一个初等矩阵。整个过程可以写成：</p>
+
+$$E_n \cdots E_2 E_1 A = U$$
+
+<p>其中 E₁, E₂, …, Eₙ 是每一步的初等矩阵（消元或置换）。将所有的矩阵乘法合并成一个矩阵：</p>
+
+$$E A = U \quad \Longrightarrow \quad A = E^{-1} U$$
+
+<p>其中 E = Eₙ ··· E₂ · E₁ 是<strong>复合消元矩阵</strong>。</p>
+
+<div class="card warm">
+  <h4 style="margin-top:0;">⚠️ 注意：矩阵乘法的结合律</h4>
+  <p><strong>矩阵乘法不满足交换律</strong>（E₁E₂ ≠ E₂E₁ 一般情况下），但是<strong>满足结合律</strong>：</p>
+  $$(E_3 E_2) E_1 = E_3 (E_2 E_1)$$
+  <p><strong>结合律很重要</strong>，在很多证明中都会用到。它意味着我们可以随便加括号，先计算任意两个相邻的矩阵乘法，再与剩下的矩阵相乘——结果不变。</p>
+  <p>在消元法语境下，结合律使得我们可以先把所有初等矩阵合并成一个复合矩阵 E，再一次性作用到 A 上。</p>
+</div>
+
+<div class="highlight">
+  <strong>关键洞察：</strong>消元法不再只是"行操作技巧"，而是矩阵乘法——一系列初等矩阵左乘 A，将 A 逐步转化为上三角 U。这个视角是理解 <strong>LU 分解</strong>（A = LU，其中 L 是下三角矩阵、U 是上三角矩阵）的基础。
+</div>
+
+<h3>7.5 通过消元法求逆矩阵</h3>
+
+<div class="summary">
+<strong>核心思想：</strong>理解消元法对应的矩阵运算后，求解逆矩阵可以通过消元动作反推，不需要按照运算法则来强行计算。
+</div>
+
+<p>如果我们有一套消元操作将 A 变成 U（上三角），那么同样地，我们可以通过反方向的操作来恢复 A。更直接地说，求逆就是"反向消元"。</p>
+
+<h4>具体例子</h4>
+
+<p>假设我们有 2×2 矩阵 A，经过消元得到 U：</p>
+
+<div class="card" style="text-align:center;">
+  $$A = \begin{bmatrix}1 & 2 \\ 3 & 4\end{bmatrix}, \quad
+  E = \begin{bmatrix}1 & 0 \\ -3 & 1\end{bmatrix}, \quad
+  U = E A = \begin{bmatrix}1 & 2 \\ 0 & -2\end{bmatrix}$$
+</div>
+
+<p>现在，如果要对矩阵 A 求逆，我们可以利用消元过程反过来推导：</p>
+
+<ol>
+  <li><strong>正向消元知 E</strong>：E 是消元矩阵，E·A = U</li>
+  <li><strong>反向推导 A⁻¹</strong>：已知 A = E⁻¹·U，如果 U 是上三角矩阵，我们可以先求 U⁻¹，再结合 E⁻¹ 得到 A⁻¹</li>
+</ol>
+
+<p>但更直观的方式是：利用<strong>增广矩阵 [A | I]</strong>，对两边同时做消元操作，当左边变成 I 时，右边就是 A⁻¹：</p>
+
+<div class="card" style="text-align:center;">
+  $$[A \,|\, I] \xrightarrow{\text{消元}} [U \,|\, E] \xrightarrow{\text{回代}} [I \,|\, A^{-1}]$$
+  <p style="margin-top:8px;">做完正向消元得到 U，再做反向回代（从 U 变回 I），相当于继续左乘矩阵，直到把 A 变成 I。</p>
+</div>
+
+<div class="highlight">
+  <strong>联系：</strong>求逆矩阵的核心就是"把消元过程反着走一遍"。LU 分解（A = LU）进一步把这一过程拆成了下三角 L 和上三角 U，使得求解线性方程组 Ax = b 变得非常高效。<br><br>
+  <strong>一句话：</strong>理解消元法对应的矩阵操作 = 理解逆矩阵的由来。
+</div>
+
+<h3>7.6 总结</h3>
+
+<div class="card warm">
+<ul>
+  <li><strong>消元法</strong>：通过行操作将 A 变成上三角矩阵 U。</li>
+  <li><strong>矩阵视角</strong>：每次行操作 = 一个初等矩阵左乘。所有初等矩阵合并成 E，E·A = U。</li>
+  <li><strong>置换矩阵</strong>：用来交换行/列的初等矩阵，主元为 0 时使用。</li>
+  <li><strong>结合律</strong>：矩阵乘法满足结合律，使我们能合并所有初等矩阵。</li>
+  <li><strong>奇异矩阵</strong>：消元过程中出现全零行 → 矩阵不可逆。</li>
+  <li><strong>求逆</strong>：通过消元操作反向推导，不需要硬算。增广矩阵 [A | I] → 消元 → 回代 → [I | A⁻¹]。</li>
+  <li><strong>LU 分解</strong>：A = LU，其中 L 是下三角矩阵（初等矩阵的逆的乘积），U 是上三角矩阵。</li>
+</ul>
+</div>
+
+<!-- ============ SECTION 8 ============ -->
+<h2 id="summary">八、总结</h2>
+
+<div class="card">
+  <ul>
+    <li><strong>Row Picture</strong>：每个方程是一条线 / 一个面，解是它们的交点。适合手工求解和小规模问题。</li>
+    <li><strong>Column Picture</strong>：每列是一个向量，解是组合系数。<strong>这是学习线性代数的正确视角。</strong></li>
+    <li>矩阵乘法 Ax 的<strong>列组合解释</strong>，将计算与几何直觉统一了起来。</li>
+    <li>方程组 Ax = b 有解的条件：b <strong>在 A 的列空间</strong>（所有列向量的线性组合构成的集合）中。</li>
+    <li><strong>消元法</strong>用初等矩阵左乘来实现行操作，是后续 LU 分解的基础。</li>
+  </ul>
+</div>
+
+<div class="summary">
+<strong>一句话记住：</strong>Row Picture 告诉你"交点在哪里"，Column Picture 告诉你"是否能到达那里"。两者结合，才能真正理解线性方程组。
+</div>
+
+</body>
+</html>
