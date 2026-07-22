@@ -1,3 +1,6 @@
+# 0. github page. 
+ https://rayliu419.github.io/ai-all/
+
 # 1. learn-claude-code
 Agentic pattern reading，怎么构建一个Agent
 https://github.com/rayliu419/learn-claude-code
