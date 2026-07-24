@@ -245,6 +245,15 @@
   .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
   .toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
   .toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
+
+  /* Param & flow tables */
+  .param-table, .flow-table { width:100%; border-collapse:collapse; font-size:0.9em; margin:8px 0; }
+  .param-table th, .flow-table th { background:#d4e8db; color:#1a3a24; padding:6px 10px; text-align:left; font-weight:700; border:1px solid #c3dbcc; }
+  .param-table td, .flow-table td { padding:5px 10px; border:1px solid #c3dbcc; color:#2d3a31; }
+  .param-table tr:nth-child(even), .flow-table tr:nth-child(even) { background:#f0f7f2; }
+  .param-table tr:nth-child(odd), .flow-table tr:nth-child(odd) { background:#fafcfa; }
+  .param-table tr:hover, .flow-table tr:hover { background:#e2efe5; }
+  .param-table code, .flow-table code { font-size:0.9em; }
 </style>
 <!-- KaTeX for math rendering -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css">
@@ -274,7 +283,9 @@
     <a href="#act5">第五幕 · 知识存储</a>
     <a href="#act3">第三幕 · 反向传播</a>
     <a href="#backprop-calc">反向传播的微积分</a>
-    <a href="#math-toolbox">🔧 数学工具箱</a>
+    <a href="#math-toolbox">🔧 附章一 · 数学工具箱</a>
+
+    <a href="#dataflow">🔀 附章二 · 完整数据流 + Decoder</a>
     <a href="#summary">🎯 总结</a>
   </div>
 </div>
@@ -630,7 +641,7 @@
 <!--  附章：数学工具箱                                                  -->
 <!-- ================================================================ -->
 
-<div style="margin-bottom:6px;"><span class="section-label">🔧 附章</span></div>
+<div style="margin-bottom:6px;"><span class="section-label">🔧 附章一</span></div>
 <h2 id="math-toolbox">📊 数学工具箱 — 矩阵乘法的两种灵魂</h2>
 
 <div class="card">
@@ -911,25 +922,137 @@
   <h4 style="color:#7a2a2a;">⚠️ 叠加态的一个直接后果</h4>
   <p>由于叠加态的存在，你没法明确地指出某个 Key 对应哪个具体的事实——一个 Key 可能同时编码了多个知识的叠加。这就是 MLP 被称为"难以解释的模型部分"的根本原因。</p>
 </div>
-
 <h3>📊 Transformer 参数量速查</h3>
 
 <div class="card">
-  <p>一个标准 Transformer 层的主要参数来源：</p>
-  <ul>
-    <li><span class="key">Embedding Matrix $W_E$</span>：词 → 向量</li>
-    <li><span class="key">Unembedding Matrix $W_U$</span>：向量 → 词</li>
-    <li><span class="key">Q / K / V 矩阵</span>：每个注意力头独立</li>
-    <li><span class="key">输出矩阵</span>：拼接多头结果</li>
-    <li><span class="key">MLP Up $W_1$</span>：升维</li>
-    <li><span class="key">MLP Down $W_2$</span>：降维</li>
+  <p>以标准 Decoder-only Transformer（如 LLaMA）的一层为例，设 $d_{model}$ 为嵌入维度、$d_{ff} = 4 \times d_{model}$ 为 MLP 中间维度：</p>
+  <table class="param-table">
+    <thead>
+      <tr><th>矩阵</th><th>形状</th><th>参数量</th><th>作用</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Embedding $W_E$</td><td>$V \times d_{model}$</td><td>$V \cdot d_{model}$</td><td>词索引 → 高维向量</td></tr>
+      <tr><td>Unembedding $W_U$</td><td>$d_{model} \times V$</td><td>$d_{model} \cdot V$</td><td>向量 → 词表分数 (Logits)</td></tr>
+      <tr><td>Attention Q 矩阵</td><td>$d_{model} \times d_{model}$</td><td>$d_{model}^2$</td><td>向量 → Query（找什么）</td></tr>
+      <tr><td>Attention K 矩阵</td><td>$d_{model} \times d_{model}$</td><td>$d_{model}^2$</td><td>向量 → Key（有什么）</td></tr>
+      <tr><td>Attention V 矩阵</td><td>$d_{model} \times d_{model}$</td><td>$d_{model}^2$</td><td>向量 → Value（改什么）</td></tr>
+      <tr><td>Attention O 矩阵</td><td>$d_{model} \times d_{model}$</td><td>$d_{model}^2$</td><td>拼接多头 → 输出</td></tr>
+      <tr><td>MLP Up $W_1$</td><td>$d_{ff} \times d_{model}$</td><td>$4 \, d_{model}^2$</td><td>升维检索（Key 匹配）</td></tr>
+      <tr><td>MLP Down $W_2$</td><td>$d_{model} \times d_{ff}$</td><td>$4 \, d_{model}^2$</td><td>降维组合（Value 加权）</td></tr>
+      <tr><td>LayerNorm (×2)</td><td>$d_{model}$ (scale) + $d_{model}$ (bias)</td><td>$2 \times 2 \, d_{model}$</td><td>层归一化（稳定训练）</td></tr>
+    </tbody>
+  </table>
+  <div class="highlight" style="margin-top:10px;padding:8px 12px;font-size:0.93em;">
+    <strong>单层参数量≈ $12 \, d_{model}^2$</strong>（忽略 Embedding 和 LayerNorm），其中 MLP 占 $\frac{2}{3}$（$8d^2$）、Attention 占 $\frac{1}{3}$（$4d^2$）。整个模型的参数 ≈ 层数 × $12d^2$ + Embedding + Unembedding。
+  </div>
+</div>
+
+<div class="card blue">
+  <h4>🔍 各矩阵的角色详解</h4>
+  <ul style="font-size:0.93em;">
+    <li><span class="key">$W_E$（Embedding）</span>：查表。每个词对应一个固定行向量，训练时调整。参数量取决于词表大小 $V$——大词表（如 128K）是 Embedding 参数的主要来源。</li>
+    <li><span class="key">$W_U$（Unembedding）</span>：与 $W_E$ 可能共享权重（weight tying）以减少参数量。它从最终向量中提取每个词作为下一个词的概率依据。</li>
+    <li><span class="key">Q / K / V 矩阵</span>：将嵌入向量投影到 Query / Key / Value 空间。多头注意力中，$h$ 个头各有独立的 Q/K/V 矩阵，每个头维度 $d_{qkv} = d_{model} / h$，总参数量为 $3 \times d_{model}^2$。对输出的贡献通过 $W_O$ 组合回来（第 $4 \times d_{model}^2$）。</li>
+    <li><span class="key">MLP $W_1$ 与 $W_2$</span>：$W_1$ 的行向量是"事实 Key"，与输入做点积决定激活哪些知识；$W_2$ 的列向量是"事实 Value"，把激活的知识加权组合回嵌入空间。两者配合实现升维检索 → 降维组合的核心知识读写操作。</li>
   </ul>
-  <p style="font-size:0.9em;color:#4a6b55;margin-top:6px;">更具体的参数量数值会在后续笔记中补充（与具体模型配置相关）。</p>
+</div>
+
+<div class="card purple">
+  <h4>🔄 理解残差连接：向量不是被替换，而是被不断修正</h4>
+  <p>残差连接是 Transformer 中最容易忽略却又最核心的设计之一。它的数学形式很简单：</p>
+  <div style="text-align:center;font-size:1em;margin:10px 0;padding:8px;background:#e8f0fe;border-radius:6px;">
+    $x_{l+1} = x_l + \text{Sublayer}(x_l)$
+  </div>
+  <p>但它的<strong>语义含义</strong>值得深入挖掘。</p>
+</div>
+
+<div class="card">
+  <h4>🧠 直觉：皇帝 → 拿破仑</h4>
+  <p>设想句子的初始词向量中包含一个词"皇帝"。在最开始的 Embedding 向量中，它只是一个孤立的词——泛指任何一位皇帝。但随着上下文逐层流过 Transformer，这个向量被不断地<strong>修正</strong>：</p>
+  <ul>
+    <li><strong>注意力层</strong>：从句子的其他词中吸收信息（"法国"、"滑铁卢"、"1815年"），把向量朝"拿破仑"的方向推一步</li>
+    <li><strong>MLP 层</strong>：基于已有的向量，从知识库中检索相关事实（"拿破仑是法国皇帝"），再修正一步</li>
+    <li><strong>下一层注意力</strong>：再吸收更细粒度的上下文……</li>
+  </ul>
+  <p>关键点在于：<span class="key">残差连接不是在计算一个全新的向量，而是在原有的向量上施加修正</span>。每一层的输出不是替换，而是"原向量 + 修正量"。</p>
+  <p style="font-size:0.93em;color:#4a6b55;">这就像一个画家在画布上不断叠加修改——最初的草图（皇帝）在每一笔之后逐渐细化（滑铁卢的皇帝 → 拿破仑）。画布本身没有被替换，上面的内容在每一层得到丰富。</p>
+
+<div class="highlight accent">
+  <h4 style="color:#7c5200;">📐 数学视角：为什么这是一个好设计？</h4>
+  <ul>
+    <li><strong>梯度流动</strong>：反向传播时，梯度可以直接通过残差分支回到浅层，避免了深层网络的梯度消失问题。即使层数极深，梯度也有“捷径”。</li>
+    <li><strong>信息保留</strong>：每一层只负责计算“增量”（$\Delta E$），而不需要从头构建表示。浅层的信息永远不会被深层“覆盖”——它始终存在于残差流中。</li>
+    <li><strong>层间解耦</strong>：每层只需关注“当前还需要补充什么”，而不是“重新理解整个输入”。让训练更加稳定，也使得增加层数成为一种可靠的扩展性能的方式。</li>
+  </ul>
 </div>
 
 <div class="takeaway">
   <div class="takeaway-title">📌 第五幕总结</div>
-  <p>MLP 是 Transformer 的事实数据库。它通过"升维检索 → 激活 → 降维组合"的三段结构，以 Key/Value 的形式存储了海量的世界知识。而叠加态则解释了为什么有限数量的神经元能胜任百科全书式的知识容量——<span class="key">高维空间的"几乎正交"方向提供了惊人的扩展性</span>。这是模型"知道"与模型"注意"（Attention）的分工。</p>
+</div>
+
+<!-- ================================================================ -->
+<!--  附章2：Transformer 完整数据流 + Decoder    -->
+<!-- ================================================================ -->
+
+<div style="margin-bottom:6px;"><span class="section-label">附章二</span></div>
+<h2 id="dataflow">🔀 Transformer 的向量完成哪些变换？</h2>
+
+<div class="card">
+  <p>到目前为止，我们讨论了注意力机制（如何吸收上下文）和 MLP（如何检索知识），但还没有完整地走一遍向量在 Transformer <strong>Decoder</strong>（以 GPT 为代表的 Decoder-only 架构）中的完整路径。</p>
+  <p>一项一项来看：</p>
+</div>
+
+<table class="flow-table">
+  <thead>
+    <tr><th>步骤</th><th>变换</th><th>发生了什么</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>① Token 化</td><td>文本 → 整数索引</td><td>“我” → token id</td></tr>
+    <tr><td>② Embedding</td><td>$x = W_E[t]$</td><td>整数 → 稠密向量 $d_{model}$</td></tr>
+    <tr><td>③ 位置编码</td><td>$x += PE(pos)$</td><td>注入位置信息，打破置换不变性</td></tr>
+    <tr><td>④ 掩码自注意力</td><td>$x'''= x + Attn_{masked}(x)$</td><td>每个词吸收左侧所有词的信息；残差保留原向量</td></tr>
+    <tr><td>⑤ 层归一化</td><td>$x'' = LayerNorm(x')$</td><td>稳定数值范围，加速训练</td></tr>
+    <tr><td>⑥ MLP</td><td>$x^{\prime\prime\prime}=x''+MLP(x'')$</td><td>从知识库中检索并融合事实；残差保留注意力的结果</td></tr>
+    <tr><td>⑦ 层归一化</td><td>$x^{(4)} = LayerNorm(x^{\prime\prime\prime})$</td><td>再次稳定</td></tr>
+    <tr><td>⑧ Unembedding</td><td>$logits = x^{(4)} \cdot W_U$</td><td>向量 → 词表分数</td></tr>
+    <tr><td>⑨ Softmax</td><td>$p = Softmax(logits / T)$</td><td>分数 → 概率分布 → 采样下一个词</td></tr>
+  </tbody>
+</table>
+
+<div class="highlight" style="margin-top:10px;padding:8px 12px;font-size:0.93em;">
+  <strong>关键洞察</strong>：步骤 ④→⑤→⑥→⑦ 重复 <strong>N 层</strong>（如 LLaMA 7B 有 32 层）。每一层都在残差流上叠加修正——<strong>向量维度始终是 $d_{model}$，从未改变</strong>。改变的是向量的方向（语义），而不是空间本身。
+</div>
+
+<h3>🔻 Decoder 架构详解</h3>
+
+<div class="card warm">
+  <p>Decoder-only 架构（GPT 系列）是目前大语言模型的主流。与 Encoder-Decoder 架构（原始 Transformer）不同，Decoder-only 模型只保留了解码器部分，通过<strong>因果掩码</strong>（Causal Masking）实现自回归生成。它的核心结构如下：</p>
+</div>
+
+<div style="text-align:center;margin:10px 0;">
+  <img src="images/decoder-both.png" alt="Transformer Decoder 架构图" style="max-width:88%;border-radius:8px;border:1px solid #c3dbcc;">
+  <p style="font-size:0.85em;color:#6a8f7a;margin-top:4px;">Image by dvgodoy / <a href="https://github.com/dvgodoy/dl-visuals" target="_blank" style="color:#4a6b55;">dl-visuals</a> / <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" style="color:#4a6b55;">CC BY 4.0</a></p>
+</div>
+
+<div class="insight">
+  <div class="insight-icon">🧩</div>
+  <div><strong>Decoder 各组件的作用</strong>：
+  <ul style="margin-top:4px;">
+    <li><span class="key">Masked Self-Attention</span>：只看到当前和之前的 token，实现自回归约束。</li>
+    <li><span class="key">Cross-Attention</span>（仅在 Encoder-Decoder 架构中有）：Decoder 的 Q 与 Encoder 输出的 K,V 交互。</li>
+    <li><span class="key">Feed-Forward（MLP）</span>：存储和检索世界知识。</li>
+    <li><span class="key">Add & LayerNorm</span>：残差连接 + 归一化，让深层网络在训练中保持稳定。</li>
+  </ul>
+  </div>
+</div>
+
+<div class="card blue">
+  <h4>💡 Decoder-only vs Encoder-Decoder</h4>
+  <ul>
+    <li><span class="key">Decoder-only（GPT）</span>：只有 Masked Self-Attention + MLP，没有 Cross-Attention。适合自由文本生成。</li>
+    <li><span class="key">Encoder-Decoder（T5、原始 Transformer）</span>：Encoder 处理输入（双向注意力），Decoder 生成输出（因果注意力 + Cross-Attention）。适合翻译、摘要等 seq2seq 任务。</li>
+  </ul>
+  <p style="margin-top:6px;font-size:0.93em;color:#4a6b55;">目前的主流大语言模型（GPT-4、Claude、LLaMA、Qwen 等）都采用 Decoder-only 架构——它更简洁，在足够的数据和规模下，性能不输 Encoder-Decoder 设计。</p>
 </div>
 
 <hr>
@@ -946,9 +1069,10 @@
     <li><strong>第一幕</strong>从微观出发：<span class="key">每一个函数选择都是一个有意义的决定</span>——ReLU 折纸、偏置平移、归纳偏置注入先验</li>
     <li><strong>第二幕</strong>从宏观出发：<span class="key">架构决定模型能学到什么层次的规律</span>——梯度下降只是工具，CNN 的结构先验才是它成功的本质</li>
     <li><strong>第三幕</strong>从传播出发：<span class="key">反向传播是学习的引擎</span>——链式法则把输出层的误差逐层传回，告诉你每个参数该往哪调、调多少</li>
-    <li><strong>🔧 附章</strong>夯实数学基础：<span class="key">矩阵乘法的两种视角</span>——行向量"匹配模式"、列向量"组合基底"，是所有后续机制的数学透镜</li>
+    <li><strong>🔧 附章一</strong>夯实数学基础：<span class="key">矩阵乘法的两种视角</span>——行向量“匹配模式”、列向量“组合基底”，是所有后续机制的数学透镜</li>
     <li><strong>第四幕</strong>进入现代架构：<span class="key">注意力机制让每个词看见整个句子</span>——QKV 三矩阵配合实现上下文感知，多头并行捕捉多维关系</li>
     <li><strong>第五幕</strong>揭示知识存储：<span class="key">MLP 是模型的百科全书</span>——升维检索、降维组合、叠加态让有限神经元编码海量知识</li>
+    <li><strong>🔀 附章二</strong>完整呈现：<span class="key">向量从 Embedding 到输出经历的全部变换</span>——从 Decoder 架构图到残差连接的修正直觉，再到参数量表的逐矩阵拆解，让 Transformer 这台“知识工厂”的每一个零件都可视化、可追踪。</li>
   </ul>
   <p style="margin-top:8px;">六者交汇于同一个洞察：<span class="key">对数据结构和物理世界的理解，才是设计好模型的核心能力</span>。这不仅仅是深度学习，这是"理解问题"的方法论。</p>
 </div>
