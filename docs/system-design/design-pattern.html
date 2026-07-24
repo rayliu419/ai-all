@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>常用设计模式 — 系统设计</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", Roboto, Helvetica, Arial, sans-serif;
+    background: #f5faf6;
+    color: #2d3a31;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 24px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 1.5em; color: #1a4f2e; margin-bottom: 6px; border-bottom: 2px solid #c3dbcc; padding-bottom: 6px; }
+  .subtitle { color: #4a6b57; margin-bottom: 16px; font-style: italic; }
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 12px 0 16px;
+  }
+  .toc h2 { font-size: 1em; color: #1a4f2e; margin: 0 0 8px; border: none; padding: 0; background: none; }
+  .toc ol { margin: 0 0 0 18px; }
+  .toc > ol { margin-left: 0; list-style: none; counter-reset: toc-counter; }
+  .toc > ol > li { counter-increment: toc-counter; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc-counter) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.9em; }
+  .toc a:hover { text-decoration: underline; color: #1a4f2e; }
+  h2 {
+    font-size: 1.2em;
+    color: #1f5c36;
+    margin: 20px 0 8px;
+    padding: 4px 0 4px 10px;
+    border-left: 4px solid #2d8a4e;
+    background: #e8f5ec;
+  }
+  h3 { font-size: 1.02em; color: #236b3e; margin: 14px 0 6px; }
+  h4 { font-size: 0.95em; color: #2d6e44; margin: 10px 0 4px; }
+  p { margin: 6px 0; }
+  ul, ol { margin: 4px 0 4px 18px; }
+  li { margin: 2px 0; }
+  code {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: #e8f5ec;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4f2e;
+  }
+  pre {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.8em;
+    background: #e8f5ec;
+    padding: 10px 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #c3dbcc;
+    margin: 6px 0;
+  }
+  .tag {
+    display: inline-block;
+    font-size: 0.78em;
+    background: #2d8a4e;
+    color: #fff;
+    padding: 1px 8px;
+    border-radius: 10px;
+    margin-right: 4px;
+  }
+  .tag-blue { background: #2a6e9e; }
+  .tag-amber { background: #b8860b; }
+  .tag-red { background: #b33a3a; }
+  .tag-purple { background: #6a3d99; }
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card-title { font-weight: 600; color: #1a4f2e; margin-bottom: 4px; }
+  .warn-card {
+    background: #fef9e7;
+    border: 1px solid #e6c952;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .warn-card .card-title { color: #8a6d0b; }
+  .info-card {
+    background: #e5f0fa;
+    border: 1px solid #8bb8d6;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .info-card .card-title { color: #1f5680; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    margin: 6px 0;
+  }
+  th, td {
+    border: 1px solid #c3dbcc;
+    padding: 6px 10px;
+    text-align: left;
+  }
+  th { background: #d4e8da; color: #1a4f2e; font-weight: 600; }
+  tr:nth-child(even) { background: #f0f8f2; }
+  .summary-box {
+    background: #d4e8da;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0;
+  }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 12px;
+    color: #2d8a4e;
+    text-decoration: none;
+    font-size: 0.9em;
+  }
+  .back-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<a class="back-link" href="../index.html">&larr; 返回索引</a>
+
+<h1>🏗️ 常用设计模式</h1>
+<p class="subtitle">基于 AWS 服务生态的系统设计模式与场景总结</p>
+
+<div class="toc">
+  <h2>📖 目录</h2>
+  <ol>
+    <li><a href="#transactional-outbox">DDB Streams → Transactional Outbox</a></li>
+    <li><a href="#sqs-dlq">SQS + DLQ → 可靠异步处理 + 毒丸消息隔离</a></li>
+    <li><a href="#sns-sqs-fanout">SNS + SQS → Fan-out 模式</a></li>
+    <li><a href="#saga">Step Functions → Saga 编排模式</a></li>
+    <li><a href="#kinesis-event-sourcing">Kinesis → Event Sourcing + 有序处理</a></li>
+    <li><a href="#dynamodb-cas">DynamoDB Conditional Write → 乐观锁 / CAS</a></li>
+    <li><a href="#eventbridge">EventBridge → Content-Based Router</a></li>
+    <li><a href="#api-gateway">API Gateway → Gateway / Facade 模式</a></li>
+    <li><a href="#global-tables">DynamoDB Global Tables → 多活 (Active-Active) 复制</a></li>
+    <li><a href="#cqrs">DynamoDB + OpenSearch → CQRS (读写分离)</a></li>
+    <li><a href="#dynamodb-ttl">DynamoDB TTL → 自清理数据 / 临时状态管理</a></li>
+    <li><a href="#claim-check">S3 Event Notification + Lambda → Claim Check (行李寄存) 模式</a></li>
+  </ol>
+</div>
+
+<!-- ============ 1. Transactional Outbox ============ -->
+<h2 id="transactional-outbox">1. DDB Streams → Transactional Outbox</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：用户下单后需要发一封确认邮件</div>
+</div>
+
+<p><strong>没有 Streams 时的痛点：</strong></p>
+<ul>
+  <li>订单落库后调用邮件服务，但邮件服务超时了</li>
+  <li>订单已写入，邮件没发出去 — 回滚订单？用户可能已经看到"下单成功"。不回滚？用户永远收不到确认邮件</li>
+</ul>
+
+<pre>
+1. 写入订单到 DDB ❌
+2. 调用邮件服务发邮件 ❌ 超时了
+</pre>
+
+<p><strong>有了 DDB Streams：</strong>写入 DDB 成功后，Stream 自动触发 Lambda 发邮件。即使 Lambda 失败了，Stream 里的记录还在，会重试。"本地写入"和"通知下游"被解耦了，但又不会丢。</p>
+
+<div class="summary-box">
+<strong>模式总结：</strong>将"本地状态变更"和"通知下游"解耦，通过 DDB Stream 保证 at-least-once 投递。适用于任何需要"先落库、后通知"的场景。
+</div>
+
+<!-- ============ 2. SQS + DLQ ============ -->
+<h2 id="sqs-dlq">2. SQS + DLQ → 可靠异步处理 + 毒丸消息隔离</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：电商平台每秒收到 10,000 个订单，每个订单需要调用风控服务做欺诈检测</div>
+</div>
+
+<p><strong>没有 SQS 时的痛点：</strong></p>
+<ul>
+  <li><strong>背包雪崩：</strong>双十一流量激增，风控服务每秒只能处理 2,000 个请求。订单服务同步调用风控，风控扛不住 → 订单服务线程池被占满 → 用户连下单页面都打不开了。一个下游的慢，把整个链路都拖死了。</li>
+  <li><strong>毒丸消息阻塞：</strong>某个订单的数据格式异常（比如金额是负数），风控服务每次处理都抛异常。如果用简单的重试队列，这条消息永远消费不掉，后面排队的正常订单全部被堵住。</li>
+</ul>
+
+<p><strong>有了 SQS + DLQ：</strong></p>
+<ul>
+  <li>订单服务写入 SQS 就返回，不管风控快不快</li>
+  <li>风控服务按自己的能力消费，积压了也不影响上游</li>
+  <li>那条"金额为负数"的畸形订单，重试 3 次后自动进入 DLQ，运维团队收到告警去人工排查</li>
+</ul>
+
+<pre>
+订单服务 -> SQS Queue -> 风控服务 (10个consumer各自消费)
+               ↘ DLQ (重试3次仍失败的消息隔离到这里)
+</pre>
+
+<div class="summary-box">
+<strong>模式总结：</strong>通过 SQS 做异步缓冲 + 流量消峰，DLQ 做毒丸消息隔离。保证上游不背下游的锅，一条坏消息不堵住整条队列。
+</div>
+
+<!-- ============ 3. SNS + SQS Fan-out ============ -->
+<h2 id="sns-sqs-fanout">3. SNS + SQS → Fan-out 模式</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：用户成功支付一笔订单后，需要同时做 5 件事</div>
+</div>
+
+<p>更新订单状态、扣减库存、给用户发 push、给商家发通知、更新用户积分。</p>
+
+<p><strong>没有 Fan-out 的痛点：</strong>支付服务依次调用 5 个下游服务。</p>
+<ul>
+  <li>积分服务挂了，整个支付流程要等它超时？还是跳过不加积分？</li>
+  <li>5 个调用串行执行，总延迟 = 5 个服务延迟之和</li>
+  <li>积分服务恢复后，挂掉期间的积分怎么补发？逐个人工对账？</li>
+</ul>
+
+<p><strong>有了 SNS + SQS：</strong></p>
+<ul>
+  <li>支付服务发一条 SNS 消息就完事，不关心有几个下游</li>
+  <li>积分服务挂了 2 小时？它的 SQS 里的消息会一直等着，恢复后自动消费补发</li>
+  <li>其他 4 个服务完全不受影响</li>
+</ul>
+
+<pre>
+支付服务 -> SNS "支付成功"
+            ---> SQS-订单 -> 订单服务 (更新状态)
+            ---> SQS-库存 -> 库存服务 (扣减)
+            ---> SQS-Push -> 通知服务 (发 push)
+            ---> SQS-商家 -> 商家服务 (通知发货)
+            ---> SQS-积分 -> 积分服务 (加积分)
+</pre>
+
+<div class="summary-box">
+<strong>模式总结：</strong>SNS 做 1:N 广播，每个下游独立 SQS 做缓冲和隔离。发布者不 care 下游数量，下游之间完全独立，一个挂了不影响其他人。
+</div>
+
+<!-- ============ 4. Saga ============ -->
+<h2 id="saga">4. Step Functions → Saga 编排模式</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：用户在旅游平台预订"机票+酒店+租车"的套餐</div>
+</div>
+
+<p>三个服务分别由不同的第三方提供，必须全部预订成功才算成功：</p>
+<ol>
+  <li>预订机票 → 成功 🟢</li>
+  <li>预订酒店 → 成功 🟢</li>
+  <li>预订租车 → 失败 ❌（该时段无车可租）</li>
+</ol>
+
+<p>机票和酒店已经预订了，租车失败了。你需要：</p>
+<ul>
+  <li>取消酒店预订（调用酒店的取消 API）</li>
+  <li>取消机票预订（调用航司的退票 API）</li>
+  <li>通知用户套餐预订失败</li>
+</ul>
+
+<p><strong>没有 Step Functions 时：</strong>自己写补偿逻辑——在代码里 try-catch，失败后依次调用取消接口。但如果"取消酒店"本身也失败了呢？需要重试补偿、记录补偿状态、处理补偿成功的情况……代码复杂度爆炸。</p>
+
+<p><strong>有了 Step Functions：</strong></p>
+<ul>
+  <li>每一步的成功/失败/重试/补偿都声明式定义</li>
+  <li>执行到哪一步了、卡在哪里了，控制台上直接看到可视化状态图</li>
+  <li>补偿步骤本身失败了也会重试</li>
+</ul>
+
+<pre>{
+  "BookFlight": { "Next": "BookHotel", "Catch": [{"Next": "CancelFlight"}] },
+  "BookHotel": { "Next": "BookCar", "Catch": [{"Next": "CancelHotel"}] },
+  "BookCar": { "End": true, "Catch": [{"Next": "CancelHotel"}] },
+  "CancelHotel": { "Next": "CancelFlight" },
+  "CancelFlight": { "End": true }
+}</pre>
+
+<div class="summary-box">
+<strong>模式总结：</strong>Saga 模式通过编排一系列本地事务 + 补偿事务，实现跨服务的最终一致性。Step Functions 提供了声明式的 Saga 编排能力，解决了跨多步事务的回滚问题。
+</div>
+
+<!-- ============ 5. Kinesis Event Sourcing ============ -->
+<h2 id="kinesis-event-sourcing">5. Kinesis → Event Sourcing + 有序处理</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：银行账户余额计算</div>
+</div>
+
+<p>用户的账户一天内发生了以下操作：</p>
+<pre>
+09:00 存入 1000
+09:05 转出 200
+09:06 转出 200 (由于网络重试，这条实际上是 09:05 那条的重复)
+09:10 转入 500
+</pre>
+
+<p><strong>三个核心问题：</strong></p>
+<ol>
+  <li><strong>顺序错乱：</strong>普通 SQS 消息无序，万一"转出 200"先于"存入 1000"被处理，系统判定余额不足，拒绝合法交易。</li>
+  <li><strong>事后审计：</strong>三个月后监管部门要求审查一个账户过去半年的每一笔变动。如果只存了最终余额 1100，根本无法回溯。</li>
+  <li><strong>Bug 修复后重新计算：</strong>发现余额计算逻辑有 bug，修复后需要从某个时间点开始重新回放所有事件来得到正确余额。</li>
+</ol>
+
+<p><strong>有了 Kinesis：</strong></p>
+<ul>
+  <li>按 account_id 做 partition key，同一个账户的所有操作天然有序</li>
+  <li>所有事件持久化在 stream 里（可配置保留 7 天到 365 天），随时可以从任意时间点回放</li>
+  <li>Log 即真相 — 余额只是事件流的一个投影（projection），可以随时从事件重新算出来</li>
+</ul>
+
+<div class="summary-box">
+<strong>模式总结：</strong>Event Sourcing 将"状态"和"事件"分离——只存事件，从事件推算出当前状态。Kinesis 提供有序、持久化的事件流能力，是 Event Sourcing 的天然载体。
+</div>
+
+<!-- ============ 6. DynamoDB CAS ============ -->
+<h2 id="dynamodb-cas">6. DynamoDB Conditional Write → 乐观锁 / CAS</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：秒杀活动，iPhone 只有 100 台库存</div>
+</div>
+
+<p>两个用户同时抢最后一台：</p>
+
+<pre>
+用户A 读到库存 = 1, 准备扣减
+用户B 读到库存 = 1, 准备扣减
+用户A 写入库存 = 0 🟢
+用户B 写入库存 = -1 ❌ 超卖了!
+</pre>
+
+<p><strong>用悲观锁的问题：</strong>秒杀场景下几万人同时抢，悲观锁意味着所有请求排队等锁，数据库连接池瞬间耗尽，整个系统瘫痪。</p>
+
+<p><strong>用 DDB Conditional Write：</strong></p>
+<ul>
+  <li>不加锁，两个请求并发写入</li>
+  <li>DDB 在服务端保证：只有 <code>stock &gt; 0</code> 时才执行扣减</li>
+  <li>用户B的写入被拒绝（ConditionCheckFailedException），返回"已售罄"</li>
+  <li>没有锁竞争，吞吐量不受影响</li>
+</ul>
+
+<pre>table.update_item(
+    Key={'product_id': 'iphone-15'},
+    UpdateExpression='SET stock = stock - 1',
+    ConditionExpression='stock &gt; 0'  # 原子性检查
+)</pre>
+
+<p><strong>版本号乐观锁：</strong></p>
+<pre># 先读: version = 5
+# 再写: 只有 version 还是 5 时才更新
+ConditionExpression='version = :expected_version'</pre>
+
+<div class="summary-box">
+<strong>模式总结：</strong>利用数据库的原子条件写入实现无锁并发控制。适合高竞争场景，避免锁的开销和级联阻塞。
+</div>
+
+<!-- ============ 7. EventBridge ============ -->
+<h2 id="eventbridge">7. EventBridge → Content-Based Router</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：大型电商平台，每秒产生几万个事件——用户注册、下单、退款、评价、浏览商品……</div>
+</div>
+
+<p>不同下游只关心特定事件：</p>
+<ul>
+  <li>风控团队只关心"金额 &gt; 5000 的订单"和"新注册用户的首单"</li>
+  <li>营销团队只关心"用户浏览了商品但没下单"（触发精准推荐）</li>
+  <li>财务团队只关心"退款事件"</li>
+</ul>
+
+<p><strong>没有 EventBridge 时：</strong>所有事件都发到一个 SNS Topic，每个下游收到全量事件后自己过滤。风控服务每秒收到 50,000 条事件，其中只有 50 条是它关心的。99.9% 的计算资源浪费在丢弃不相关的消息上。</p>
+
+<p><strong>有了 EventBridge：</strong>路由在平台层完成，下游服务只收到自己关心的事件。</p>
+
+<pre>// 风控规则: 只有大额订单才发给风控
+{
+  "source": ["order-service"],
+  "detail-type": ["OrderCreated"],
+  "detail": {
+    "amount": [{"numeric": [">", 5000]}]
+  }
+}
+
+// 营销规则: 浏览了但10分钟没下单
+{
+  "source": ["behavior-service"],
+  "detail-type": ["ProductViewed"],
+  "detail": {
+    "followed_by_purchase": [false]
+  }
+}</pre>
+
+<div class="summary-box">
+<strong>模式总结：</strong>Content-Based Router 在消息中间件层面完成事件过滤和路由，下游只收需要的消息，减少计算浪费和代码复杂度。
+</div>
+
+<!-- ============ 8. API Gateway ============ -->
+<h2 id="api-gateway">8. API Gateway → Gateway / Facade 模式</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：App 首页需要展示用户信息、推荐商品、未读消息数、优惠券数量</div>
+</div>
+
+<p><strong>没有 Gateway 时：</strong>App 直接调用 4 个微服务的接口。</p>
+<ul>
+  <li><strong>网络延迟：</strong>4 个串行 HTTP 请求，每个 100ms，首页加载 400ms+。地铁信号不好时更是灾难</li>
+  <li><strong>安全性：</strong>4 个微服务各自做 JWT 验证、限流、防刷——某个服务忘了做限流就被刷爆了</li>
+  <li><strong>客户端耦合：</strong>后端拆分微服务时（如"消息服务"一拆为二），所有客户端必须升级</li>
+</ul>
+
+<p><strong>有了 API Gateway：</strong></p>
+<ul>
+  <li>认证、限流、日志在 Gateway 统一做一次</li>
+  <li>后端随意拆分重组，客户端无感知</li>
+  <li>可以针对移动端和 Web 返回不同的数据结构（BFF 模式）</li>
+</ul>
+
+<pre>
+App -> API Gateway (一个请求) -> 聚合调用 4个微服务 -> 拼接返回
+</pre>
+
+<div class="summary-box">
+<strong>模式总结：</strong>Gateway 作为系统的统一入口，负责认证、限流、聚合、协议转换。将客户端与后端实现解耦，是微服务架构的标准边界模式。
+</div>
+
+<!-- ============ 9. Global Tables ============ -->
+<h2 id="global-tables">9. DynamoDB Global Tables → 多活 (Active-Active) 复制</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：全球电商平台，用户分布在美国、欧洲、亚洲</div>
+</div>
+
+<p><strong>单 region 的问题：</strong>东京用户每次访问延迟 150ms+。如果 us-east-1 整个挂了，全球用户全部无法访问。</p>
+
+<p><strong>传统主从复制：</strong>东京放只读副本，但用户更新地址时仍需写到美国主库。主库挂了，数据可能不一致。</p>
+
+<p><strong>有了 Global Tables：</strong></p>
+<ul>
+  <li>每个 region 都可以读写，用户体验极好</li>
+  <li>某个 region 挂了，DNS 自动切换到其他 region，用户无感知</li>
+  <li>冲突解决策略：Last Writer Wins（按时间戳），适合大部分场景</li>
+</ul>
+
+<pre>
+东京用户 -> Tokyo region DDB (就近读写，延迟 &lt; 10ms)
+美国用户 -> Virginia region DDB (就近读写)
+             ↕ 自动双向同步 (通常 &lt; 1秒)
+</pre>
+
+<div class="summary-box">
+<strong>模式总结：</strong>Active-Active 多活复制让用户就近读写，region 级故障自动切换。关键在于冲突处理策略（LWW 适合大多数场景）。
+</div>
+
+<!-- ============ 10. CQRS ============ -->
+<h2 id="cqrs">10. DynamoDB + OpenSearch → CQRS (读写分离)</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：电商平台的商品系统</div>
+</div>
+
+<p>写入需求简单：按 product_id 精确操作。DDB 干这个很快。</p>
+<p>但读取需求五花八门：</p>
+<ul>
+  <li>"价格 50-100 之间的耐克跑鞋，按销量排序"</li>
+  <li>"最近 7 天上架的带蓝牙的耳机"</li>
+  <li>"搜索关键词'显示器'，筛选品牌、分辨率、尺寸"</li>
+</ul>
+
+<p><strong>问题：</strong>DynamoDB 是 KV 存储，只能按主键或简单索引。它不擅长全文搜索、多维度筛选、聚合排序。硬要做要么建一堆 GSI（成本爆炸），要么在应用层过滤（扫描全表，延迟爆炸）。</p>
+
+<p><strong>CQRS 思路：</strong>写和读用不同的存储。</p>
+<ul>
+  <li>写入走 DDB：简单、快、强一致</li>
+  <li>读取走 OpenSearch：灵活、支持复杂查询</li>
+  <li>DDB Stream 自动把写入同步到 OpenSearch，延迟秒级</li>
+  <li>两个存储各自针对自己的场景做优化，互不妥协</li>
+</ul>
+
+<pre>
+商家改价格 -> DynamoDB (写模型，按 product_id 精确写入)
+               ↓ DDB Stream
+             OpenSearch (读模型，支持全文搜索 + 多维筛选 + 聚合)
+
+用户搜索"耐克跑鞋 50-100元" -> OpenSearch 查询
+</pre>
+
+<div class="summary-box">
+<strong>模式总结：</strong>CQRS（Command Query Responsibility Segregation）将读写模型分离，各自针对自己的负载做优化。适合读写负载差异大、读模型复杂度高的场景。
+</div>
+
+<!-- ============ 11. DynamoDB TTL ============ -->
+<h2 id="dynamodb-ttl">11. DynamoDB TTL → 自清理数据 / 临时状态管理</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景一：用户登录后的 session 信息</div>
+</div>
+
+<p>session 存在 DDB 里，有效期 30 分钟。没有 TTL 时，你需要自己写定时任务扫描全表删除过期 session。数据量大了以后，这个扫描本身就是性能瓶颈。</p>
+
+<div class="card">
+  <div class="card-title">🎯 场景二：防止用户短时间重复操作</div>
+</div>
+
+<p>用户第二天点"领取"，DDB 返回 ConditionalCheckFailedException（记录已存在），返回"今天已经领过了"。第二天这条记录自动消失，用户又可以领了。不需要写任何清理代码。</p>
+
+<pre>{
+  'user_id': 'zhangsan',
+  'coupon_id': 'double11-2024',
+  'ttl': int(time.time()) + 86400  # 24小时后自动删除
+}</pre>
+
+<div class="card">
+  <div class="card-title">🎯 场景三：幂等性记录的自动清理</div>
+</div>
+
+<p>防重复扣款的 dedup 记录只需要保留几个小时，设个 TTL，到期自动删，不用担心表无限膨胀。</p>
+
+<div class="summary-box">
+<strong>模式总结：</strong>利用 DDB TTL 做数据自清理，无需写定时任务。适用于 session 管理、幂等性去重、临时状态、优惠券领取等有时间窗口的场景。
+</div>
+
+<!-- ============ 12. Claim Check ============ -->
+<h2 id="claim-check">12. S3 Event Notification + Lambda → Claim Check (行李寄存) 模式</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：数据处理流水线，上游生成了一份 50MB 的报表数据，需要传给下游 3 个服务处理</div>
+</div>
+
+<p><strong>问题：</strong>SQS 消息大小限制是 256KB。50MB 的数据根本塞不进去。就算能塞进去，同一份数据在消息队列中复制 3 份发给 3 个消费者，带宽浪费严重。</p>
+
+<p><strong>Claim Check 模式：</strong></p>
+<ul>
+  <li>上游把 50MB 数据上传到 S3，然后往消息里只放一个"取件码"</li>
+  <li>下游收到消息，用"取件码"去 S3 读取数据</li>
+</ul>
+
+<pre>
+上游 -> S3: s3://reports/daily-2024-01-15.csv (50MB)
+     -> SQS message: {"s3_key": "reports/daily-2024-01-15.csv"} (几十字节)
+下游 -> 从 S3 下载文件 -> 处理
+</pre>
+
+<p><strong>更优雅的方式：</strong>直接用 S3 Event Notification 触发 Lambda，完全不需要手动发消息，S3 本身就是"行李寄存处"和"通知系统"的合体。</p>
+
+<div class="summary-box">
+<strong>模式总结：</strong>将大数据 payload 存在共享存储（S3），消息中只传引用。解决了消息队列大小限制和带宽浪费问题，S3 Event Notification 可进一步简化流程。
+</div>
+
+</div>
+</body>
+</html>

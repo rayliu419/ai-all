@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高可用设计模式 — 系统设计</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", Roboto, Helvetica, Arial, sans-serif;
+    background: #f5faf6;
+    color: #2d3a31;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 24px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 1.5em; color: #1a4f2e; margin-bottom: 6px; border-bottom: 2px solid #c3dbcc; padding-bottom: 6px; }
+  .subtitle { color: #4a6b57; margin-bottom: 16px; font-style: italic; }
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 12px 0 16px;
+  }
+  .toc h2 { font-size: 1em; color: #1a4f2e; margin: 0 0 8px; border: none; padding: 0; background: none; }
+  .toc ol { margin: 0 0 0 18px; }
+  .toc > ol { margin-left: 0; list-style: none; counter-reset: toc-counter; }
+  .toc > ol > li { counter-increment: toc-counter; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc-counter) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.9em; }
+  .toc a:hover { text-decoration: underline; color: #1a4f2e; }
+  h2 {
+    font-size: 1.2em;
+    color: #1f5c36;
+    margin: 20px 0 8px;
+    padding: 4px 0 4px 10px;
+    border-left: 4px solid #2d8a4e;
+    background: #e8f5ec;
+  }
+  h3 { font-size: 1.02em; color: #236b3e; margin: 14px 0 6px; }
+  h4 { font-size: 0.95em; color: #2d6e44; margin: 10px 0 4px; }
+  p { margin: 6px 0; }
+  ul, ol { margin: 4px 0 4px 18px; }
+  li { margin: 2px 0; }
+  code {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: #e8f5ec;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4f2e;
+  }
+  pre {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.8em;
+    background: #e8f5ec;
+    padding: 10px 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #c3dbcc;
+    margin: 6px 0;
+  }
+  .tag {
+    display: inline-block;
+    font-size: 0.78em;
+    background: #2d8a4e;
+    color: #fff;
+    padding: 1px 8px;
+    border-radius: 10px;
+    margin-right: 4px;
+  }
+  .tag-blue { background: #2a6e9e; }
+  .tag-amber { background: #b8860b; }
+  .tag-red { background: #b33a3a; }
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card-title { font-weight: 600; color: #1a4f2e; margin-bottom: 4px; }
+  .warn-card {
+    background: #fef9e7;
+    border: 1px solid #e6c952;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .warn-card .card-title { color: #8a6d0b; }
+  .info-card {
+    background: #e5f0fa;
+    border: 1px solid #8bb8d6;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .info-card .card-title { color: #1f5680; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    margin: 6px 0;
+  }
+  th, td {
+    border: 1px solid #c3dbcc;
+    padding: 6px 10px;
+    text-align: left;
+  }
+  th { background: #d4e8da; color: #1a4f2e; font-weight: 600; }
+  tr:nth-child(even) { background: #f0f8f2; }
+  .summary-box {
+    background: #d4e8da;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0;
+  }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 12px;
+    color: #2d8a4e;
+    text-decoration: none;
+    font-size: 0.9em;
+  }
+  .back-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<a class="back-link" href="../index.html">&larr; 返回索引</a>
+
+<h1>🛡️ 高可用设计模式</h1>
+<p class="subtitle">冗余 · 检测 · 恢复 — 系统可用性架构模式总结</p>
+
+<div class="toc">
+  <h2>📖 目录</h2>
+  <ol>
+    <li><a href="#multi-az">多 AZ 部署 — 冗余容灾</a></li>
+    <li><a href="#leader-election">主从切换 / Leader Election — 自动故障转移</a></li>
+    <li><a href="#health-check">健康检查 + 自动剔除 — 快速剔除故障节点</a></li>
+    <li><a href="#circuit-breaker">Circuit Breaker — 熔断保护</a></li>
+    <li><a href="#bulkhead">Bulkhead — 舱壁隔离</a></li>
+    <li><a href="#retry-backoff">Retry + Exponential Backoff + Jitter — 优雅重试</a></li>
+    <li><a href="#rate-limiting">Rate Limiting + Load Shedding — 过载保护</a></li>
+    <li><a href="#graceful-degradation">Graceful Degradation — 优雅降级</a></li>
+    <li><a href="#active-active-passive">Active-Active vs Active-Passive — 多活架构</a></li>
+    <li><a href="#quorum">Quorum / 多数派机制 — 防脑裂</a></li>
+  </ol>
+</div>
+
+<!-- ============ 1. 多 AZ 部署 ============ -->
+<h2 id="multi-az">1. 多 AZ 部署 — 冗余容灾</h2>
+
+<p>多可用区（Availability Zone）部署是云原生高可用的第一道防线。</p>
+
+<div class="card">
+  <div class="card-title">关键设计原则</div>
+  <ul>
+    <li><strong>N+1 容量规划：</strong>如果有 3 个 AZ，每个 AZ 的容量要能够承受总流量的 50%（即挂了一个剩下两个能扛住）。而不是刚好 33%，那样挂了一个就过载了。</li>
+    <li><strong>无状态服务优先：</strong>服务本身不存储状态，状态放在外部存储（DB、Cache），这样任何 AZ 的 Pod 都可以替代。</li>
+    <li><strong>数据层也要多 AZ：</strong>服务多 AZ 了但数据库是单 AZ，数据库挂了照样全完。</li>
+    <li><strong>测试 AZ 故障：</strong>定期做 AZ 故障演练（Chaos Engineering），确保真实出事时切换是丝滑的。</li>
+  </ul>
+</div>
+
+<div class="summary-box">
+<strong>核心：</strong>冗余 + 反脆弱设计，不仅要多副本，还要保证单个副本失效后整体仍有足够容量。
+</div>
+
+<!-- ============ 2. 主从切换 ============ -->
+<h2 id="leader-election">2. 主从切换 / Leader Election — 自动故障转移</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：K8s 集群只有一个 master 节点，某天 master 挂了</div>
+</div>
+
+<p>整个集群无法调度新 Pod、无法响应 kubectl 命令，所有运维操作瘫痪。</p>
+
+<p><strong>没有主从切换的问题：</strong></p>
+<ul>
+  <li>单 master 是经典单点故障。Master 挂了，已有 Pod 短时间还能跑，但不能创建新 Pod、不能扩容、不能做任何控制面操作。</li>
+  <li>恢复 master 需要人工介入，可能花 30 分钟甚至更久。</li>
+</ul>
+
+<h3>更多 Leader Election 的例子</h3>
+<table>
+  <tr>
+    <th>系统</th>
+    <th>选举机制</th>
+    <th>说明</th>
+  </tr>
+  <tr>
+    <td><strong>Kafka Controller</strong></td>
+    <td>ZooKeeper / KRaft</td>
+    <td>负责分区 Leader 选举和 broker 上下线管理</td>
+  </tr>
+  <tr>
+    <td><strong>Redis Sentinel</strong></td>
+    <td>Raft 风格选举</td>
+    <td>Sentinel 集群选出 Leader，由 Leader 执行 failover</td>
+  </tr>
+  <tr>
+    <td><strong>ZooKeeper</strong></td>
+    <td>ZAB 协议（类似 Raft）</td>
+    <td>Leader 处理写，Follower 处理读</td>
+  </tr>
+  <tr>
+    <td><strong>Consul</strong></td>
+    <td>Raft</td>
+    <td>服务发现和配置管理</td>
+  </tr>
+</table>
+
+<div class="summary-box">
+<strong>核心：</strong>通过分布式一致性协议（Raft / ZAB / Paxos）自动选举新 Leader，实现控制面故障的自动恢复。
+</div>
+
+<!-- ============ 3. 健康检查 ============ -->
+<h2 id="health-check">3. 健康检查 + 自动剔除 — 快速剔除故障节点</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：微服务集群有 10 个 Pod，其中 2 个因为内存泄漏处于半死不活状态</div>
+</div>
+
+<p>进程还在但响应超时。Load Balancer 继续把请求发过去，导致 20% 的请求超时。</p>
+
+<p><strong>没有健康检查的问题：</strong></p>
+<ul>
+  <li>"进程活着" ≠ "服务正常" — 进程可能在但已经 OOM、死锁、连不上数据库</li>
+  <li>LB 只检查端口是否通，端口通但服务不正常的情况检测不到</li>
+  <li>人工发现问题再处理，可能已经过了 10 分钟</li>
+</ul>
+
+<p><strong>有了完善的健康检查：</strong></p>
+<table>
+  <tr>
+    <th>探针类型</th>
+    <th>作用</th>
+  </tr>
+  <tr>
+    <td><strong>Liveness Probe</strong></td>
+    <td>检测进程是否还活着，不活了就重启 Pod。解决"进程卡死"的问题。</td>
+  </tr>
+  <tr>
+    <td><strong>Readiness Probe</strong></td>
+    <td>检测服务是否准备好接受流量，没准备好就从 Service 的 endpoints 中剔除。</td>
+  </tr>
+  <tr>
+    <td><strong>Startup Probe</strong></td>
+    <td>给慢启动的应用一个宽限期，避免 Liveness Probe 在应用没启动完就杀掉它。</td>
+  </tr>
+</table>
+
+<h3>更高层面的健康检查</h3>
+<ul>
+  <li><strong>AWS ALB Target Group Health Check：</strong>ALB 定期对后端实例做 HTTP 检查，unhealthy 的自动剔除</li>
+  <li><strong>Consul / Eureka 服务注册：</strong>服务实例定期向注册中心发心跳，心跳超时自动下线</li>
+  <li><strong>数据库连接池健康检查：</strong>HikariCP 等连接池定期检测连接是否有效，无效的自动丢弃</li>
+</ul>
+
+<div class="summary-box">
+<strong>核心：</strong>多层次的健康检测（进程级 → 服务级 → 依赖级），将故障节点从负载池中快速摘除。
+</div>
+
+<!-- ============ 4. Circuit Breaker ============ -->
+<h2 id="circuit-breaker">4. Circuit Breaker — 熔断保护</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：订单服务调用支付服务，支付服务挂了</div>
+</div>
+
+<p>每次调用都要等 5 秒超时才返回。订单服务线程池 200 个线程，全部卡在等待支付超时，新的订单请求排队，最终订单服务自己也挂了。下游的故障雪崩式地拖垮了整条链路。</p>
+
+<p><strong>没有熔断的问题：</strong></p>
+<ul>
+  <li><strong>级联失败（Cascading Failure）：</strong>A 调 B，B 调 C，C 挂了 → B 线程池耗尽 → A 线程池耗尽 → 系统崩溃</li>
+  <li><strong>重试风暴：</strong>每个请求超时后重试，下游本来就扛不住，还被重试流量压得更狠</li>
+</ul>
+
+<p><strong>有了 Circuit Breaker：</strong></p>
+<ul>
+  <li>借鉴电路保险丝原理。正常时电路闭合（Closed），故障太多时保险丝断开（Open），直接不再发请求，快速返回错误</li>
+  <li>过一段时间尝试性放几个请求过去（Half-Open），如果成功就恢复，失败就继续断开</li>
+</ul>
+
+<p><strong>实际效果：</strong>支付服务挂了 → 熔断器在 10 次失败后打开 → 后续请求直接返回"支付暂不可用"（50ms），不再等 5 秒超时 → 线程池不会耗尽 → 其他功能不受影响。</p>
+
+<div class="info-card">
+  <div class="card-title">常用框架</div>
+  <p>Resilience4j（Java 推荐）、Sentinel（阿里）、Envoy / Istio（Service Mesh 层面熔断）</p>
+</div>
+
+<div class="summary-box">
+<strong>核心：</strong>快速失败（Fail Fast）优于耗时等待，通过熔断器状态机（Closed → Open → Half-Open）在系统层面级联保护。
+</div>
+
+<!-- ============ 5. Bulkhead ============ -->
+<h2 id="bulkhead">5. Bulkhead — 舱壁隔离</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：一个服务同时依赖支付服务和库存服务，共用同一个 HTTP 线程池</div>
+</div>
+
+<p>支付服务变慢了，200 个线程全堆在等待支付响应。这时候库存查询也进不来了——明明库存服务好好的，但线程都被支付占了。</p>
+
+<p><strong>没有隔离的问题：</strong>不同下游调用共享资源（线程池、连接池、内存），一个慢的拖累所有。类比：船体没有隔离舱，一处漏水就整船沉没。</p>
+
+<p><strong>有了 Bulkhead（舱壁隔离）：</strong>给不同的下游调用分配独立的资源池。</p>
+<ul>
+  <li>支付调用用线程池 A（50 线程），库存调用用线程池 B（50 线程）</li>
+  <li>支付线程池满了？只影响支付相关功能，库存查询照常</li>
+</ul>
+
+<h3>隔离的不同粒度</h3>
+<table>
+  <tr>
+    <th>隔离方式</th>
+    <th>说明</th>
+    <th>特点</th>
+  </tr>
+  <tr>
+    <td><strong>线程池隔离</strong></td>
+    <td>每个下游一个独立线程池</td>
+    <td>最常见，有超时保护</td>
+  </tr>
+  <tr>
+    <td><strong>信号量隔离</strong></td>
+    <td>用计数器限制并发数，不创建新线程</td>
+    <td>比线程池轻量，无超时保护</td>
+  </tr>
+  <tr>
+    <td><strong>进程隔离</strong></td>
+    <td>关键服务独立部署，物理隔离</td>
+    <td>最彻底但成本最高</td>
+  </tr>
+  <tr>
+    <td><strong>K8s Resource Limits</strong></td>
+    <td>给 Pod 设置 CPU/Memory limits</td>
+    <td>一个 Pod 出问题不影响同节点其他 Pod</td>
+  </tr>
+</table>
+
+<div class="summary-box">
+<strong>核心：</strong>将资源池按下游/功能分区，一个分区的故障不会耗尽全局资源，实现故障隔离。
+</div>
+
+<!-- ============ 6. Retry + Backoff ============ -->
+<h2 id="retry-backoff">6. Retry + Exponential Backoff + Jitter — 优雅重试</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：100 个客户端同时调用一个服务，服务短暂过载返回 503</div>
+</div>
+
+<p>所有客户端立刻重试 → 服务瞬间又收到 100 个请求 → 又 503 → 又全部重试……无限循环，服务永远恢复不了。这就是"重试风暴"（Retry Storm）。</p>
+
+<p><strong>没有退避策略的问题：</strong></p>
+<ul>
+  <li><strong>固定间隔重试：</strong>所有客户端在同一时刻重试，形成"惊群效应"（Thundering Herd）</li>
+  <li><strong>无限重试：</strong>下游已经挂了，客户端不停重试只会加重下游负担</li>
+</ul>
+
+<p><strong>有了 Exponential Backoff + Jitter：</strong></p>
+<ul>
+  <li><strong>指数退避：</strong>第 1 次等 1 秒，第 2 次等 2 秒，第 3 次等 4 秒……逐渐拉长重试间隔，给下游喘息时间</li>
+  <li><strong>随机抖动（Jitter）：</strong>在退避时间上加上随机偏移，100 个客户端不再同时重试，分散到不同时刻</li>
+  <li><strong>最大重试次数：</strong>超过 N 次就放弃，避免无限重试</li>
+</ul>
+
+<h3>哪些错误应该重试？</h3>
+<div class="card" style="display:flex; gap:20px; flex-wrap:wrap;">
+  <div>
+    <p><strong>✅ 需要重试</strong></p>
+    <ul>
+      <li>网络超时</li>
+      <li>503 Service Unavailable</li>
+      <li>429 Too Many Requests</li>
+    </ul>
+  </div>
+  <div>
+    <p><strong>❌ 不需要重试</strong></p>
+    <ul>
+      <li>400 Bad Request</li>
+      <li>401 Unauthorized</li>
+      <li>404 Not Found</li>
+    </ul>
+  </div>
+</div>
+
+<div class="summary-box">
+<strong>核心：</strong>重试要有退避策略，避免重试风暴。加上 jitter 打散重试时刻。只对可恢复的错误重试。
+</div>
+
+<!-- ============ 7. Rate Limiting ============ -->
+<h2 id="rate-limiting">7. Rate Limiting + Load Shedding — 过载保护</h2>
+
+<h3>Rate Limiting（限流）</h3>
+<ul>
+  <li><strong>单 Pod 限流：</strong>保护单个实例不被打崩溃，即使整体集群有容量，单个 Pod 也有极限</li>
+  <li><strong>全局限流：</strong>保护下游资源（数据库、第三方 API），防止总请求量超过下游承受能力</li>
+  <li><strong>常见算法：</strong>令牌桶（Token Bucket）、漏桶（Leaky Bucket）、滑动窗口（Sliding Window）</li>
+</ul>
+
+<h3>Load Shedding（甩负荷）</h3>
+<ul>
+  <li>比限流更激进：当系统已经过载时，主动丢弃一部分请求</li>
+  <li>优先保证核心请求（下单、支付），牺牲非核心请求（推荐、浏览历史）</li>
+</ul>
+
+<h3>实际例子</h3>
+<ul>
+  <li><strong>Envoy / Nginx：</strong>在网关层做限流，应用层不用管</li>
+  <li><strong>AWS API Gateway：</strong>内置 throttling，每秒/每日请求限制</li>
+  <li><strong>Google 的 CoDel（Controlled Delay）：</strong>根据队列等待时间动态丢弃请求。请求在队列里等太久就直接丢弃——因为等它被处理完时，客户端可能早就超时了</li>
+</ul>
+
+<div class="summary-box">
+<strong>核心：</strong>拒绝过量请求，保护系统不因过载而崩溃。Load Shedding 在限流基础上进一步做优先级调度。
+</div>
+
+<!-- ============ 8. Graceful Degradation ============ -->
+<h2 id="graceful-degradation">8. Graceful Degradation — 优雅降级</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：电商 App 首页需要聚合 6 个服务的数据，推荐服务挂了</div>
+</div>
+
+<p><strong>没有降级：</strong>首页直接报错，用户什么都看不到。或者一直等推荐服务超时，首页加载慢 5 秒+。</p>
+
+<p><strong>有了优雅降级：</strong></p>
+<ul>
+  <li>推荐服务挂了？首页显示一个"热门商品"的静态列表（预先缓存好的 fallback 数据）</li>
+  <li>其他 5 个服务正常，用户完全感觉不到异常</li>
+  <li>类比：飞机的一个引擎坏了，靠剩下的引擎继续飞，而不是直接坠机</li>
+</ul>
+
+<h3>降级策略的层次</h3>
+<table>
+  <tr>
+    <th>优先级</th>
+    <th>策略</th>
+    <th>说明</th>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>返回缓存数据</td>
+    <td>用上一次成功的结果，可能有点旧但比没有好</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>返回默认值/静态数据</td>
+    <td>推荐服务挂了就展示热门商品缓存</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>隐藏功能模块</td>
+    <td>这个模块暂时不显示，不影响其他模块</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>关闭非核心功能</td>
+    <td>全站关闭评论、关闭推荐，保证核心链路（搜索→下单→支付）畅通</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>只读模式</td>
+    <td>禁止写入操作，只允许查询</td>
+  </tr>
+</table>
+
+<div class="summary-box">
+<strong>核心：</strong>部分故障不导致整体不可用，通过缓存、静态数据、功能降级等手段保证核心体验。
+</div>
+
+<!-- ============ 9. Active-Active vs Active-Passive ============ -->
+<h2 id="active-active-passive">9. Active-Active vs Active-Passive — 多活架构</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：全球业务公司，数据中心在新加坡。日本和美国的用户每次访问延迟 200ms+</div>
+</div>
+
+<h3>Active-Passive（主备模式）</h3>
+<ul>
+  <li>一个数据中心承担所有读写流量，另一个数据中心只做数据同步，平时不接流量</li>
+  <li><strong>优点：</strong>简单，没有数据冲突问题</li>
+  <li><strong>缺点：</strong>备站资源闲置浪费；切换时有停服窗口；备站长期不接流量，真切换时可能有各种意想不到的问题</li>
+</ul>
+
+<h3>Active-Active（多活模式）</h3>
+<ul>
+  <li>多个数据中心同时接受读写流量</li>
+  <li><strong>优点：</strong>用户就近访问延迟低；没有资源浪费；一个挂了其他无缝接管</li>
+  <li><strong>缺点：</strong>必须处理数据冲突（同一条数据被两个 DC 同时修改）；架构复杂度大幅增加</li>
+</ul>
+
+<h3>冲突处理方式</h3>
+<table>
+  <tr>
+    <th>策略</th>
+    <th>说明</th>
+  </tr>
+  <tr>
+    <td><strong>按用户分片</strong></td>
+    <td>日本用户的数据只在东京写，美国用户的数据只在弗吉尼亚写。避免同一条数据在两个 DC 被修改</td>
+  </tr>
+  <tr>
+    <td><strong>LWW（Last Write Wins）</strong></td>
+    <td>时间戳最新的覆盖。简单但可能丢失数据</td>
+  </tr>
+  <tr>
+    <td><strong>CRDT</strong></td>
+    <td>数据结构层面保证自动合并，不冲突。详见 <a href="geo-replication.html">geo-replication.md</a></td>
+  </tr>
+</table>
+
+<p><strong>业界实践：</strong>DynamoDB Global Tables（LWW）、Cassandra 多 DC（无主天然多活）、CockroachDB（Region 内 Raft 强一致，详见 <a href="geo-replication.html">geo-replication.md</a>）</p>
+
+<div class="summary-box">
+<strong>核心：</strong>Active-Active 延迟更低、利用率更高，但必须解决数据冲突问题。按用户分片是最简单的冲突规避手段。
+</div>
+
+<!-- ============ 10. Quorum ============ -->
+<h2 id="quorum">10. Quorum / 多数派机制 — 防脑裂</h2>
+
+<div class="card">
+  <div class="card-title">🎯 场景：3 节点集群（A、B、C），网络分区导致 A 和 B、C 断开连接</div>
+</div>
+
+<p>A 觉得自己想选新 leader；B、C 觉得 A 挂了想选新 leader。如果两边都接受写入 → 脑裂 → 数据分叉 → 灾难。</p>
+
+<p><strong>Quorum 的解决方式：</strong></p>
+<ul>
+  <li>任何写操作必须得到超过半数节点（Quorum = N/2 + 1）的确认才算成功</li>
+  <li>3 节点的 Quorum = 2。A 独自一个分区只有 1 票，达不到 Quorum，自动变成只读/下线</li>
+  <li>B 和 C 有 2 票 ≥ Quorum，可以选出新 leader 继续服务</li>
+  <li>核心思想：网络分区时，只有包含多数派的那部分分区能继续写入，少数派自动停止接受写入</li>
+</ul>
+
+<h3>使用 Quorum 的系统</h3>
+<p>Etcd/Raft、ZooKeeper/ZAB、Kafka KRaft、MongoDB（<code>w: majority</code>）、Cassandra（可调一致性 <code>QUORUM</code>）</p>
+
+<div class="summary-box">
+<strong>核心：</strong>通过多数派决策防止脑裂，保证集群在网络分区时只有一个分区能提供服务，避免数据不一致。
+</div>
+
+<!-- ============ 总结 ============ -->
+<h2 id="summary">总结</h2>
+
+<div class="summary-box" style="font-size:1.05em;">
+高可用的本质就是三个字：<strong>冗余</strong>（多副本）、<strong>检测</strong>（快速发现故障）、<strong>恢复</strong>（自动切换到健康节点）。上面所有模式都是这三者的不同组合。
+</div>
+
+<ul>
+  <li><strong>多 AZ 部署、Active-Active：</strong>基础设施层面的冗余</li>
+  <li><strong>健康检查、心跳、超时：</strong>故障检测手段</li>
+  <li><strong>Leader Election、熔断、重试退避、限流降级：</strong>自动恢复和过载保护机制</li>
+  <li><strong>Bulkhead、Quorum：</strong>故障隔离和一致性保障</li>
+</ul>
+
+</div>
+</body>
+</html>
