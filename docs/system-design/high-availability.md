@@ -124,5 +124,18 @@
     - 核心思想：网络分区时，只有包含多数派的那部分分区能继续写入，少数派自动停止接受写入。
 - 使用 Quorum 的系统：Etcd/Raft、ZooKeeper/ZAB、Kafka KRaft、MongoDB (`w: majority`)、Cassandra (可调一致性 `QUORUM`)。
 
+### cheat-sheet
+- ![cheat-sheet](images/cheat-sheet.png)
+- VIP = virtual IP VRRP
+  - IP也可以代表多台机器，使用虚拟IP连接，某台挂掉了，其他的可以取代。
+  - CORS的ECS用一个虚拟IP来访问转发，某台挂掉以后就不再通过其转发。
+- 服务的机器做依赖组件拨测。
+  - CORS中，某些服务如果要调用MongoDB，不停的拨测DB，将Readiness probe设置为这个拨测结果。
+  - 如果发现此DB拨测不通，代表请求走这台机器也没有意义了。
+  - 这种拨测和K8s的Readiness probe结合的方法比较有意思。
+  - K8s还有Liveness probe，如果失败就直接重启Pod了。
+- 跨Region的计算平台。
+  - CORS中本DLI出问题的时候，调用跨Region的DLI平台。
+
 ## 总结
 高可用的本质就是三个字一冗余（多副本）、检测（快速发现故障）、恢复（自动切换到健康节点）。上面所有模式都是这三者的不同组合。

@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Production Readiness Review 生产就绪评审</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+/* === Base === */
+body {
+  background: #f5faf6;
+  color: #2d3a31;
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  max-width: 960px;
+  margin: 20px auto;
+  padding: 0 24px;
+}
+
+/* === Headings === */
+h1 { font-size: 1.35em; color: #1a4f2e; border-bottom: 2px solid #c3dbcc; padding-bottom: 6px; margin: 20px 0 10px; }
+h2 { font-size: 1.2em; color: #236b3e; margin: 20px 0 8px; padding: 8px 12px; background: #e8f5ec; border-radius: 6px; border-left: 4px solid #4caf50; }
+h3 { font-size: 1.02em; color: #2d7a4a; margin: 14px 0 6px; }
+h4 { font-size: 0.95em; color: #3a8b55; margin: 10px 0 4px; }
+
+/* === Text === */
+p { margin: 6px 0; }
+li { margin: 2px 0; }
+a { color: #1e6b3b; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* === Code === */
+code { font-size: 0.88em; background: #e8f5ec; padding: 2px 5px; border-radius: 3px; color: #1a4f2e; }
+pre {
+  font-size: 0.8em;
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 6px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+/* === Tables === */
+table {
+  font-size: 0.9em;
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+}
+th, td {
+  border: 1px solid #c3dbcc;
+  padding: 6px 10px;
+  text-align: left;
+}
+th {
+  background: #e8f5ec;
+  color: #1a4f2e;
+  font-weight: 600;
+}
+tr:nth-child(even) { background: #f0f9f3; }
+tr:nth-child(odd) { background: #fff; }
+
+/* === Cards === */
+.card {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+.card-title { font-weight: 600; color: #1a4f2e; margin-bottom: 4px; font-size: 1em; }
+
+/* === Info / Warning boxes === */
+.info-box {
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-left: 4px solid #2196f3;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.warning-box {
+  background: #fff3e0;
+  border: 1px solid #ffcc80;
+  border-left: 4px solid #ff9800;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.success-box {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-left: 4px solid #4caf50;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+
+/* === TOC === */
+.toc {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 14px 20px;
+  margin: 12px 0 16px;
+}
+.toc h2 { font-size: 1em; color: #1a4f2e; margin: 0 0 8px; border: none; padding: 0; background: none; }
+.toc > ol { margin: 0; list-style: none; counter-reset: toc; }
+.toc > ol > li { counter-increment: toc; margin: 3px 0; }
+.toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+.toc a { color: #236b3e; text-decoration: none; font-size: 0.9em; }
+.toc a:hover { text-decoration: underline; color: #1a4f2e; }
+.toc ol ol { margin: 2px 0 2px 20px; list-style: none; counter-reset: toc-sub; }
+.toc ol ol > li { counter-increment: toc-sub; margin: 2px 0; }
+.toc ol ol > li::before { content: counter(toc) "." counter(toc-sub) " "; font-weight: 500; color: #3a8b55; font-size: 0.85em; }
+
+/* === Checklist === */
+.checklist { list-style: none; padding-left: 0; }
+.checklist li::before { content: "☐ "; color: #4caf50; font-weight: bold; }
+
+/* === Grid === */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 10px 0;
+}
+@media (max-width: 640px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* === Summary / Details === */
+details {
+  background: #f0f9f3;
+  border: 1px solid #c3dbcc;
+  border-radius: 6px;
+  padding: 8px 14px;
+  margin: 8px 0;
+}
+details summary {
+  font-weight: 600;
+  color: #1a4f2e;
+  cursor: pointer;
+}
+details[open] { padding-bottom: 12px; }
+
+/* === Footer === */
+.footer {
+  margin-top: 30px;
+  padding-top: 12px;
+  border-top: 2px solid #c3dbcc;
+  font-size: 0.85em;
+  color: #6a8f78;
+}
+</style>
+</head>
+<body>
+
+<h1>Production Readiness Review 生产就绪评审</h1>
+
+<p>
+  <strong>PRR (Production Readiness Review)</strong> 是评估业务 workload 是否具备在生产环境安全、可靠运行能力的系统性评审过程。它覆盖从 SLI/SLO 定义到故障演练、变更管理、安全生产的完整维度，确保服务在云上部署前达到定义的成熟度标准。
+</p>
+
+<div class="info-box">
+  <strong>核心理念：</strong>PRR 不是一次性的评审检查，而是一个持续改进的流程。服务随业务演进，PRR 标准也应随架构变化定期重新审视。最终目标是使服务具备 <strong>自愈能力</strong>（self-healing）和 <strong>持续合规</strong>（continuous compliance）。
+</div>
+
+<!-- ===== TOC ===== -->
+<div class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#sli-slo">SLI / SLO</a></li>
+    <li><a href="#redundancy">可冗余 — Redundancy</a></li>
+    <li><a href="#dr">可容灾 — Disaster Recovery</a></li>
+    <li><a href="#overload">可过载控制 — Overload Control</a></li>
+    <li><a href="#fault">可故障管理 — Fault Management</a></li>
+    <li><a href="#change">可变更能力 — Change Management</a></li>
+    <li><a href="#operability">可运维 — Operability</a></li>
+    <li><a href="#safety">安全生产 — Production Safety</a></li>
+    <li><a href="#review">评审节奏与清单</a></li>
+  </ol>
+</div>
+
+<!-- ========== 1. SLI / SLO ========== -->
+<h2 id="sli-slo">1. SLI / SLO</h2>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">SLI — Service Level Indicator</div>
+    <div>服务质量的量化度量。例如：请求成功率、P99 延迟、吞吐量。</div>
+  </div>
+  <div class="card">
+    <div class="card-title">SLO — Service Level Objective</div>
+    <div>SLI 的目标值或区间。例如：P99 延迟 &lt; 500ms。</div>
+  </div>
+  <div class="card">
+    <div class="card-title">SLA — Service Level Agreement</div>
+    <div>与用户的契约性承诺，通常附带经济后果（赔偿/罚金）。</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Error Budget — 错误预算</div>
+    <div>1 − SLO 的剩余空间。用于平衡可靠性与功能迭代速度。</div>
+  </div>
+</div>
+
+<h3>常见 SLI 维度</h3>
+<table>
+  <tr><th>分类</th><th>典型 SLI</th><th>示例目标</th></tr>
+  <tr><td>可用性 (Availability)</td><td>成功请求占比 (yield)</td><td>≥ 99.9%</td></tr>
+  <tr><td>延迟 (Latency)</td><td>P50 / P95 / P99 响应时间</td><td>P99 &lt; 500ms</td></tr>
+  <tr><td>吞吐量 (Throughput)</td><td>每秒请求数 (QPS / RPS)</td><td>≥ 1000 QPS</td></tr>
+  <tr><td>持久性 (Durability)</td><td>数据留存概率</td><td>11 个 9 (99.999999999%)</td></tr>
+  <tr><td>正确性 (Correctness)</td><td>错误率 (500, 数据质量)</td><td>&lt; 0.1%</td></tr>
+</table>
+
+<h3>可用性对照表</h3>
+<table>
+  <tr><th>可用性等级</th><th>年允许停机</th><th>月允许停机</th><th>周允许停机</th><th>日允许停机</th></tr>
+  <tr><td>99% (2 nines)</td><td>3.65 天</td><td>7.2 小时</td><td>1.68 小时</td><td>14.4 分钟</td></tr>
+  <tr><td>99.5%</td><td>1.83 天</td><td>3.6 小时</td><td>50.4 分钟</td><td>7.20 分钟</td></tr>
+  <tr><td>99.9% (3 nines)</td><td>8.76 小时</td><td>43.2 分钟</td><td>10.1 分钟</td><td>1.44 分钟</td></tr>
+  <tr><td>99.95%</td><td>4.38 小时</td><td>21.6 分钟</td><td>5.04 分钟</td><td>43.2 秒</td></tr>
+  <tr><td>99.99% (4 nines)</td><td>52.6 分钟</td><td>4.32 分钟</td><td>60.5 秒</td><td>8.64 秒</td></tr>
+  <tr><td>99.999% (5 nines)</td><td>5.26 分钟</td><td>25.9 秒</td><td>6.05 秒</td><td>0.87 秒</td></tr>
+</table>
+
+<h3>关键实践</h3>
+<ul>
+  <li><strong>从用户侧定义 SLI</strong>：优先选择直接影响用户体验的指标（如客户端延迟），而非仅收集服务端指标。</li>
+  <li><strong>错误预算机制</strong>：SLO = 99.9%，则错误预算 = 0.1%。SLO 达标时团队可以大胆发布；预算耗尽时冻结发布，全力提升稳定性。</li>
+  <li><strong>燃烧率告警</strong>：当错误预算燃烧速度过快时，应提前告警而非等到预算耗尽。</li>
+  <li><strong>SLI 看板</strong>：每个服务必须有展示核心 SLI 的看板，看板必须对接告警通道。</li>
+  <li><strong>发布 SLO</strong>：向内部消费者发布 SLO，使其了解服务的可靠性边界，避免过度信任或信任不足。</li>
+</ul>
+
+<div class="success-box">
+  <strong>纵深：</strong>不要只搜集"能搜集的"指标，而要搜集"能反映用户真实体验"的指标。服务端 P99 正常不代表客户端体验良好——网络延迟、DNS 解析、CDN 回源都可能引入额外延迟。
+</div>
+
+<!-- ========== 2. 可冗余 ========== -->
+<h2 id="redundancy">2. 可冗余 — Redundancy</h2>
+
+<p>消除单点故障 (SPOF)。每个组件至少需要两个独立副本。</p>
+
+<h3>2.1 SPOF 识别与消除</h3>
+<ul>
+  <li>每个关键组件必须识别其 SPOF，并提供缓解方案。</li>
+  <li>常见 SPOF：单 DB 实例、单 AZ、单负载均衡器、单存储卷、单域名服务器。</li>
+  <li>缓解策略：<strong>主备</strong> (active-passive) 或 <strong>多活</strong> (active-active)。</li>
+</ul>
+
+<h3>2.2 微服务多集群部署</h3>
+<ul>
+  <li>每个微服务至少部署在 2 个独立集群上（Kubernetes 集群或计算池）。</li>
+  <li>集群间基础设施隔离：独立控制面、独立故障域。</li>
+  <li>流量分发：DNS 权重、全局负载均衡器、服务网格路由。</li>
+</ul>
+
+<h3>2.3 反亲和部署</h3>
+<ul>
+  <li><strong>Pod 反亲和</strong>：同一服务的 Pod 副本调度到不同 Worker 节点。</li>
+  <li><strong>节点反亲和</strong>：工作负载分布在不同节点组 / 故障域。</li>
+  <li><strong>存储反亲和</strong>：有状态服务（数据库、消息队列）的存储卷分布在不同存储后端。</li>
+  <li><strong>实现方式</strong>：Kubernetes <code>podAntiAffinity</code> + <code>topologySpreadConstraints</code>。</li>
+</ul>
+
+<details>
+  <summary>YAML 示例：Kubernetes 反亲和配置</summary>
+<pre>
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchLabels:
+            app: my-service
+        topologyKey: "kubernetes.io/hostname"
+topologySpreadConstraints:
+- maxSkew: 1
+  topologyKey: "topology.kubernetes.io/zone"
+  whenUnsatisfiable: DoNotSchedule
+  labelSelector:
+    matchLabels:
+      app: my-service
+</pre>
+</details>
+
+<h3>2.4 数据冗余</h3>
+<ul>
+  <li>副本跨 AZ 或跨 Region 分布。</li>
+  <li>分布式存储：Replication Factor ≥ 3 or Erasure Coding。</li>
+  <li>数据库：主从复制、Quorum 读写、跨区域同步。</li>
+</ul>
+
+<!-- ========== 3. 可容灾 ========== -->
+<h2 id="dr">3. 可容灾 — Disaster Recovery</h2>
+
+<p>从 AZ 级和 Region 级故障中存活并恢复的能力。</p>
+
+<h3>3.1 3AZ 部署</h3>
+<ul>
+  <li>服务和中间件至少部署在 3 个可用区。</li>
+  <li>每个 AZ 是独立的故障域（供电、制冷、网络）。</li>
+  <li>负载均衡器分发流量到所有 AZ；丢失任一 AZ 时保留 ≥ 66% 容量。</li>
+</ul>
+
+<h3>3.2 Region 级容灾</h3>
+<ul>
+  <li><strong>Region 切换</strong>：能够将全部流量从 Region A 切换到 Region B。需定期演练。</li>
+  <li><strong>Region 演练</strong>：至少每季度执行一次完整的 Region 级故障切换演练。</li>
+  <li><strong>Region 闭环</strong>：Region 内自我闭环——无跨 Region 运行时依赖。唯一跨 Region 的是异步数据复制。</li>
+  <li><strong>跨 Region 数据复制</strong>：根据 RPO 要求选择同步或异步复制。</li>
+</ul>
+
+<h3>3.3 DNS 与 API 网关</h3>
+<ul>
+  <li><strong>DNS</strong>：GSLB + 延迟/地理路由。TTL 设低（30–60s）以支持快速切换。</li>
+  <li><strong>API 网关 (APIG)</strong>：统一入口，支持流控、鉴权、路由和 Region 级故障切换。</li>
+</ul>
+
+<h3>3.4 数据保护</h3>
+<ul>
+  <li><strong>软删除</strong>：支持从误删除恢复。根据数据类型定义保留周期。</li>
+  <li><strong>备份</strong>：自动化备份，定义 RTO 和 RPO。备份存储在异 Region。</li>
+  <li><strong>数据一致性</strong>：复制/切换后校验数据一致性（Checksum、Reconciliation Job）。</li>
+</ul>
+
+<h3>3.5 DR 指标</h3>
+<table>
+  <tr><th>指标</th><th>典型目标</th><th>说明</th></tr>
+  <tr><td>RTO (Recovery Time Objective)</td><td>&lt; 1 小时</td><td>服务恢复所需时间</td></tr>
+  <tr><td>RPO (Recovery Point Objective)</td><td>&lt; 15 分钟</td><td>最大数据丢失窗口</td></tr>
+  <tr><td>Failover 成功率</td><td>100%（演练中）</td><td>自动化验证</td></tr>
+</table>
+
+<div class="warning-box">
+  <strong>常见陷阱：</strong>主站点承载所有流量，备用 Region 从未被真正使用。当真正故障发生时，备用 Region 的配置可能已过时、容量不足、或中间件版本不一致。<strong>定期演练是唯一验证手段。</strong>
+</div>
+
+<!-- ========== 4. 可过载控制 ========== -->
+<h2 id="overload">4. 可过载控制 — Overload Control</h2>
+
+<p>保护系统免受流量尖峰、慢客户端和下游故障的影响。</p>
+
+<h3>4.1 API 网关流控</h3>
+<ul>
+  <li>按消费者 / API / 方法设置速率限制。</li>
+  <li>突发流量允许：Token Bucket 或 Leaky Bucket 算法。</li>
+  <li>返回 <code>429 Too Many Requests</code> + <code>Retry-After</code> 头部。</li>
+  <li>优雅降级：非关键 API 优先限流。</li>
+</ul>
+
+<h3>4.2 重试控制</h3>
+<ul>
+  <li><strong>指数退避</strong>：基时每次翻倍，添加随机抖动（Jitter）避免惊群效应。</li>
+  <li><strong>重试预算</strong>：限制总重试次数（如最多 3 次）。耗尽后快速失败。</li>
+  <li><strong>熔断器 (Circuit Breaker)</strong>：连续失败超过阈值 => Open 态，拦截请求让下游恢复；定期探活（Half-Open）检测恢复。</li>
+</ul>
+
+<div class="card">
+  <strong>重试策略对比</strong><br>
+  <table>
+    <tr><th>策略</th><th>说明</th><th>适用场景</th></tr>
+    <tr><td>立即重试</td><td>失败后即刻重试</td><td>网络包损坏等稀有瞬态故障</td></tr>
+    <tr><td>固定间隔</td><td>固定延迟后重试</td><td>服务短暂繁忙</td></tr>
+    <tr><td>指数退避 + Jitter</td><td>延迟逐次翻倍 + 随机化</td><td>通用场景，避免惊群</td></tr>
+    <tr><td>渐进式</td><td>延迟线性增长</td><td>特定速率限制场景</td></tr>
+  </table>
+</div>
+
+<h3>4.3 服务降级与自动扩缩</h3>
+<ul>
+  <li><strong>优雅降级</strong>：过载时关闭非核心功能，返回缓存/过期数据而非错误。</li>
+  <li><strong>舱壁模式 (Bulkhead)</strong>：按消费者/租户隔离资源。一个舱壁内的故障不影响其他舱壁。</li>
+  <li><strong>自动扩缩</strong>：
+    <ul>
+      <li>HPA：基于 CPU / 内存 / 自定义指标。</li>
+      <li>Cluster Autoscaler：节点级扩缩。</li>
+      <li>预测性扩缩：针对周期性流量模式。</li>
+      <li>缩容应慢于扩容，以吸收流量波动。</li>
+    </ul>
+  </li>
+</ul>
+
+<details>
+  <summary>enrich: Bulkhead 模式详解</summary>
+  <p>Bulkhead（舱壁）模式得名于船舱水密隔舱设计——一个隔舱进水不影响其他隔舱。</p>
+  <p>在分布式系统中的应用：</p>
+  <ul>
+    <li><strong>资源隔离</strong>：每个下游服务分配独立的连接池/线程池。Service A 故障时，只有它的池被耗尽，Service B 和 C 不受影响。</li>
+    <li><strong>实例隔离</strong>：每个租户使用独立的服务实例。Client 1 流量过大只会打满自己的实例。</li>
+    <li><strong>队列隔离</strong>：异步消息使用独立的队列和消费者组。</li>
+    <li><strong>工具</strong>：Resilience4j (Java)、Polly (.NET)。</li>
+  </ul>
+</details>
+
+<!-- ========== 5. 可故障管理 ========== -->
+<h2 id="fault">5. 可故障管理 — Fault Management</h2>
+
+<p>检测、响应、学习故障。</p>
+
+<h3>5.1 健康检测</h3>
+<ul>
+  <li><strong>主节点监控</strong>：通过 Lease / Heartbeat 检测 Leader 故障。</li>
+  <li><strong>备节点监控</strong>：备节点常被忽视。必须同样积极地监控备节点健康。定时对备副本执行健康检查和查询测试。</li>
+  <li><strong>Liveness vs Readiness</strong>：Liveness 探针重启不健康 Pod；Readiness 探针将不健康 Pod 从服务中移除。</li>
+</ul>
+
+<h3>5.2 主备切换</h3>
+<ul>
+  <li>自动化故障切换：Pacemaker、Kubernetes Leader Election、数据库 HA Manager。</li>
+  <li>优先选择 Active-Active 方案——无切换延迟，降低 Split-Brain 风险。</li>
+  <li>文档化切换流程并定期演练。</li>
+</ul>
+
+<h3>5.3 故障模式库与演练</h3>
+<ul>
+  <li><strong>维护故障模式库</strong>：列出所有已知故障模式、症状、检测方法、缓解步骤、升级路径。</li>
+  <li><strong>常见故障模式</strong>：网络分区、节点故障、AZ 故障、慢查询、证书过期、OOM、磁盘满、数据损坏。</li>
+</ul>
+
+<div class="card">
+  <div class="card-title">故障模式库模板</div>
+  <table>
+    <tr><th>故障模式</th><th>症状</th><th>检测</th><th>缓解</th></tr>
+    <tr><td>Pod OOMKilled</td><td>容器重启，错误率上升</td><td>Kubernetes events + metrics</td><td>调大 limits，检查内存泄漏</td></tr>
+    <tr><td>DB 连接池耗尽</td><td>API 超时，连接错误</td><td>DB 连接数监控</td><td>增加 max_connections，优化连接池</td></tr>
+    <tr><td>证书过期</td><td>TLS 握手失败</td><td>证书到期前 30d 告警</td><td>自动续签 (cert-manager)</td></tr>
+    <tr><td>AZ 故障</td><td>某 AZ 实例全部不可达</td><td>AZ 级健康检查</td><td>切除该 AZ，流量发往其他 AZ</td></tr>
+  </table>
+</div>
+
+<h4>混沌工程 (Chaos Engineering)</h4>
+<ul>
+  <li>定期注入故障来验证系统行为。</li>
+  <li><strong>工具</strong>：Chaos Mesh（Kubernetes 原生）、Litmus、Gremlin、Azure Chaos Studio。</li>
+  <li><strong>注入类型</strong>：Pod 删除、网络延迟/丢包、CPU/内存压力、磁盘 I/O 故障、DNS 故障。</li>
+  <li><strong>原则</strong>：从小爆炸半径开始，逐步扩大。</li>
+  <li><strong>Game Days</strong>：计划性演练，团队在注入故障上实践应急响应。</li>
+</ul>
+
+<details>
+  <summary>enrich: Chaos Mesh 架构与工作流</summary>
+  <p>Chaos Mesh 是 CNCF 孵化的混沌工程平台，基于 Kubernetes CRD 构建：</p>
+  <ul>
+    <li><strong>Chaos Dashboard</strong>：可视化 Web UI，管理实验、RBAC 权限。</li>
+    <li><strong>Chaos Controller Manager</strong>：核心调度逻辑，管理多种 CRD Controller。</li>
+    <li><strong>Chaos Daemon</strong>：以 DaemonSet 模式运行，注入具体故障（网络、文件系统、内核）。</li>
+  </ul>
+  <p>典型工作流：用户在 Dashboard 定义实验 → API Server 创建 Chaos CRD → Controller Manager 调度 → Daemon 注入故障。</p>
+</details>
+
+<!-- ========== 6. 可变更能力 ========== -->
+<h2 id="change">6. 可变更能力 — Change Management</h2>
+
+<p>安全、渐进地交付变更，每个阶段具备可观测性。</p>
+
+<h3>6.1 部署策略</h3>
+<table>
+  <tr><th>策略</th><th>描述</th><th>适用场景</th></tr>
+  <tr><td>滚动更新 (Rolling)</td><td>逐个替换 Pod</td><td>无状态服务，低风险变更</td></tr>
+  <tr><td>蓝绿部署 (Blue-Green)</td><td>两套完整环境，流量一次性切换</td><td>高风险变更、有状态迁移</td></tr>
+  <tr><td>灰度 (Canary)</td><td>逐步将流量切换到新版本</td><td>用户侧服务、A/B 测试</td></tr>
+</table>
+
+<h3>6.2 Ring 环灰度</h3>
+<div class="card">
+  <pre>
+Ring 0 (dev/test) → Ring 1 (内部试用) → Ring 2 (区域灰度1-5%) → Ring 3 (逐步扩大) → Ring 4 (全量)
+  </pre>
+  <ul>
+    <li><strong>Ring 0</strong>：开发/测试环境部署，内部验证。</li>
+    <li><strong>Ring 1</strong>：公司内部用户，Dogfooding。</li>
+    <li><strong>Ring 2</strong>：小规模外部用户（1-5%）。</li>
+    <li><strong>Ring 3</strong>：逐步提升流量百分比。</li>
+    <li><strong>Ring 4</strong>：100% 生产流量。</li>
+    <li>每个 Ring 有 <strong>浸泡期</strong>（如 30 分钟），期间监控 SLO 和 Error Budget。</li>
+    <li><strong>拨测 (Synthetic Probing)</strong>：在每个 Ring 上线前运行自动化探测。</li>
+  </ul>
+</div>
+
+<h3>6.3 集群级灰度</h3>
+<p>先将新版本部署到一个集群验证，确认无误后再部署到其他集群。</p>
+
+<h3>6.4 节点级分批变更</h3>
+<p>基础设施变更（OS 升级、内核补丁、Agent 更新）：逐节点或分批（如每批 10%）滚动。每批后监控关键指标，发现回退则暂停。</p>
+
+<h3>6.5 特性灰度 (Feature Flags)</h3>
+<ul>
+  <li>将<strong>部署</strong>与<strong>发布</strong>解耦。特性可按用户、Region、租户开关。</li>
+  <li>特性开关系统支持：渐进式发布、A/B 测试、即时关闭。</li>
+  <li>特性全面上线后移除 Flag，避免技术债。</li>
+</ul>
+
+<div class="success-box">
+  <strong>纵深：</strong>Google SRE 实践——每个 Ring 的浸泡期不仅仅是"等一会儿"，而是持续验证 SLO 燃烧率不超过预期。如果一个 Ring 在浸泡期内消耗了超过 2% 的月度错误预算，则阻断该 Ring 的推进。
+</div>
+
+<!-- ========== 7. 可运维 ========== -->
+<h2 id="operability">7. 可运维 — Operability</h2>
+
+<p>从第一天就为运维而设计。</p>
+
+<h3>7.1 数据面不依赖管理面</h3>
+<ul>
+  <li>数据面（服务用户流量）必须在管理面（部署、可观测性、配置）不可用时继续运作。</li>
+  <li>管理面故障不得引起数据面降级。</li>
+  <li>设计原则：管理面组件不应处于用户请求的<strong>关键路径</strong>上。</li>
+</ul>
+
+<h3>7.2 监控与告警</h3>
+<ul>
+  <li><strong>四大黄金信号</strong> (Google SRE)：延迟 (Latency)、流量 (Traffic)、错误 (Errors)、饱和度 (Saturation)。</li>
+  <li><strong>多级拨测</strong>：
+    <ul>
+      <li>L1：基础可用性（Ping / Health Endpoint）。</li>
+      <li>L2：功能探测（登录、搜索、下单等业务流程）。</li>
+      <li>L3：业务事务探测（端到端 + 数据校验）。</li>
+    </ul>
+  </li>
+  <li><strong>告警等级</strong>：
+    <table>
+      <tr><th>等级</th><th>响应时间</th><th>示例</th></tr>
+      <tr><td>P0</td><td>≤ 5 分钟</td><td>服务不可用、数据丢失</td></tr>
+      <tr><td>P1</td><td>≤ 15 分钟</td><td>P99 延迟 > 2x 基线</td></tr>
+      <tr><td>P2</td><td>≤ 1 小时</td><td>错误率轻度升高</td></tr>
+    </table>
+  </li>
+  <li><strong>On-Call</strong>：建立 Primary/Secondary 轮值。Google SRE 建议：≤ 25% 时间 On-Call，≥ 50% 用于工程改进。</li>
+  <li><strong>Runbook</strong>：每种告警类型文档化排障步骤。Runbook 应版本控制并定期测试。</li>
+</ul>
+
+<h3>7.3 日志与可观测性</h3>
+<ul>
+  <li>结构化日志（JSON），跨服务关联 Trace ID。</li>
+  <li>分布式追踪：OpenTelemetry、Jaeger、Zipkin。</li>
+  <li>指标：Prometheus + Grafana 或云厂商托管方案。</li>
+  <li>日志聚合：ELK、Loki、或云原生方案。</li>
+</ul>
+
+<details>
+  <summary>enrich: 黄金信号实战建议</summary>
+  <ul>
+    <li><strong>Latency</strong>：区分"正常响应时间"和"超时/错误"。确保 P50/P95/P99 各自独立监控。</li>
+    <li><strong>Traffic</strong>：不仅看总量（QPS），还要看每个 Consumer/Tenant 的分量，用于限流和成本分摊。</li>
+    <li><strong>Errors</strong>：区分客户端错误（4xx）和服务端错误（5xx）。5xx 才是黄金信号里的"Errors"。</li>
+    <li><strong>Saturation</strong>：最容易被忽略的信号。CPU 100% 是饱和的晚期信号；线程池队列深度、内存使用率、磁盘 IOPS 饱和是更早的预警。</li>
+  </ul>
+</details>
+
+<!-- ========== 8. 安全生产 ========== -->
+<h2 id="safety">8. 安全生产 — Production Safety</h2>
+
+<p>安全运维的管控与治理。</p>
+
+<h3>8.1 审计日志</h3>
+<ul>
+  <li>所有生产访问和变更必须可审计。</li>
+  <li><strong>记录内容</strong>：谁、做了什么、何时、从哪、对什么资源。</li>
+  <li><strong>不可篡改存储</strong>：审计日志写入 Append-Only 存储（S3 Object Lock、SIEM 系统）。</li>
+  <li><strong>保留周期</strong>：按合规要求（通常 ≥ 1 年，金融行业 ≥ 7 年）。</li>
+  <li><strong>权限审查</strong>：定期审查生产访问权限，最小权限原则。</li>
+</ul>
+
+<h3>8.2 变更审批</h3>
+<ul>
+  <li>生产变更必须有定义的变更管理流程。</li>
+  <li>紧急变更需要事后审查和合理性说明。</li>
+  <li>所有 Infrastructure-as-Code 变更需要 Peer Review。</li>
+</ul>
+
+<h3>8.3 密钥管理</h3>
+<ul>
+  <li>禁止在代码或配置文件中存储凭据、Token、密钥。</li>
+  <li>使用密钥存储：HashiCorp Vault、Cloud KMS、Kubernetes Secrets（开启加密）。</li>
+  <li>按计划自动轮换密钥。</li>
+</ul>
+
+<h3>8.4 合规</h3>
+<ul>
+  <li>数据驻留要求：数据存储在指定 Region。</li>
+  <li>传输中加密 (TLS) 和静态加密。</li>
+  <li>依赖漏洞扫描：SBOM、CVE 监控。</li>
+  <li>定期渗透测试。</li>
+</ul>
+
+<!-- ========== 9. 评审节奏与清单 ========== -->
+<h2 id="review">9. 评审节奏与清单</h2>
+
+<h3>何时触发 PRR</h3>
+<ul>
+  <li>新服务首次生产部署前。</li>
+  <li>重大架构变更（新增 Region、变更数据存储、重大重构）。</li>
+  <li>重大事故后，发现架构性安全/可靠性缺口。</li>
+  <li>现有服务年度复评。</li>
+</ul>
+
+<h3>检查清单格式</h3>
+<p>每个 PRR 项目应有以下要素：</p>
+<ul>
+  <li><strong>要求描述</strong>：需要满足什么。</li>
+  <li><strong>验收标准</strong>：可测量 / 可验证。</li>
+  <li><strong>证据</strong>：看板 URL、配置片段、测试结果。</li>
+  <li><strong>责任人</strong>：谁负责。</li>
+</ul>
+
+<h3>成熟度模型评分</h3>
+<table>
+  <tr><th>等级</th><th>含义</th></tr>
+  <tr><td>L0 — 未处理</td><td>未考虑此维度</td></tr>
+  <tr><td>L1 — 人工</td><td>依赖人工操作，无自动化</td></tr>
+  <tr><td>L2 — 部分</td><td>部分自动化，有残留风险</td></tr>
+  <tr><td>L3 — 完成</td><td>全自动化、文档化、已验证</td></tr>
+  <tr><td>L4 — 持续</td><td>自愈能力、持续验证</td></tr>
+</table>
+
+<div class="card">
+  <div class="card-title">PRR 检查清单示例（部分）</div>
+  <ul class="checklist">
+    <li>是否定义了 SLI 看板并对接告警？</li>
+    <li>是否存在 SPOF？是否已识别并缓解？</li>
+    <li>服务是否部署在 ≥ 2 个集群？</li>
+    <li>是否配置了 Pod 反亲和和 TopologySpread？</li>
+    <li>中间件是否跨 3AZ 部署？</li>
+    <li>是否定期执行 Region 故障切换演练？</li>
+    <li>API 网关是否配置了流控？</li>
+    <li>是否实现了 Circuit Breaker + Retry 模式？</li>
+    <li>是否存在故障模式库？是否定期进行 Chaos Engineering 演练？</li>
+    <li>变更是否经过 Ring 灰度 + 浸泡 + 拨测？</li>
+    <li>数据面是否独立于管理面？</li>
+    <li>是否配置了多级拨测？</li>
+    <li>审计日志是否启用并配置了不可篡改存储？</li>
+  </ul>
+</div>
+
+<div class="info-box">
+  <strong>结论：</strong>PRR 不是一次通过就一劳永逸的检查。系统会老化、依赖会变更、业务需求会进化。建议每季度审视 PRR 检查项，将 PRR 整合进 <strong>服务生命周期管理</strong> 流程中。目标不是一个完美无缺的系统，而是一个 <strong>已知风险可接受、故障可发现、恢复可预期</strong> 的系统。
+</div>
+
+<!-- ===== Footer ===== -->
+<div class="footer">
+  <p><strong>Production Readiness Review 生产就绪评审</strong> — 基于 Google SRE、AWS Well-Architected、Azure Well-Architected、CNCF Chaos Mesh 等行业最佳实践整理。</p>
+  <p>参考来源：Google SRE Book · AWS Well-Architected Framework · Azure Well-Architected Framework · Azure Architecture Patterns · Chaos Mesh Docs · DORA DevOps Capabilities</p>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: "$$", right: "$$", display: true},
+        {left: "$", right: "$", display: false}
+      ]
+    });
+  });
+</script>
+
+</body>
+</html>

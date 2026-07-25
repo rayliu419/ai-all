@@ -148,6 +148,7 @@
     <li><a href="#graceful-degradation">Graceful Degradation — 优雅降级</a></li>
     <li><a href="#active-active-passive">Active-Active vs Active-Passive — 多活架构</a></li>
     <li><a href="#quorum">Quorum / 多数派机制 — 防脑裂</a></li>
+    <li><a href="#cheat-sheet">cheat-sheet</a></li>
   </ol>
 </div>
 
@@ -544,6 +545,32 @@
 <div class="summary-box">
 <strong>核心：</strong>通过多数派决策防止脑裂，保证集群在网络分区时只有一个分区能提供服务，避免数据不一致。
 </div>
+
+<!-- ============ cheat-sheet ============ -->
+<h2 id="cheat-sheet">11. cheat-sheet</h2>
+
+<div class="card">
+  <p><img src="images/cheat-sheet.png" alt="cheat-sheet" style="max-width:100%; border-radius:6px;"></p>
+</div>
+
+<h3>VIP = Virtual IP VRRP</h3>
+<ul>
+  <li>IP也可以代表多台机器，使用虚拟IP连接，某台挂掉了，其他的可以取代。</li>
+  <li>CORS的ECS用一个虚拟IP来访问转发，某台挂掉以后就不再通过其转发。</li>
+</ul>
+
+<h3>依赖组件拨测</h3>
+<ul>
+  <li>CORS中，某些服务如果要调用MongoDB，不停的拨测DB，将Readiness probe设置为这个拨测结果。</li>
+  <li>如果发现此DB拨测不通，代表请求走这台机器也没有意义了。</li>
+  <li>这种拨测和K8s的Readiness probe结合的方法比较有意思。</li>
+  <li>K8s还有Liveness probe，如果失败就直接重启Pod了。</li>
+</ul>
+
+<h3>跨 Region 的计算平台</h3>
+<ul>
+  <li>CORS中本DLI出问题的时候，调用跨Region的DLI平台。</li>
+</ul>
 
 <!-- ============ 总结 ============ -->
 <h2 id="summary">总结</h2>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>流量治理 — 系统设计</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", Roboto, Helvetica, Arial, sans-serif;
+    background: #f5faf6;
+    color: #2d3a31;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 24px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 1.5em; color: #1a4f2e; margin-bottom: 6px; border-bottom: 2px solid #c3dbcc; padding-bottom: 6px; }
+  .subtitle { color: #4a6b57; margin-bottom: 16px; font-style: italic; }
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 12px 0 16px;
+  }
+  .toc h2 { font-size: 1em; color: #1a4f2e; margin: 0 0 8px; border: none; padding: 0; background: none; }
+  .toc ol { margin: 0 0 0 18px; }
+  .toc > ol { margin-left: 0; list-style: none; counter-reset: toc-counter; }
+  .toc > ol > li { counter-increment: toc-counter; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc-counter) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.9em; }
+  .toc a:hover { text-decoration: underline; color: #1a4f2e; }
+  h2 {
+    font-size: 1.2em;
+    color: #1f5c36;
+    margin: 20px 0 8px;
+    padding: 4px 0 4px 10px;
+    border-left: 4px solid #2d8a4e;
+    background: #e8f5ec;
+  }
+  h3 { font-size: 1.02em; color: #236b3e; margin: 14px 0 6px; }
+  p { margin: 6px 0; }
+  ul, ol { margin: 4px 0 4px 18px; }
+  li { margin: 2px 0; }
+  code {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: #e8f5ec;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4f2e;
+  }
+  pre {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.8em;
+    background: #e8f5ec;
+    padding: 10px 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #c3dbcc;
+    margin: 6px 0;
+  }
+  .tag {
+    display: inline-block;
+    font-size: 0.78em;
+    background: #2d8a4e;
+    color: #fff;
+    padding: 1px 8px;
+    border-radius: 10px;
+    margin-right: 4px;
+  }
+  .tag-blue { background: #2a6e9e; }
+  .tag-amber { background: #b8860b; }
+  .tag-red { background: #b33a3a; }
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card-title { font-weight: 600; color: #1a4f2e; margin-bottom: 4px; }
+  .warn-card {
+    background: #fef9e7;
+    border: 1px solid #e6c952;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .warn-card .card-title { color: #8a6d0b; }
+  .info-card {
+    background: #e5f0fa;
+    border: 1px solid #8bb8d6;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .info-card .card-title { color: #1f5680; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    margin: 6px 0;
+  }
+  th, td {
+    border: 1px solid #c3dbcc;
+    padding: 6px 10px;
+    text-align: left;
+  }
+  th { background: #d4e8da; color: #1a4f2e; font-weight: 600; }
+  tr:nth-child(even) { background: #f0f8f2; }
+  .summary-box {
+    background: #d4e8da;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0;
+  }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 12px;
+    color: #2d8a4e;
+    text-decoration: none;
+    font-size: 0.9em;
+  }
+  .back-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<a class="back-link" href="../index.html">&larr; 返回索引</a>
+
+<h1>🌊 流量治理</h1>
+<p class="subtitle">防止异常流量拖垮正常服务，避免雪崩效应和连锁反应</p>
+
+<div class="toc">
+  <h2>📖 目录</h2>
+  <ol>
+    <li><a href="#overview">总览</a></li>
+    <li><a href="#circuit-breaker">熔断</a></li>
+    <li><a href="#isolation">隔离</a></li>
+    <li><a href="#retry">重试</a></li>
+    <li><a href="#degradation">降级</a></li>
+    <li><a href="#timeout">超时</a></li>
+    <li><a href="#rate-limiting">限流</a></li>
+  </ol>
+</div>
+
+<!-- ============ 1. 总览 ============ -->
+<h2 id="overview">1. 总览</h2>
+
+<div class="summary-box" style="font-size:1.05em;">
+  流量治理总的来说：就是防止某些有问题的流量导致正常流量也受到影响，防止造成雪崩效应和连锁反应。
+</div>
+
+<!-- ============ 2. 熔断 ============ -->
+<h2 id="circuit-breaker">2. 熔断</h2>
+
+<div class="card">
+  <div class="card-title">Circuit Breaker</div>
+  <p>Resilience4j 的 Circuit Breaker 实现熔断保护，当下游故障率达到阈值时自动断开，避免级联失败。</p>
+</div>
+
+<div class="info-card">
+  <div class="card-title">参考</div>
+  <p>详见 <a href="high-availability.html#circuit-breaker">高可用设计 — Circuit Breaker</a></p>
+</div>
+
+<!-- ============ 3. 隔离 ============ -->
+<h2 id="isolation">3. 隔离</h2>
+
+<p>通过物理或逻辑上分离资源和请求，减少单点故障的影响范围。</p>
+
+<h3>隔离的维度</h3>
+<table>
+  <tr>
+    <th>隔离方式</th>
+    <th>说明</th>
+  </tr>
+  <tr>
+    <td><strong>动静隔离</strong></td>
+    <td>静态资源（CDN）与动态请求分离，静态故障不影响动态服务</td>
+  </tr>
+  <tr>
+    <td><strong>读写隔离</strong></td>
+    <td>读流量和写流量走不同的实例或数据源，写故障不影响读</td>
+  </tr>
+  <tr>
+    <td><strong>机房隔离</strong></td>
+    <td>多机房部署，一个机房故障不影响其他机房</td>
+  </tr>
+  <tr>
+    <td><strong>线程隔离</strong></td>
+    <td>单个微服务内，不同下游调用使用独立线程池（Bulkhead）</td>
+  </tr>
+</table>
+
+<div class="info-card">
+  <div class="card-title">参考</div>
+  <p>详见 <a href="high-availability.html#bulkhead">高可用设计 — Bulkhead</a></p>
+</div>
+
+<!-- ============ 4. 重试 ============ -->
+<h2 id="retry">4. 重试</h2>
+
+<p>包括同步和异步重试，以及各种退避机制，帮助在失败时优雅地恢复服务。</p>
+
+<h3>Resilience4j Retry</h3>
+<p>Resilience4j 提供灵活的重试配置，支持退避策略。</p>
+
+<div class="warn-card">
+  <div class="card-title">⚠️ 注意 Retry Storm</div>
+  <p>无节制的重试会导致重试风暴（Retry Storm）— 下游本已过载，被大量重试压得更狠。务必配合指数退避和最大重试次数限制。</p>
+</div>
+
+<div class="info-card">
+  <div class="card-title">参考</div>
+  <p>详见 <a href="high-availability.html#retry-backoff">高可用设计 — Retry + Exponential Backoff + Jitter</a></p>
+</div>
+
+<!-- ============ 5. 降级 ============ -->
+<h2 id="degradation">5. 降级</h2>
+
+<p>自动和手动降级，作为服务负载过重时的应急措施。</p>
+
+<ul>
+  <li><strong>自动降级：</strong>系统检测到压力超过阈值时自动触发降级策略</li>
+  <li><strong>手动降级：</strong>运维人员通过开关/配置主动降级非核心功能</li>
+  <li><strong>Non-CSP 数据降级：</strong>核心业务数据走主路径，非核心数据（如推荐、浏览历史）降级为默认值或空</li>
+</ul>
+
+<div class="info-card">
+  <div class="card-title">参考</div>
+  <p>详见 <a href="high-availability.html#graceful-degradation">高可用设计 — Graceful Degradation</a></p>
+</div>
+
+<!-- ============ 6. 超时 ============ -->
+<h2 id="timeout">6. 超时</h2>
+
+<div class="card">
+  <div class="card-title">客户端的强 Timeout 设置</div>
+  <p>客户端调用下游时，必须设置合理的超时时间，避免线程/连接被无限期占用。</p>
+</div>
+
+<h3>Resilience4j Time Limiter</h3>
+<p>Resilience4j 提供 Time Limiter 组件，为异步操作设置超时上限，超时后自动取消并返回 fallback。</p>
+
+<ul>
+  <li>设置连接超时（Connection Timeout）— 建立连接的最长等待</li>
+  <li>设置读取超时（Read Timeout）— 等待响应的最长等待</li>
+  <li>超时后快速失败，释放线程资源</li>
+</ul>
+
+<!-- ============ 7. 限流 ============ -->
+<h2 id="rate-limiting">7. 限流</h2>
+
+<p>客户端和服务端限流，确保系统在高负载下仍能稳定运行。</p>
+
+<h3>限流的层次</h3>
+<table>
+  <tr>
+    <th>层次</th>
+    <th>说明</th>
+  </tr>
+  <tr>
+    <td><strong>CSG 服务级限流</strong></td>
+    <td>API 网关层对每个服务设置流量配额，防止单个服务被打爆</td>
+  </tr>
+  <tr>
+    <td><strong>Global Rate Limiter 单机限流</strong></td>
+    <td>每个实例自身限制请求速率，保护进程不被突发流量冲垮</td>
+  </tr>
+  <tr>
+    <td><strong>Load Shedding API 级别限流</strong></td>
+    <td>针对特定 API 的细粒度限流，核心 API 和非核心 API 不同配额</td>
+  </tr>
+</table>
+
+<div class="info-card">
+  <div class="card-title">参考</div>
+  <p>详见 <a href="high-availability.html#rate-limiting">高可用设计 — Rate Limiting + Load Shedding</a></p>
+</div>
+
+<div class="summary-box">
+  <strong>核心：</strong>熔断、隔离、重试、降级、超时、限流六种手段相互配合，构建多层次的流量治理体系。每个手段在不同层面（网关层、服务层、实例层、API 层）发挥作用，共同保障系统在异常流量下的稳定性。
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>容灾设计 — 系统设计</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", Roboto, Helvetica, Arial, sans-serif;
+    background: #f5faf6;
+    color: #2d3a31;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 24px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 1.5em; color: #1a4f2e; margin-bottom: 6px; border-bottom: 2px solid #c3dbcc; padding-bottom: 6px; }
+  .subtitle { color: #4a6b57; margin-bottom: 16px; font-style: italic; }
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 12px 0 16px;
+  }
+  .toc h2 { font-size: 1em; color: #1a4f2e; margin: 0 0 8px; border: none; padding: 0; background: none; }
+  .toc ol { margin: 0 0 0 18px; }
+  .toc > ol { margin-left: 0; list-style: none; counter-reset: toc-counter; }
+  .toc > ol > li { counter-increment: toc-counter; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc-counter) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.9em; }
+  .toc a:hover { text-decoration: underline; color: #1a4f2e; }
+  h2 {
+    font-size: 1.2em;
+    color: #1f5c36;
+    margin: 20px 0 8px;
+    padding: 4px 0 4px 10px;
+    border-left: 4px solid #2d8a4e;
+    background: #e8f5ec;
+  }
+  h3 { font-size: 1.02em; color: #236b3e; margin: 14px 0 6px; }
+  h4 { font-size: 0.95em; color: #2d6e44; margin: 10px 0 4px; }
+  p { margin: 6px 0; }
+  ul, ol { margin: 4px 0 4px 18px; }
+  li { margin: 2px 0; }
+  code {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: #e8f5ec;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4f2e;
+  }
+  pre {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.8em;
+    background: #e8f5ec;
+    padding: 10px 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #c3dbcc;
+    margin: 6px 0;
+  }
+  .tag {
+    display: inline-block;
+    font-size: 0.78em;
+    background: #2d8a4e;
+    color: #fff;
+    padding: 1px 8px;
+    border-radius: 10px;
+    margin-right: 4px;
+  }
+  .tag-blue { background: #2a6e9e; }
+  .tag-amber { background: #b8860b; }
+  .tag-red { background: #b33a3a; }
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card-title { font-weight: 600; color: #1a4f2e; margin-bottom: 4px; }
+  .warn-card {
+    background: #fef9e7;
+    border: 1px solid #e6c952;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .warn-card .card-title { color: #8a6d0b; }
+  .info-card {
+    background: #e5f0fa;
+    border: 1px solid #8bb8d6;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .info-card .card-title { color: #1f5680; }
+  .correction-box {
+    background: #fef9e7;
+    border: 1px solid #e6c952;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .correction-box .card-title { color: #8a6d0b; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    margin: 6px 0;
+  }
+  th, td {
+    border: 1px solid #c3dbcc;
+    padding: 6px 10px;
+    text-align: left;
+  }
+  th { background: #d4e8da; color: #1a4f2e; font-weight: 600; }
+  tr:nth-child(even) { background: #f0f8f2; }
+  .summary-box {
+    background: #d4e8da;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0;
+  }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 12px;
+    color: #2d8a4e;
+    text-decoration: none;
+    font-size: 0.9em;
+  }
+  .back-link:hover { text-decoration: underline; }
+  hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<a class="back-link" href="../index.html">&larr; 返回索引</a>
+
+<h1>🔄 容灾设计</h1>
+<p class="subtitle">Disaster Recovery — 从 AZ 级到 Region 级的容灾架构设计</p>
+
+<div class="toc">
+  <h2>📖 目录</h2>
+  <ol>
+    <li><a href="#overview">总览（RTO / RPO）</a></li>
+    <li><a href="#az-dr">AZ 级容灾</a></li>
+    <li><a href="#region-dr">Region 级容灾</a></li>
+    <li><a href="#unified">容灾统一考虑</a></li>
+    <li><a href="#design-thinking">容灾 High-Level 设计思路</a></li>
+    <li><a href="#references">参考</a></li>
+  </ol>
+</div>
+
+<!-- ============ 1. 总览 ============ -->
+<h2 id="overview">1. 总览（RTO / RPO）</h2>
+
+<p>容灾（Disaster Recovery, DR）是系统设计中最硬核的环节之一。和高可用（HA）的区别在于：HA 容忍单点故障（一台机器、一个进程挂掉），DR 容忍区域级故障（整个 AZ 掉电、整个 Region 网络中断）。</p>
+
+<h3>核心指标</h3>
+<table>
+  <tr>
+    <th>指标</th>
+    <th>含义</th>
+    <th>AZ 级容灾</th>
+    <th>Region 级容灾</th>
+  </tr>
+  <tr>
+    <td><strong>RTO</strong></td>
+    <td>Recovery Time Objective — 从故障到恢复的时间</td>
+    <td>秒级（自动切换）</td>
+    <td>分钟级（DNS 切换 + 数据恢复）</td>
+  </tr>
+  <tr>
+    <td><strong>RPO</strong></td>
+    <td>Recovery Point Objective — 能丢失多少数据</td>
+    <td>≈ 0（同步复制，数据不丢）</td>
+    <td>&gt; 0（异步复制，有数据窗口）</td>
+  </tr>
+</table>
+
+<div class="summary-box">
+  <strong>一句话：</strong>AZ 级容灾追求「数据不丢 + 自动恢复」，Region 级容灾接受「少量数据丢失 + 分钟级恢复」，换取对区域性灾难的防护能力。
+</div>
+
+<hr>
+
+<!-- ============ 2. AZ 级容灾 ============ -->
+<h2 id="az-dr">2. AZ 级容灾</h2>
+
+<h3>原理</h3>
+
+<p>AZ（Availability Zone）是同一 Region 内隔离的数据中心集群，AZ 之间通过高速专用网络互联，延迟通常在 1-2ms 以内。这种低延迟使得<strong>同步复制</strong>成为可能。</p>
+
+<div class="card">
+  <div class="card-title">AZ 级容灾的核心公式</div>
+  <p><strong>3AZ 部署 + 多数派协议（Raft / Paxos）</strong></p>
+  <ul>
+    <li>3AZ 中任一 AZ 整体失效，剩余 2AZ 仍能形成多数派（Quorum = 2），继续提供服务。</li>
+    <li>强一致场景下，RPO ≈ 0（同步复制确保不丢数据），写操作 p99 延迟增加约 1-3ms。</li>
+    <li>少数派 AZ 中的节点自动变为只读或下线，不会导致脑裂。</li>
+  </ul>
+</div>
+
+<h3>支持 AZ 级容灾的有状态中间件</h3>
+
+<p>以下中间件原生支持 3AZ 部署，能够在单个 AZ 完全掉电后继续提供服务（RPO ≈ 0，RTO 秒级自动切换）：</p>
+
+<table>
+  <tr>
+    <th>中间件</th>
+    <th>容灾机制</th>
+    <th>说明</th>
+  </tr>
+  <tr>
+    <td><strong>Etcd / ZooKeeper</strong></td>
+    <td>Raft / ZAB 多数派协议</td>
+    <td>3 节点各部署在不同 AZ，任一 AZ 挂掉剩余 2 节点 ≥ Quorum，写入正常。</td>
+  </tr>
+  <tr>
+    <td><strong>Kafka</strong></td>
+    <td>分区副本跨 AZ 分布</td>
+    <td>每个分区 3 副本分布在 3AZ，ISR 同步复制。AZ 挂掉后剩余副本重新选举 leader。注意：AZ 故障时部分 follower 可能不在 ISR 中，会暂时降低写入的 min.insync.replicas 满足度。</td>
+  </tr>
+  <tr>
+    <td><strong>MongoDB</strong></td>
+    <td>副本集（Raft 类协议）跨 AZ</td>
+    <td>每个 shard 的副本集分布在 3AZ，primary 和 secondary 跨 AZ 部署。AZ 挂掉后副本集自动选举新 primary。</td>
+  </tr>
+  <tr>
+    <td><strong>CockroachDB</strong></td>
+    <td>Raft + 自动 rebalance</td>
+    <td>每个 range 默认 3 副本跨 AZ/Region 分布，AZ 故障后自动在存活节点补充副本。</td>
+  </tr>
+  <tr>
+    <td><strong>Redis Enterprise / ElastiCache</strong></td>
+    <td>跨 AZ 副本</td>
+    <td>主从分属不同 AZ，AZ 故障触发自动 failover。注意：Redis 原生主从是异步复制，极端场景下可能丢少量数据。</td>
+  </tr>
+</table>
+
+<div class="correction-box">
+  <div class="card-title">🔧 纠偏</div>
+  <p>原始笔记中提到 "MongoDB 使用 sharding 模式，实际上先 sharding，再 raft 复制"。准确地说，MongoDB 的副本集（Replica Set）使用 Raft 类协议做数据复制和 leader 选举；Sharding 是数据分片，每个 shard 本身就是一个副本集。二者是正交的——即使不分片，单个副本集也能跨 AZ 部署。</p>
+</div>
+
+<h3>K8s 控制面的 AZ 容灾</h3>
+
+<p>K8s 本身也支持 3AZ 部署控制面：</p>
+<ul>
+  <li><strong>etcd 集群</strong>：3 或 5 节点分布在 3AZ，容忍 1-2 个 AZ 故障。</li>
+  <li><strong>API Server</strong>：无状态，多副本部署在 3AZ，前面挂负载均衡。</li>
+  <li><strong>Scheduler / Controller Manager</strong>：Leader Election 机制，只有一个实例活跃，挂掉后自动切换。</li>
+</ul>
+
+<h3>无状态服务的 AZ 部署</h3>
+
+<p>无状态服务本身不存储数据，容灾相对简单：<strong>3AZ 多副本部署 + 负载均衡</strong>。</p>
+<ul>
+  <li>每个 AZ 部署一定数量的 Pod 实例（N+1 容量规划：每个 AZ 容量能承载总流量的 50%，挂一个 AZ 后剩余两个能扛住）。</li>
+  <li>Service Mesh（Istio 等）或 ALB/Nginx 负责跨 AZ 流量分发。</li>
+  <li>故障检测：Readiness Probe 检测 Pod 是否正常，异常的自动从 endpoints 剔除。</li>
+</ul>
+
+<hr>
+
+<!-- ============ 3. Region 级容灾 ============ -->
+<h2 id="region-dr">3. Region 级容灾</h2>
+
+<h3>为什么比 AZ 级难得多</h3>
+
+<table>
+  <tr>
+    <th>因素</th>
+    <th>AZ 级</th>
+    <th>Region 级</th>
+  </tr>
+  <tr>
+    <td>网络延迟</td>
+    <td>1-2ms（专用光纤）</td>
+    <td>50-200ms（公网 / 跨洲）</td>
+  </tr>
+  <tr>
+    <td>数据复制</td>
+    <td>同步复制可行</td>
+    <td>只能异步复制</td>
+  </tr>
+  <tr>
+    <td>数据冲突</td>
+    <td>一致性协议解决</td>
+    <td>多写冲突不可避免</td>
+  </tr>
+  <tr>
+    <td>流量切换</td>
+    <td>负载均衡自动切换</td>
+    <td>DNS 切换（分钟级）</td>
+  </tr>
+  <tr>
+    <td>状态迁移</td>
+    <td>无状态 + 共享存储</td>
+    <td>有状态数据需跨 Region 同步</td>
+  </tr>
+</table>
+
+<p>正因为跨 Region 延迟高，<strong>同步复制不可行</strong>（一笔写入等 200ms 才返回，P99 延迟爆炸），所以 Region 级容灾必须接受<strong>异步数据复制</strong>，由此带来 RPO &gt; 0 和数据冲突问题。</p>
+
+<h3>多 Region 容灾的架构模式</h3>
+
+<h4>模式 1：Active-Passive（主备）</h4>
+<ul>
+  <li>一个 Region 承担所有读写流量，另一个 Region 只做数据同步，不接流量。</li>
+  <li>主 Region 挂掉后，DNS 解析切到备 Region，数据层恢复后即可继续服务。</li>
+  <li><strong>优点：</strong>简单，无需处理数据冲突。</li>
+  <li><strong>缺点：</strong>备 Region 资源闲置；切换有 1-10 分钟停服窗口（DNS TTL + 数据恢复）；备 Region 长期不接流量，真切换时可能有各种意想不到的问题。</li>
+</ul>
+
+<h4>模式 2：Active-Active（多活）</h4>
+<ul>
+  <li>多个 Region 同时接受读写流量。</li>
+  <li><strong>优点：</strong>用户就近访问延迟低；资源充分利用；一个 Region 挂掉后其他无缝接管。</li>
+  <li><strong>缺点：</strong>必须处理数据冲突；架构复杂度大幅增加。</li>
+</ul>
+
+<div class="correction-box">
+  <div class="card-title">🔧 关于 "同步跨 Region 调用" 的澄清</div>
+  <p>原始笔记中写道 "同步的跨 region 调用需要被避免，应该尽量使用 regional 资源"。这条原则本身是对的——跨 Region 同步调用会让请求增加 50-200ms 延迟，且跨 Region 网络抖动会直接影响用户体验。</p>
+  <p>但这不是铁律。在一些场景下，<strong>跨 Region 同步查询</strong>是可接受的（例如只读查询，不涉及写入一致性），或者使用 <strong>Async + Callback</strong> 模式替代同步调用。需要具体分析：</p>
+  <ul>
+    <li>如果业务容忍高延迟：可以使用跨 Region 同步调用。</li>
+    <li>如果业务不要求强一致：可以使用本地缓存 + 异步刷新。</li>
+    <li>如果跨 Region 调用不可避免：考虑使用全球负载均衡（如 AWS Global Accelerator）优化路径。</li>
+  </ul>
+</div>
+
+<h3>多 Region 容灾的基本要求</h3>
+
+<ol>
+  <li>
+    <strong>异步数据复制</strong> — 跨 Region 数据同步必须是异步的。需要考虑：
+    <ul>
+      <li>数据冲突策略：LWW（Last Write Wins）、CRDT、按用户分片。</li>
+      <li>复制延迟监控：延迟过大时触发告警或切换。</li>
+    </ul>
+  </li>
+  <li>
+    <strong>全局网络基础设施</strong> —
+    <ul>
+      <li>AWS 提供 Global Accelerator 和 Direct Connect 来优化跨 Region 网络路径。</li>
+      <li>各云厂商都有高速专用网络做多 Region 数据拷贝。</li>
+    </ul>
+  </li>
+  <li>
+    <strong>服务无状态化</strong> — 服务本身不持有本地状态，所有状态存储在外部（DB、Cache）。这是多 Region 部署的前提。
+  </li>
+  <li>
+    <strong>DNS 与流量路由</strong> —
+    <ul>
+      <li>Route 53（AWS）或类似服务做基于延迟 / 地理位置的路由。</li>
+      <li>Health check 自动摘除故障 Region。</li>
+    </ul>
+  </li>
+</ol>
+
+<h3>云厂商的 Region 级容灾能力</h3>
+
+<table>
+  <tr>
+    <th>云服务</th>
+    <th>容灾能力</th>
+    <th>一致性保证</th>
+  </tr>
+  <tr>
+    <td><strong>AWS S3 跨 Region 复制</strong></td>
+    <td>跨 Region 异步复制，自动同步</td>
+    <td>最终一致性。新版 Multi-Region Access Points 可实现 Active-Active。</td>
+  </tr>
+  <tr>
+    <td><strong>DynamoDB Global Tables</strong></td>
+    <td>多 Region 多写，自动冲突解决（LWW）</td>
+    <td>最终一致性。同一 Region 内读自身写是强一致，跨 Region 读可能有秒级滞后。</td>
+  </tr>
+  <tr>
+    <td><strong>Aurora Global Database</strong></td>
+    <td>一个 Region 主写，最多 5 个只读 Region，异步复制延迟 &lt;1 秒</td>
+    <td>主 Region 写完成后，其他 Region 异步复制，通常 1 秒内可见。</td>
+  </tr>
+  <tr>
+    <td><strong>Spanner（GCP）</strong></td>
+    <td>TrueTime + 锁机制实现跨 Region 强一致</td>
+    <td>真正的强一致跨 Region 写入，但延迟较高（p99 约 50-100ms），成本极高。</td>
+  </tr>
+</table>
+
+<div class="correction-box">
+  <div class="card-title">🔧 纠偏</div>
+  <p>原始笔记中说 "相比 AZ 级的容灾差不少"。这话不完全准确。DDB Global Tables 和 Spanner 的 Region 级容灾确实有 RPO &gt; 0（异步复制），但在<strong>用户就近访问和 Region 级故障转移</strong>方面，它们解决的是 AZ 级无法解决的问题——你的 AZ 级再多副本，整个 Region 断电了全都白搭。不能简单说"差不少"，只能说各有各的天花板。</p>
+</div>
+
+<hr>
+
+<!-- ============ 4. 容灾统一考虑 ============ -->
+<h2 id="unified">4. 容灾统一考虑</h2>
+
+<p>所有容灾手段归根结底都可以归纳为两件事：<strong>冗余 + 检测失败</strong>。</p>
+
+<h3>冗余</h3>
+
+<p>冗余在不同层面有不同的含义：</p>
+
+<table>
+  <tr>
+    <th>层面</th>
+    <th>含义</th>
+    <th>例子</th>
+  </tr>
+  <tr>
+    <td><strong>组件自带的冗余</strong></td>
+    <td>分布式存储的多数派复制</td>
+    <td>Raft 写多数节点才算成功，组件自身就有容错能力</td>
+  </tr>
+  <tr>
+    <td><strong>相同功能组件的冗余</strong></td>
+    <td>同一个功能有多个实现</td>
+    <td>大数据既用 DLI（华为）又有 MRS，一个挂了用另一个</td>
+  </tr>
+  <tr>
+    <td><strong>同组件不同实例的冗余</strong></td>
+    <td>同一个服务部署多个实例</td>
+    <td>DLI 可以调用多个 Region 的计算资源</td>
+  </tr>
+</table>
+
+<h3>检测失败</h3>
+
+<p>冗余再多的组件，检测不到故障就没法切流：</p>
+
+<ul>
+  <li><strong>无状态服务的健康检查</strong> — Nginx/ALB 的主动健康探测，K8s 的 Liveness/Readiness Probe。</li>
+  <li><strong>有状态服务的故障检测</strong> — Raft leader 心跳超时、ZAB 的 follower 心跳、Kafka ISR 同步检测。</li>
+  <li><strong>拨测（Probe）与 Readiness 结合</strong> — 服务不仅检测自身进程是否活着，还检测依赖组件（DB、下游服务）是否可达。如果依赖挂了，Readiness 返回 false，让流量不要来。</li>
+</ul>
+
+<hr>
+
+<!-- ============ 5. 容灾设计思路 ============ -->
+<h2 id="design-thinking">5. 容灾 High-Level 设计思路</h2>
+
+<h3>第 1 步：找出故障点</h3>
+
+<p>列出系统中的所有组件，标注出：</p>
+<ul>
+  <li>核心路径上的组件（离开它业务就跑不了）。</li>
+  <li>单点故障（只有一个实例、单 AZ）。</li>
+  <li>弱依赖（挂了有降级方案，不影响核心功能）。</li>
+</ul>
+
+<div class="info-card">
+  <div class="card-title">参考</div>
+  <p>参见 <a href="high-availability.html#graceful-degradation">高可用设计 — Graceful Degradation</a> 的降级层次。</p>
+</div>
+
+<h3>第 2 步：区分有状态 / 无状态</h3>
+
+<ul>
+  <li><strong>有状态服务</strong> — 数据通过多副本复制来提供容灾。优先使用原生支持 AZ 级容灾的组件（Etcd、Kafka、MongoDB、CockroachDB）。</li>
+  <li><strong>无状态服务</strong> — 容灾相对简单，主要考虑处理能力的冗余。通过 API Gateway、DNS 做流量分发。</li>
+</ul>
+
+<h3>第 3 步：确定容灾级别</h3>
+
+<table>
+  <tr>
+    <th>条件</th>
+    <th>建议</th>
+  </tr>
+  <tr>
+    <td>只有单 Region 可用</td>
+    <td>AZ 级容灾，3AZ 部署</td>
+  </tr>
+  <tr>
+    <td>需要全球用户低延迟</td>
+    <td>Region 级 Active-Active</td>
+  </tr>
+  <tr>
+    <td>合规要求数据不出国</td>
+    <td>按 Region 隔离，每个 Region 独立部署</td>
+  </tr>
+  <tr>
+    <td>业务对数据一致性要求极高</td>
+    <td>AZ 级强一致（同步复制），Region 级做灾备（异步 + 人工切换）</td>
+  </tr>
+</table>
+
+<h3>第 4 步：设计故障切换流程</h3>
+
+<ul>
+  <li>什么时候触发切换？（监控指标、阈值）</li>
+  <li>切换是自动还是半自动？</li>
+  <li>切换后怎么恢复原状？（failback 流程）</li>
+  <li>有没有演练过？（定期 Chaos Engineering）</li>
+</ul>
+
+<h3>第 5 步：考虑上游结合</h3>
+
+<ul>
+  <li><strong>重试 + 指数退避</strong> — 上游客户端做好重试策略，配合下游容灾切换。</li>
+  <li><strong>消息队列削峰</strong> — Queue 可以帮助缓冲流量，延迟消费。即使下游暂时不可用，消息不丢。</li>
+  <li><strong>熔断 + 降级</strong> — 检测到跨 Region 延迟异常升高时熔断，走本地降级方案。</li>
+</ul>
+
+<hr>
+
+<!-- ============ 6. 参考 ============ -->
+<h2 id="references">6. 参考</h2>
+
+<ol>
+  <li><a href="https://zhuanlan.zhihu.com/p/515303354">知乎：高可用架构设计</a></li>
+  <li><a href="https://learn.microsoft.com/en-us/azure/architecture/high-availability/building-solutions-for-high-availability">Azure: Building solutions for high availability</a></li>
+  <li><a href="https://aws.amazon.com/cn/blogs/startups/how-to-get-high-availability-in-architecture/">AWS: How to get high availability in architecture</a></li>
+  <li><a href="https://s3.amazonaws.com/aws001/guided_trek/GuidedTrek_RightScale_High%20Availability%20in%20the%20Cloud_SanFran.pdf">RightScale: High Availability in the Cloud (PDF)</a></li>
+  <li><a href="https://learn.lianglianglee.com/%E4%B8%93%E6%A0%8F/MySQL%E5%AE%9E%E6%88%98%E5%AE%9D%E5%85%B8/17%20%20%E9%AB%98%E5%8F%AF%E7%94%A8%E8%AE%BE%E8%AE%A1%EF%BC%9A%E4%BD%A0%E6%80%8E%E4%B9%88%E6%B4%BB%E7%94%A8%E4%B8%89%E5%A4%A7%E6%9E%B6%E6%9E%84%E6%96%B9%E6%A1%88%EF%BC%9F.md">掘金小册：MySQL 实战宝典 — 高可用设计</a></li>
+  <li><a href="https://cloud.tencent.com/developer/article/1624636">腾讯云：高可用架构设计</a></li>
+  <li><a href="https://zhuanlan.zhihu.com/p/102245185">知乎：异地多活架构设计</a></li>
+  <li><a href="https://dunwu.github.io/design/pages/9a462f/">系统设计：高可用架构</a></li>
+  <li><a href="http://blog.itpub.net/70024924/viewspace-2931140/">ITPub：容灾高可用设计</a></li>
+  <li><a href="https://acloudguru.com/blog/engineering/why-and-how-do-we-build-a-multi-region-active-active-architecture">Pluralsight: How to build a multi-region active-active architecture on AWS</a></li>
+  <li><a href="https://learn.microsoft.com/en-us/azure/well-architected/design-guides/regions-availability-zones">Azure: Architecture strategies for using availability zones and regions</a></li>
+</ol>
+
+</div>
+</body>
+</html>
