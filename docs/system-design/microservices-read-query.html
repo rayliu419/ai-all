@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微服务中的 Read Query 处理</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    mermaid.initialize({ startOnLoad: true, theme: "base", themeVariables: {
+      primaryColor: "#e8f5ec",
+      primaryTextColor: "#2d3a31",
+      primaryBorderColor: "#4caf50",
+      lineColor: "#4caf50",
+      secondaryColor: "#fff3e0",
+      tertiaryColor: "#e3f2fd",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+      fontSize: "10px"
+    }});
+  });
+</script>
+<style>
+body {
+  background: #f5faf6;
+  color: #2d3a31;
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  max-width: 960px;
+  margin: 20px auto;
+  padding: 0 24px;
+}
+h1 { font-size: 1.35em; color: #1a4f2e; border-bottom: 2px solid #c3dbcc; padding-bottom: 6px; margin: 20px 0 10px; }
+h2 { font-size: 1.2em; color: #236b3e; margin: 20px 0 8px; padding: 8px 12px; background: #e8f5ec; border-radius: 6px; border-left: 4px solid #4caf50; }
+h3 { font-size: 1.02em; color: #2d7a4a; margin: 14px 0 6px; }
+h4 { font-size: 0.95em; color: #3a8b55; margin: 10px 0 4px; }
+p { margin: 6px 0; }
+li { margin: 2px 0; }
+a { color: #1e6b3b; text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-size: 0.88em; background: #e8f5ec; padding: 2px 5px; border-radius: 3px; color: #1a4f2e; }
+pre {
+  font-size: 0.8em;
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 6px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+table {
+  font-size: 0.9em;
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+}
+th, td {
+  border: 1px solid #c3dbcc;
+  padding: 6px 10px;
+  text-align: left;
+}
+th {
+  background: #e8f5ec;
+  color: #1a4f2e;
+  font-weight: 600;
+}
+tr:nth-child(even) { background: #f0f9f3; }
+tr:nth-child(odd) { background: #fff; }
+.card {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+.card-title { font-weight: 600; color: #1a4f2e; margin-bottom: 4px; font-size: 1em; }
+.info-box {
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-left: 4px solid #2196f3;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.warning-box {
+  background: #fff3e0;
+  border: 1px solid #ffcc80;
+  border-left: 4px solid #ff9800;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.success-box {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-left: 4px solid #4caf50;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.toc {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 14px 20px;
+  margin: 12px 0 16px;
+}
+.toc h2 { font-size: 1em; color: #1a4f2e; margin: 0 0 8px; border: none; padding: 0; background: none; }
+.toc > ol { margin: 0; list-style: none; counter-reset: toc; }
+.toc > ol > li { counter-increment: toc; margin: 3px 0; }
+.toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+.toc a { color: #236b3e; text-decoration: none; font-size: 0.9em; }
+.toc a:hover { text-decoration: underline; color: #1a4f2e; }
+.toc ol ol { margin: 2px 0 2px 20px; list-style: none; counter-reset: toc-sub; }
+.toc ol ol > li { counter-increment: toc-sub; margin: 2px 0; }
+.toc ol ol > li::before { content: counter(toc) "." counter(toc-sub) " "; font-weight: 500; color: #3a8b55; font-size: 0.85em; }
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 10px 0;
+}
+@media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+details {
+  background: #f0f9f3;
+  border: 1px solid #c3dbcc;
+  border-radius: 6px;
+  padding: 8px 14px;
+  margin: 8px 0;
+}
+details summary { font-weight: 600; color: #1a4f2e; cursor: pointer; font-size: 1em; }
+details[open] { padding-bottom: 12px; }
+.section-label {
+  display: inline-block;
+  font-size: 0.75em;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.label-core { background: #1a4f2e; color: #fff; }
+.footer {
+  margin-top: 30px;
+  padding-top: 12px;
+  border-top: 2px solid #c3dbcc;
+  font-size: 0.85em;
+  color: #6a8f78;
+}
+.tag {
+  display: inline-block;
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.8em;
+  color: #1a4f2e;
+  margin-right: 4px;
+}
+/* Mermaid image styling */
+.mermaid {
+  text-align: center;
+  margin: 16px 0;
+  overflow-x: auto;
+}
+</style>
+</head>
+<body>
+
+<h1>微服务中的 Read Query 处理</h1>
+
+<p>
+  微服务架构采用"Database per Service"模式，join 跨多个服务的数据成为一个核心难题。本文首先讨论<strong>跨服务数据聚合</strong>的三种核心方案：API Composer、CQRS + Materialized View、Event Sourcing；然后单独讨论这些方案引入的<strong>一致性问题</strong>（Read-Your-Writes）和<strong>批量查询性能优化</strong>这两个跨切面专题。
+</p>
+
+<div class="info-box">
+  <strong>核心矛盾：</strong>微服务要求数据按服务边界独立存储（Database per Service），但业务查询往往需要跨越多个服务的数据。解决方案的实质是在 <strong>耦合度</strong>、<strong>一致性</strong>、<strong>查询性能</strong> 之间做权衡。
+</div>
+
+<!-- ===== TOC ===== -->
+<div class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#background">问题背景</a></li>
+    <li><a href="#api-composer">方案一：API Composer</a> <span class="tag">跨服务聚合</span></li>
+    <li><a href="#cqrs">方案二：CQRS + Materialized View</a> <span class="tag">跨服务聚合</span></li>
+    <li><a href="#event-sourcing">方案三：Event Sourcing</a> <span class="tag">跨服务聚合</span></li>
+    <li style="color:#777;"><a href="#ryw" style="color:#777;">一致性专题：Read-Your-Writes</a> <span class="tag" style="color:#6a8f78;border-color:#c3dbcc;">跨切面</span></li>
+    <li style="color:#777;"><a href="#batch-query" style="color:#777;">性能专题：批量查询与索引优化</a> <span class="tag" style="color:#6a8f78;border-color:#c3dbcc;">跨切面</span></li>
+    <li><a href="#comparison">方案对比与选择</a></li>
+  </ol>
+</div>
+
+<!-- ===== 1. Background ===== -->
+<h2 id="background">1. 问题背景</h2>
+
+<p>微服务读请求面临的核心问题可以归纳为三类：</p>
+
+<ul>
+  <li><strong>跨服务数据聚合</strong>：join 的数据分散在不同服务的数据库中，无法用传统 SQL join。这是本文方案一~三要解决的核心问题。</li>
+  <li><strong>数据一致性</strong>：异步聚合方案（CQRS、Event Sourcing）引入最终一致性，用户刚写入的数据可能读不到。这是第5节 RYW 要解决的问题。</li>
+  <li><strong>批量查询性能</strong>：即使在同一服务内，按低基数字段（如 status）批量过滤时 MySQL 索引效率低，需要专门的优化策略。这是第6节要讨论的问题。</li>
+</ul>
+
+<div class="warning-box">
+  <strong>一个常见的误解</strong>：CQRS 就是读写分离。实际上"读写分离"通常指读写用同一类 DB（如 MySQL 主从），而 CQRS 允许用完全不同的 DB 类型来满足查询需求 —— ES 做搜索、MongoDB 做文档聚合、Neo4j 做图查询。
+</div>
+
+<!-- ================================================================ -->
+<!-- 核心方案：三个平行的跨服务数据聚合方法                           -->
+<!-- ================================================================ -->
+
+<!-- ===== 2. API Composer ===== -->
+<h2 id="api-composer">2. 方案一：API Composer <span class="section-label label-core">跨服务聚合</span></h2>
+
+<h3>解决什么问题</h3>
+<p><strong>实时跨服务数据聚合</strong>——客户端需要同时获取 Service A、B、C 的数据并组合在一起时，如何在不改变现有服务的前提下完成 join。</p>
+
+<h3>原理</h3>
+<p>引入一个 API Composer（通常是 API Gateway 或独立的组合服务），分别调用多个微服务的 API，在内存中完成 join 后返回。</p>
+
+<div class="mermaid">
+flowchart LR
+  C[Client] --> GW[API Composer]
+  GW --> SA[Service A<br/>data_a]
+  GW --> SB[Service B<br/>data_b]
+  GW --> SC[Service C<br/>data_c]
+  SA --> J{In-memory Join}
+  SB --> J
+  SC --> J
+  J --> R[Response]
+  style C fill:#e3f2fd,stroke:#2196f3
+  style GW fill:#e8f5ec,stroke:#4caf50,font-weight:bold
+  style J fill:#fff3e0,stroke:#ff9800
+</div>
+
+<h3>优缺点</h3>
+<table>
+  <tr><th>优点</th><th>缺点</th></tr>
+  <tr><td>实现简单，不改变现有服务</td><td>多次网络交互增大延迟</td></tr>
+  <tr><td>无需额外存储</td><td>降低可用性 (A × B × C)</td></tr>
+  <tr><td>适用于数据量小的场景</td><td>大数据集 in-memory join 低效</td></tr>
+  <tr><td>数据实时性最好</td><td>数据不一致（各服务返回时刻不同）</td></tr>
+</table>
+
+<h3>引入的问题与缓解措施</h3>
+
+<p><strong>问题 1：可用性降低</strong>——依赖的服务越多，整体可用性越低。</p>
+<ul>
+  <li><strong>并行调用</strong>：缩短延迟窗口，可用性取决于最慢/最不可用的单一服务而非乘积。</li>
+  <li><strong>熔断降级</strong>：某个服务超时/失败时，返回部分数据而非整体失败。</li>
+  <li><strong>缓存兜底</strong>：对非实时敏感的数据加本地缓存，减少实时依赖。</li>
+</ul>
+
+<p><strong>问题 2：多源数据不一致</strong>——各服务返回的是不同时刻的快照，组合后逻辑上可能矛盾（如订单状态为"已发货"但配送记录还没生成）。</p>
+<ul>
+  <li><strong>接受弱一致</strong>：在非关键场景下接受最终一致性。</li>
+  <li><strong>关键数据走主库</strong>：对一致性要求高的字段，直接从所属服务的主库读取。</li>
+</ul>
+
+<details>
+  <summary>可用性计算示例</summary>
+  <p>假设 Service A、B、C 各自可用性为 99.9%（3 nines），API Composer 串行调用它们：</p>
+  <p style="text-align:center;font-size:1em;"><strong>整体可用性 = 0.999 × 0.999 × 0.999 = 99.7%</strong></p>
+  <p>这意味着每年的停机时间从 <strong>8.76 小时</strong>（单个服务）增加到 <strong>26.3 小时</strong>（组合后）。如果改为并行调用，可用性取决于最小可用性，但延迟取决于最慢的服务。</p>
+</details>
+
+<h3>适用场景</h3>
+<ul>
+  <li>数据量小（翻页、聚合结果数可控）</li>
+  <li>实时性要求高</li>
+  <li>简单的主数据聚合（如查用户 + 查订单）</li>
+  <li>不适合大数据过滤、复杂聚合查询</li>
+</ul>
+
+<!-- ===== 3. CQRS + Materialized View ===== -->
+<h2 id="cqrs">3. 方案二：CQRS + Materialized View <span class="section-label label-core">跨服务聚合</span></h2>
+
+<h3>解决什么问题</h3>
+<p><strong>高性能跨服务复杂查询</strong>——当 API Composer 无法满足性能要求（大数据量 join 低效、频繁跨服务调用延迟高），或者查询模式复杂（多条件过滤、全文搜索、图查询）时，需要将数据预聚合到专为查询优化的存储中。</p>
+
+<h3>核心思想</h3>
+<p>CQRS (Command Query Responsibility Segregation) 将<strong>命令</strong>（写操作）和<strong>查询</strong>（读操作）分离到不同的模型中，甚至使用完全不同的存储。</p>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">Command 侧</div>
+    <div>负责数据变更。使用业务模型，写入自己的 DB。关注数据完整性、验证逻辑、事务边界。</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Query 侧</div>
+    <div>专门为查询优化。使用不同的 DB 类型、不同的 schema、不同的索引策略。可存在多个 View DB。</div>
+  </div>
+</div>
+
+<h3>Materialized View 的角色</h3>
+<p>Materialized View（物化视图）是 CQRS 中 Read Model 的<strong>具体实现方式</strong>。它在多个数据源之上预先建立只读的、已聚合的视图。视图是<strong>完全可丢弃的</strong>——可以从源数据完整重建。Command 侧写入 → 事件驱动更新 Materialized View → Query 侧读取 Materialized View。</p>
+
+<h3>架构</h3>
+
+<div class="mermaid">
+flowchart LR
+  subgraph Command["Command Side"]
+    OA[Order Service] -->|Domain Event| EB[Event Bus]
+    KA[Kitchen Service] -->|Domain Event| EB
+    DA[Delivery Service] -->|Domain Event| EB
+  end
+  EB --> EH1[Event Handler]
+  EB --> EH2[Event Handler]
+  EB --> EH3[Event Handler]
+  EH1 --> VDB1[View DB<br/>ElasticSearch]
+  EH2 --> VDB2[View DB<br/>MongoDB]
+  EH3 --> VDB3[View DB<br/>Neo4j]
+  subgraph Query["Query Side"]
+    VDB1
+    VDB2
+    VDB3
+  end
+  style Command fill:#e8f5ec,stroke:#4caf50
+  style Query fill:#e3f2fd,stroke:#2196f3
+</div>
+
+<p>每个服务发布领域事件（Domain Events），Query 侧监听这些事件，构建和维护自己的 View DB。</p>
+
+<h3>典型例子：Order History Service</h3>
+<p>来自 Chris Richardson <em>Microservices Patterns</em> 中的经典案例 <code>findHistoryOrder</code>：</p>
+
+<div class="card">
+  <ol>
+    <li>Order Service 发布 <code>OrderCreated</code>、<code>OrderShipped</code> 等事件。</li>
+    <li>Kitchen Service、Delivery Service、Accounting Service 各自发布领域事件。</li>
+    <li>Order History Service 监听所有相关事件，在 View DB 中融合数据。</li>
+    <li>View DB 使用文档数据库，schema 按查询需求设计（反范式化，无需 join）。</li>
+  </ol>
+</div>
+
+<div class="success-box">
+  <strong>关键洞察：</strong>"数据的拥有者（设计数据模型的微服务、修改数据实体的微服务），不一定由它来实现所有的查询。"——数据的<strong>写入边界</strong>和<strong>读取边界</strong>可以是不同的。Order History Service 不"拥有"订单数据，但它可以维护一个专为历史订单查询优化的 View DB。
+</div>
+
+<h3>优缺点</h3>
+<table>
+  <tr><th>优点</th><th>缺点</th></tr>
+  <tr><td>查询性能高，schema 按需优化</td><td>架构复杂度大幅增加</td></tr>
+  <tr><td>读写独立扩展</td><td>需要维护事件同步机制</td></tr>
+  <tr><td>可混合使用多种 DB</td><td>最终一致性，有复制延迟</td></tr>
+  <tr><td>Command 侧业务逻辑更简洁</td><td>代码一定程度重复</td></tr>
+</table>
+
+<h3>引入的问题与缓解措施</h3>
+
+<p><strong>问题：最终一致性</strong>——这是 CQRS 最核心的代价。Command 侧写入成功后，View DB 的同步存在延迟。用户可能看到过时数据，甚至完全看不到自己刚写入的数据（read-after-write inconsistency）。</p>
+
+<ul>
+  <li><strong>UI 提示</strong>：告诉用户"数据已收到，将在数秒内更新"。降低用户对实时性的预期。</li>
+  <li><strong>乐观 UI</strong>：写成功后立即在本地更新展示，不等后端确认。</li>
+  <li><strong>Read-Your-Writes (RYW)</strong>：对刚修改过的数据，保证用户能立即读到一致的结果。详见<a href="#ryw">第5节</a>。</li>
+  <li><strong>监控延迟</strong>：跟踪 View DB 与 Command DB 之间的同步延迟，超出阈值时告警。</li>
+</ul>
+
+<div class="info-box">
+  <strong>注意：</strong>RYW 不是 CQRS 的必选项，而是在"用户体验"和"架构简洁性"之间的一个权衡点。是否需要 RYW、选择哪种 RYW 策略，主要看用户的失望成本有多高。
+</div>
+
+<h3>Materialized View 应用场景</h3>
+<ul>
+  <li>多表 join 的复杂查询预计算</li>
+  <li>报表、大屏、统计场景</li>
+  <li>微服务场景下跨服务数据聚合</li>
+  <li>存储异构数据（关系型 + 文档 + 全文索引）</li>
+</ul>
+
+<!-- ===== 4. Event Sourcing ===== -->
+<h2 id="event-sourcing">4. 方案三：Event Sourcing <span class="section-label label-core">跨服务聚合</span></h2>
+
+<h3>解决什么问题</h3>
+<p><strong>审计追踪与时态查询</strong>——当系统需要记录所有历史变更、支持"一个月前的订单状态是什么？"这种查询、或者需要基于事件的跨服务协作时，传统的 CRUD 模式无法满足。Event Sourcing 提供了一条不同的数据存储路径。</p>
+
+<h3>原理</h3>
+<p>不存储当前状态，而是存储所有变更事件（append-only log）。当前状态通过<strong>重放所有事件</strong>来计算（rehydration）。</p>
+
+<div class="warning-box">
+  <strong>审慎采用：</strong>Event Sourcing 复杂度极高。仅在需要审计追踪、时态查询、事件驱动协作的场景下使用。对于大多数系统，传统 CRUD + CQRS 已足够。
+</div>
+
+<h3>与 CQRS 的协同</h3>
+<ul>
+  <li><strong>Command 侧</strong>：append 事件到 Event Store（命令校验后生成事件）。</li>
+  <li><strong>Query 侧</strong>：监听事件，构建 Materialized View。</li>
+  <li><strong>Event Store</strong>：作为单一真相源（System of Record），提供完整的审计追踪。</li>
+</ul>
+
+<h3>CQRS + Event Sourcing 架构</h3>
+
+<div style="transform: scale(0.75); transform-origin: top left; width: 75%;">
+<div class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'nodePadding': '3' }}}%%
+flowchart TB
+  subgraph Write["写请求"]
+    CH[Command Handler]
+  end
+  subgraph Rules["业务规则"]
+    V[校验]
+  end
+  Write --> V
+  V -->|Append| ES[Event Store]
+  ES --> EB2[Event Bus]
+  EB2 --> EH[Event Handler]
+  EH --> MV[Materialized View<br/>Query 侧]
+  EH --> EXT[外部系统]
+  subgraph Read["读请求"]
+    QH[Query Handler] --> MV
+  end
+  style Write fill:#e8f5ec,stroke:#4caf50
+  style Read fill:#e3f2fd,stroke:#2196f3
+  style ES fill:#fff3e0,stroke:#ff9800
+  style MV fill:#f0f9f3,stroke:#4caf50
+</div>
+</div>
+
+<h3>优缺点</h3>
+<table>
+  <tr><th>优点</th><th>缺点</th></tr>
+  <tr><td>完整的审计追踪</td><td>极高复杂度，学习曲线陡峭</td></tr>
+  <tr><td>支持时态查询（任意时间点的状态）</td><td>事件版本演进困难</td></tr>
+  <tr><td>天然支持事件驱动协作</td><td>Rehydration 性能可能成为瓶颈</td></tr>
+  <tr><td>Event Store 是可靠的真相源</td><td>需要快照机制优化重放性能</td></tr>
+</table>
+
+<h3>引入的问题与缓解措施</h3>
+
+<p><strong>问题 1：事件版本演进</strong>——事件结构随业务需求变化，旧事件和新代码可能不兼容。</p>
+<ul>
+  <li><strong>向上兼容</strong>：新增字段设默认值，不下线旧字段。</li>
+  <li><strong>事件版本号</strong>：在事件中显式记录 schema 版本，处理器按版本路由。</li>
+  <li><strong>事件转换器</strong>：在读取时对旧版本事件做原地或 on-the-fly 转换。</li>
+</ul>
+
+<p><strong>问题 2：Rehydration 性能</strong>——从头重放全部事件恢复状态，事件量越大越慢。</p>
+<ul>
+  <li><strong>快照（Snapshot）</strong>：每隔 N 个事件记录一个状态快照，重放时从最近快照开始。</li>
+  <li><strong>异步 Materialized View</strong>：查询不从 Event Store 重放，而是从 View DB 读取。</li>
+</ul>
+
+<h3>适用场景</h3>
+<ul>
+  <li>需要审计追踪（如金融交易、合规系统）</li>
+  <li>需要时态查询（如"查看历史任意时刻的账户余额"）</li>
+  <li>事件驱动协作（多个服务需要响应同一组事件）</li>
+  <li>不适合简单 CRUD 系统</li>
+</ul>
+
+<!-- ================================================================ -->
+<!-- 跨切面专题                                                        -->
+<!-- ================================================================ -->
+
+<div class="info-box">
+  <strong>跨切面说明：</strong>以下两节讨论的不是与方案一~三平行的"方案"，而是这些方案（特别是 CQRS）引入的<strong>衍生问题</strong>及其解决方法。它们是水平跨切面，在评估架构时需要一并考虑。
+</div>
+
+<!-- ===== 5. Read-Your-Writes ===== -->
+<h2 id="ryw">5. 一致性专题：Read-Your-Writes</h2>
+
+<h3>这个专题讨论什么</h3>
+<p>前文方案二（CQRS）的核心代价是<strong>最终一致性</strong>：Command 侧写入后，View DB 的同步存在延迟。这导致用户刚写入的数据在查询时读不到——即 read-after-write inconsistency。RYW（Read-Your-Writes）保证用户对自己写入的数据能立即读到一致的结果。</p>
+
+<p><strong>注意</strong>：这不是跨服务查询的"第五种方案"，而是方案二引入的问题的<strong>解决策略</strong>。</p>
+
+<h3>问题场景</h3>
+
+<div style="transform: scale(0.75); transform-origin: top left; width: 75%;">
+<div class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'actorMargin': '12' }}}%%
+sequenceDiagram
+  actor User
+  participant Command as "Command Side"
+  participant Query as "Query Side"
+  User->>Command: POST /orders
+  Command-->>User: 201 OK
+  User->>Query: GET /orders/123
+  Query-->>User: 404 Not Found
+  Note right of User: 用户看不到刚写入的数据<br/>View DB 尚未同步
+</div>
+</div>
+
+<p>本质矛盾：Command 侧写成功了，但 Query 侧还没来得及同步，用户看到"数据丢了"或"操作没生效"。</p>
+
+<h3>策略 A：Write-Through（同步刷新）</h3>
+<p>写入 Command 侧后，同步等待 View DB 更新完成再返回响应。</p>
+
+<div style="transform: scale(0.75); transform-origin: top left; width: 75%;">
+<div class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'actorMargin': '12' }}}%%
+sequenceDiagram
+  actor User
+  participant Command as "Command Side"
+  participant Query as "Query Side"
+  User->>Command: POST /orders
+  Command->>Query: 同步写入 View DB
+  Query-->>Command: 确认
+  Command-->>User: 201 OK
+  User->>Query: GET /orders/123
+  Query-->>User: 200 OK (数据已存在)
+</div>
+</div>
+
+<table>
+  <tr><th>优点</th><th>缺点</th></tr>
+  <tr><td>逻辑简单，立即可见</td><td>写延迟增大（需等待所有 View DB）</td></tr>
+  <tr><td>对客户端透明</td><td>写可用性降低（依赖 View DB）</td></tr>
+</table>
+
+<p>适用：需要严格 RYW、写频率不高的场景。</p>
+
+<h3>策略 B：Read-Your-Writes Session</h3>
+<p>为每个用户会话维护一个版本号或时间戳。</p>
+
+<ol>
+  <li>写操作返回一个写入时间戳或 event ID。</li>
+  <li>读请求携带该时间戳，Query 侧在同步未追平时阻塞等待或返回特殊状态。</li>
+  <li>或由客户端等待一段时间后重试。</li>
+</ol>
+
+<div style="transform: scale(0.75); transform-origin: top left; width: 75%;">
+<div class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'actorMargin': '12' }}}%%
+sequenceDiagram
+  actor User
+  participant Command as "Command Side"
+  participant Query as "Query Side"
+  User->>Command: POST /orders
+  Command-->>User: { orderId: 123, version: 42 }
+  User->>Query: GET /orders/123?after_version=42
+  alt 已同步
+    Query-->>User: 200 OK 数据已返回
+  else 未同步
+    Query-->>User: 425 Too Early 请稍后重试
+  end
+</div>
+</div>
+
+<h3>策略 C：Read from Command Side（直接读主库）</h3>
+<p>对于用户刚写入的数据，直接从 Command 侧（主库）读取。适用于用户的"我的订单"等个人数据查询。</p>
+
+<table>
+  <tr><th>优点</th><th>缺点</th></tr>
+  <tr><td>强一致性</td><td>增加 Command 侧读负载</td></tr>
+  <tr><td>无需同步机制</td><td>通常 Command 侧不是为读优化的</td></tr>
+</table>
+
+<h3>策略 D：Logical Replication with Monotonic Reads</h3>
+<p>利用数据库自身的复制机制（如 MySQL binlog、Kafka 分区），保证同一 partition key 的读写按顺序到达。</p>
+<ul>
+  <li>单用户的所有请求路由到同一 partition。</li>
+  <li>Partition 内事件严格有序，读操作在写操作之后到达该 partition 的 View DB。</li>
+  <li>天然保证该用户的 RYW。</li>
+</ul>
+
+<h3>策略选择</h3>
+<table>
+  <tr><th>策略</th><th>一致性</th><th>写延迟</th><th>复杂度</th><th>适用</th></tr>
+  <tr><td>Write-Through</td><td>强</td><td>升高</td><td>低</td><td>低频写，严格 RYW</td></tr>
+  <tr><td>RYW Session</td><td>最终 + RYW</td><td>不影响</td><td>中</td><td>大部分 CQRS 场景</td></tr>
+  <tr><td>Read from Command</td><td>强</td><td>不影响</td><td>低</td><td>个人数据查询</td></tr>
+  <tr><td>Monotonic Reads</td><td>最终 + RYW</td><td>不影响</td><td>高</td><td>高吞吐 CQRS</td></tr>
+</table>
+
+<div class="success-box">
+  <strong>关键原则：</strong>优先保证用户在自己的数据上看到强一致性（RYW），对其他用户的数据可以接受最终一致。
+</div>
+
+<!-- ===== 6. Batch Query ===== -->
+<h2 id="batch-query">6. 性能专题：批量查询与索引优化</h2>
+
+<h3>这个专题讨论什么</h3>
+<p>前面方案一~三关注的是<strong>跨服务</strong>的数据聚合。但即使在<strong>单个服务内部</strong>，也面临批量查询性能问题——特别是按低基数字段（如 status）做过滤时，MySQL 索引效率很低。本节讨论的优化策略适用于单服务或跨服务中的读性能提升。</p>
+
+<p>来自笔记中的实际场景：</p>
+
+<h3>场景 1：按 status 批量查询</h3>
+<p>CORS 大数据管理面需要批量查失败/未调度的记录；GIM Migration 需查很久未完成的任务。</p>
+
+<p><strong>优化策略（从简单到复杂）：</strong></p>
+<table>
+  <tr><th>方案</th><th>说明</th><th>成本</th></tr>
+  <tr><td>避免直接查 status</td><td>用创建时间作为索引字段，批量查询后读 status 再过滤</td><td>低</td></tr>
+  <tr><td>status 单独建表</td><td>拆成标志位表/压缩表，扫描行数少</td><td>低</td></tr>
+  <tr><td>复合索引</td><td>(status, create_time) 联合索引，减少回表</td><td>低</td></tr>
+  <tr><td>CQRS + ES</td><td>用 ES 存储待过滤的记录，过滤效率极高</td><td>中高</td></tr>
+</table>
+
+<h3>场景 2：DJS 查询下一分钟调度的记录</h3>
+<p><strong>方案</strong>：在任务执行时，同时生成<strong>下次执行的时间戳</strong>，将时间戳作为 hash key，快速定位一批记录。这是典型的"调度时间预计算 + 精确索引"策略。</p>
+
+<h3>通用索引设计原则</h3>
+<div class="card">
+  <ul>
+    <li><strong>查询需求驱动</strong>：确定哪些是常见查询，为它们创建索引。</li>
+    <li><strong>列选择</strong>：为 WHERE、JOIN、ORDER BY 中频繁使用的列建索引。</li>
+    <li><strong>复合索引</strong>：多列查询条件考虑联合索引，最左前缀原则。</li>
+    <li><strong>索引覆盖</strong>：尽量让索引包含查询所需的所有列，避免回表。</li>
+    <li><strong>维护成本</strong>：不过度创建索引。DELETE/UPDATE 的性能会受影响。</li>
+    <li><strong>监控优化</strong>：使用 explain / 慢查询日志持续优化。</li>
+  </ul>
+</div>
+
+<p>低基数字段（如 status、type、flag）的值种类很少（比如 status 只有 4~20 种取值）。B+树索引可以用二分查找快速定位到一个 status 值在索引中的位置，但是——找到之后发现这个值对应的行数可能占总表的 25%（如果有 4 种 status），仍然需要扫描大量行。而且这些行分散在磁盘上，每回表一次就是一次随机 I/O。所以问题的本质不是"查不到"，而是"查到的数据太多 + 回表成本太高"。</p>
+
+<p>以下是针对性的优化手段：</p>
+
+<h4>方法 1：覆盖索引（Covering Index）—— 消除回表成本</h4>
+
+<p>如果索引本身包含了查询需要的 <strong>所有列</strong>，MySQL 就不需要回表去读数据行了。即使索引扫描了 25% 的行，那也是在 B+树上的顺序扫描，比随机 I/O 快得多。</p>
+
+<pre>
+-- 业务需求：按 status 查订单的 id、status、create_time
+-- 原 SQL（会回表读数据行）：
+SELECT id, status, create_time FROM orders WHERE status = 'FAILED';
+
+-- 建覆盖索引：
+CREATE INDEX idx_status_created ON orders(status, create_time);
+-- 现在索引 (status, create_time) 包含了所有查询列，EXPLAIN 会显示 Using index（不需要回表）
+</pre>
+
+<div class="info-box">
+  <strong>适用条件</strong>：查询列固定且较少。如果 SELECT * 或者列很多，覆盖索引会变得过大，维护成本高。
+</div>
+
+<h4>方法 2：Index Skip Scan —— 让优化器帮你"拆查询"</h4>
+
+<p>复合索引 <code>(status, create_time)</code> 在查询 <code>WHERE status = 'FAILED'</code> 时，按理说只能用到 status 部分，create_time 用不上。但 MySQL 8.0.13+ 的 Index Skip Scan 可以绕过这个限制：</p>
+
+<pre>
+-- 有索引 (status, create_time)，但只想按 status 查
+EXPLAIN SELECT * FROM orders WHERE status = 'FAILED';
+-- 如果 status 有 4 个 distinct 值，MySQL 会隐式地把它拆成：
+--   (SELECT * FROM orders WHERE status = 'FAILED' AND create_time >= MIN)
+--   UNION
+--   (SELECT * FROM orders WHERE status = 'FAILED' AND create_time BETWEEN ...)
+--   ...
+
+-- 等价于手动做：
+SELECT * FROM orders WHERE status = 'FAILED' AND create_time > '1970-01-01';
+-- 但 MySQL 自动帮你完成了这个"跳过"逻辑
+</pre>
+
+<p>效果：即使 status 选择性低，Index Skip Scan 也能利用完整的复合索引做 range scan，比全表扫描快得多。</p>
+
+<div class="info-box">
+  <strong>关键限制</strong>：status 的 distinct 值越少效果越好（5~20 个）。如果 status 有 1000 种取值，Skip Scan 就需要遍历 1000 次，反而更慢。
+</div>
+
+<h4>方法 3：分区表（Partitioning）—— 物理隔离数据</h4>
+
+<p>按 status 分区后，每个分区只存一种 status 的数据。查询 <code>WHERE status = 'FAILED'</code> 时，MySQL 通过"分区裁剪"（Partition Pruning）直接跳过无关分区，只扫一个分区。</p>
+
+<pre>
+CREATE TABLE orders (
+  id BIGINT NOT NULL,
+  status ENUM('PENDING','PROCESSING','SUCCESS','FAILED') NOT NULL,
+  create_time DATETIME NOT NULL,
+  data TEXT,
+  PRIMARY KEY (id, status)   -- 分区键必须是主键的一部分
+) PARTITION BY LIST COLUMNS(status) (
+  PARTITION p_pending VALUES IN ('PENDING'),
+  PARTITION p_processing VALUES IN ('PROCESSING'),
+  PARTITION p_success VALUES IN ('SUCCESS'),
+  PARTITION p_failed VALUES IN ('FAILED')
+);
+
+-- 查询现在只扫 p_failed 分区
+EXPLAIN SELECT * FROM orders WHERE status = 'FAILED';
+-- partitions 列显示：p_failed（其他分区被裁剪掉了）
+</pre>
+
+<p>分区表的本质是用物理文件隔离替代索引过滤。缺点：分区数不宜过多（建议 &lt; 50），且 status 值变化时需要 ALTER TABLE 调整分区。</p>
+
+<h4>方法 4：INDEX_MERGE（位图合并）—— 用多条小路拼出大路</h4>
+
+<p>当查询涉及多个低基数字段时（如 <code>WHERE status = 'FAILED' AND type = 3</code>），单一索引效率很低。但 MySQL 5.6+ 可以分别用两个索引查出各自的"位图"，然后做交集：</p>
+
+<pre>
+-- 两个单列索引
+CREATE INDEX idx_status ON orders(status);
+CREATE INDEX idx_type ON orders(type);
+
+-- 查询
+EXPLAIN SELECT * FROM orders WHERE status = 'FAILED' AND type = 3;
+-- Extra 列会显示：Using intersect(idx_status, idx_type)
+-- 执行过程：
+--   1. 用 idx_status 找到所有 status='FAILED' 的行（得到一个 rowid 集合 A）
+--   2. 用 idx_type 找到所有 type=3 的行（得到 rowid 集合 B）
+--   3. 对 A 和 B 做交集，只回表读交集部分的 10 行
+</pre>
+
+<p>如果没有 INDEX_MERGE，MySQL 只能选择其中一个索引（扫 1000 行）或全表扫。INDEX_MERGE 把两个 10% 的数据集交成了 1%，大幅减少回表次数。</p>
+
+<div class="warning-box">
+  <strong>注意</strong>：INDEX_MERGE 不是万能的——优化器只在它认为合并比全表扫/单一索引更优时才会启用。可以用 <code>FORCE INDEX(idx_status, idx_type)</code> 或 <code>IGNORE INDEX</code> 测试是否生效。
+</div>
+
+<h4>方法 5：单独状态表（Thin Status Table）—— 把数据切薄</h4>
+
+<p>如果主表行很大（比如 data TEXT/BLOB 列占几 KB），B+树扫描时每读一行 I/O 成本很高。把 <code>(id, status)</code> 拆成一张极薄的表，每行只有十几个字节，一个数据页能装几百行，全表扫描也很快。</p>
+
+<pre>
+-- 主表（行很大）
+CREATE TABLE orders (
+  id BIGINT PRIMARY KEY,
+  status VARCHAR(20),
+  data LONGTEXT,          -- 几 KB
+  ...
+);
+
+-- 状态表（极薄，每行约 10 bytes）
+CREATE TABLE order_status (
+  id BIGINT PRIMARY KEY,
+  status VARCHAR(20),
+  INDEX idx_status(status)
+);
+
+-- 查询：只扫薄表
+SELECT id FROM order_status WHERE status = 'FAILED';
+-- 一行一个数据页可能包含 500+ 条记录，扫描 100 万行也很快
+
+-- 拿到 id 后，可以再 INNER JOIN 主表只取需要的行
+SELECT o.* FROM order_status s
+JOIN orders o ON o.id = s.id
+WHERE s.status = 'FAILED';
+</pre>
+
+<p>本质上是对数据做了"列裁剪"——只把用于过滤的列放到小表中，让每次 I/O 读到更多行。</p>
+
+
+<div class="success-box">
+  <strong>总结：</strong>低基数字段没有银弹。覆盖索引消除回表成本（最简单有效）、Index Skip Scan 利用复合索引做 range scan（8.0+ 专享）、分区表物理隔离数据（适合稳定状态集）、INDEX_MERGE 用多个窄索引做交/并运算（适合多条件过滤）、单独状态表把数据切薄（适合宽表场景）。<strong>在实际优化时，先用 EXPLAIN 确认瓶颈是"扫了太多行"还是"回表太贵"，然后选择对应的方法。</strong>
+</div><!-- ===== 7. Comparison ===== -->
+<h2 id="comparison">7. 方案对比与选择</h2>
+
+<h3>总览对比</h3>
+<p>以下对比仅针对三个核心的跨服务数据聚合方案。一致性和性能优化策略根据具体场景叠加选择。</p>
+
+<table>
+  <tr><th>维度</th><th>API Composer</th><th>CQRS + Materialized View</th><th>Event Sourcing</th></tr>
+  <tr><td>复杂度</td><td>低</td><td>中高</td><td>极高</td></tr>
+  <tr><td>数据实时性</td><td>实时</td><td>最终一致（秒级）</td><td>最终一致</td></tr>
+  <tr><td>查询灵活性</td><td>受限于各服务 API</td><td>可任意优化 schema</td><td>最灵活（可重放）</td></tr>
+  <tr><td>适用规模</td><td>小数据量</td><td>中大规模</td><td>审计/时态查询</td></tr>
+  <tr><td>运维成本</td><td>低</td><td>中</td><td>高</td></tr>
+  <tr><td>一致性保证</td><td>弱一致</td><td>最终一致</td><td>最终一致 + 可校验</td></tr>
+  <tr><td>RYW 必要性</td><td>无</td><td>视场景而定</td><td>视场景而定</td></tr>
+</table>
+
+<h3>选择决策树</h3>
+
+<div class="mermaid">
+flowchart TD
+  Q{是否需要跨服务查询？}
+  Q -->|否| A[单服务直接查自己的 DB<br/>普通分页、索引优化]
+  Q -->|是| B{数据量小、实时性高？}
+  B -->|是| C[API Composer]
+  B -->|否| D{查询模式}
+  D -->|复杂查询| E{需要审计/溯源？}
+  E -->|否| F[CQRS + Materialized View<br/>+ 可选 RYW 策略]
+  E -->|是| H[Event Sourcing + CQRS<br/>+ 可选 RYW 策略]
+  D -->|批量过滤| I{数据量可控？}
+  I -->|是| J[索引优化<br/>复合索引、覆盖索引]
+  I -->|否| K[CQRS + ES<br/>ElasticSearch 做过滤]
+
+  style Q fill:#fff3e0,stroke:#ff9800,font-weight:bold
+  style A fill:#e8f5ec,stroke:#4caf50
+  style C fill:#e8f5ec,stroke:#4caf50
+  style F fill:#e8f5ec,stroke:#4caf50
+  style H fill:#e3f2fd,stroke:#2196f3
+  style J fill:#e8f5ec,stroke:#4caf50
+  style K fill:#e8f5ec,stroke:#4caf50
+</div>
+
+<h3>混合使用建议</h3>
+<ul>
+  <li><strong>简单查询</strong>：API Composer 足够。不需要引入 CQRS 复杂度。</li>
+  <li><strong>核心查询路径</strong>：CQRS + Materialized View。View DB 按需选择（文档 DB / ES / 图 DB）。</li>
+  <li><strong>批量/后台任务</strong>：索引优化 + CQRS。避免直接查低基数字段。</li>
+  <li><strong>复杂业务 + 审计需求</strong>：Event Sourcing + CQRS。但限定在有收益的子域（如订单、账户）。</li>
+</ul>
+
+<div class="success-box">
+  <strong>结论：</strong>没有银弹。CQRS 是微服务查询中最推荐的模式，但它的适用边界需要仔细评估。优先从 API Composer 起步，当查询性能成为瓶颈或有复杂查询需求时，再引入 CQRS 的 View DB，并根据业务需要叠加 RYW 一致性。Event Sourcing 只在审计/溯源需求明确时才考虑。
+</div>
+
+<!-- ===== Footer ===== -->
+<div class="footer">
+  <p><strong>微服务中的 Read Query 处理</strong> — 基于 Chris Richardson <em>Microservices Patterns</em>、Azure Architecture Center、Martin Fowler 等行业资料整理。</p>
+  <p>参考来源：Microservices.io · Azure Architecture Center · Martin Fowler (CQRS, Event Sourcing) · Google Spanner · Amazon DynamoDB · Pat Helland</p>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: "$$", right: "$$", display: true},
+        {left: "$", right: "$", display: false}
+      ]
+    });
+  });
+</script>
+
+</body>
+</html>
