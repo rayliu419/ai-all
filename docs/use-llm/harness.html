@@ -16,22 +16,10 @@
 
   /* layout */
   .page-layout {
-    display: flex;
-    gap: 30px;
     margin: 0 auto;
     padding: 28px 20px;
-    min-height: 100vh;
   }
-  .sidebar {
-    width: 200px;
-    flex-shrink: 0;
-    align-self: flex-start;
-    position: sticky;
-    top: 28px;
-    max-height: calc(100vh - 56px);
-    overflow-y: auto;
-  }
-  .content { flex: 1; min-width: 0; }
+  .content { min-width: 0; }
 
   /* typography */
   h1 { font-size: 1.35em; margin: 0 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
@@ -69,8 +57,7 @@
   .toc a { color: #236b3e; text-decoration: none; font-size: 0.92em; }
   .toc a:hover { text-decoration: underline; color: #1a4a2e; }
 
-  /* inline toc fallback (hidden by default) */
-  .toc-inline { display: none; }
+
 
   strong { color: #1a4a2a; }
   em { color: #3d6a4f; }
@@ -143,46 +130,28 @@
 
   /* narrow screen: collapse sidebar */
   @media (max-width: 800px) {
-    .page-layout { flex-direction: column; padding: 16px 12px; }
-    .sidebar { display: none; }
-    .toc-inline { display: block; }
+    .page-layout { padding: 16px 12px; }
     ul, ol { padding-left: 16px; }
   }
 </style>
 </head>
 <body>
 
+
 <div class="page-layout">
 
-<aside class="sidebar">
-  <div class="toc">
-    <div class="toc-title">目录</div>
-    <ol>
-      <li><a href="#core">核心思想</a></li>
-      <li><a href="#practices">实践方法</a></li>
-      <li><a href="#single-vs-multi">单 Agent vs. 多 Agent</a></li>
-      <li><a href="#long-tasks">长程任务支架设计</a></li>
-      <li><a href="#loop">Loop Engineering</a></li>
-    </ol>
-  </div>
-</aside>
-
 <main class="content">
-
 <h1>Harness Engineering 经验</h1>
 
-<!-- inline toc for narrow screens -->
-<div class="toc-inline">
-  <div class="toc">
-    <div class="toc-title">目录</div>
-    <ol>
-      <li><a href="#core">核心思想</a></li>
-      <li><a href="#practices">实践方法</a></li>
-      <li><a href="#single-vs-multi">单 Agent vs. 多 Agent</a></li>
-      <li><a href="#long-tasks">长程任务支架设计</a></li>
-      <li><a href="#loop">Loop Engineering</a></li>
-    </ol>
-  </div>
+<div class="toc">
+  <div class="toc-title">目录</div>
+  <ol>
+    <li><a href="#core">核心思想</a></li>
+    <li><a href="#practices">实践方法</a></li>
+    <li><a href="#single-vs-multi">单 Agent vs. 多 Agent</a></li>
+    <li><a href="#long-tasks">长程任务支架设计</a></li>
+    <li><a href="#loop">Loop Engineering</a></li>
+  </ol>
 </div>
 
 <div class="card" style="text-align:center; border:2px solid #d97706;">
