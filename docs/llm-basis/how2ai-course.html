@@ -154,9 +154,11 @@
   tr:nth-child(even) { background: #edf6f0; }
   .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
   .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
-  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
-  .toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
-  .toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
+  .toc > ol { margin: 8px 0 0 22px; list-style: none; counter-reset: toc; padding: 0; }
+  .toc > ol > li { counter-increment: toc; margin: 4px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4a2e; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.92em; }
+  .toc a:hover { text-decoration: underline; color: #1a4a2e; }
 </style>
 </head>
 <body>
@@ -165,15 +167,15 @@
 
 <div class="toc">
   <div class="toc-title">📖 目录</div>
-  <div class="toc-grid">
-    <a href="#course-overview">课程总览</a>
-    <a href="#data-centric">第 2 讲 · 数据为中心</a>
-    <a href="#model-architecture">第 3 讲 · 模型架构与数据适配</a>
-    <a href="#multimodal-alignment">第 4 讲 · 多模态与对齐</a>
-    <a href="#cross-modal-learning">第 6 讲 · 跨模态学习</a>
-    <a href="#large-language-models">第 x 讲 · 大语言模型</a>
-    <a href="#rl-interaction">第 11 讲 · 强化学习与交互</a>
-  </div>
+  <ol>
+    <li><a href="#course-overview">课程总览</a></li>
+    <li><a href="#data-centric">第 2 讲 · 数据为中心</a></li>
+    <li><a href="#model-architecture">第 3 讲 · 模型架构与数据适配</a></li>
+    <li><a href="#multimodal-alignment">第 4 讲 · 多模态与对齐</a></li>
+    <li><a href="#cross-modal-learning">第 6 讲 · 跨模态学习</a></li>
+    <li><a href="#large-language-models">第 x 讲 · 大语言模型</a></li>
+    <li><a href="#rl-interaction">第 11 讲 · 强化学习与交互</a></li>
+  </ol>
 </div>
 
 <!-- ============ OVERVIEW ============ -->

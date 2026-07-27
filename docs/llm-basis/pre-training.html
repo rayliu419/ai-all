@@ -242,9 +242,11 @@
   /* Table of contents */
   .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
   .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
-  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
-  .toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
-  .toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
+  .toc > ol { margin: 8px 0 0 22px; list-style: none; counter-reset: toc; padding: 0; }
+  .toc > ol > li { counter-increment: toc; margin: 4px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4a2e; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.92em; }
+  .toc a:hover { text-decoration: underline; color: #1a4a2e; }
 
   /* Param & flow tables */
   .param-table, .flow-table { width:100%; border-collapse:collapse; font-size:0.9em; margin:8px 0; }
@@ -276,18 +278,17 @@
 
 <div class="toc">
   <div class="toc-title">📖 目录</div>
-  <div class="toc-grid">
-    <a href="#act1">第一幕 · 函数选择</a>
-    <a href="#act4">第四幕 · 注意力机制</a>
-    <a href="#act2">第二幕 · 梯度下降</a>
-    <a href="#act5">第五幕 · 知识存储</a>
-    <a href="#act3">第三幕 · 反向传播</a>
-    <a href="#backprop-calc">反向传播的微积分</a>
-    <a href="#math-toolbox">🔧 附章一 · 数学工具箱</a>
-
-    <a href="#dataflow">🔀 附章二 · 完整数据流 + Decoder</a>
-    <a href="#summary">🎯 总结</a>
-  </div>
+  <ol>
+    <li><a href="#act1">第一幕 · 函数选择</a></li>
+    <li><a href="#act2">第二幕 · 梯度下降</a></li>
+    <li><a href="#act3">第三幕 · 反向传播</a></li>
+    <li><a href="#backprop-calc">反向传播的微积分</a></li>
+    <li><a href="#math-toolbox">🔧 附章一 · 数学工具箱</a></li>
+    <li><a href="#act4">第四幕 · 注意力机制</a></li>
+    <li><a href="#act5">第五幕 · 知识存储</a></li>
+    <li><a href="#dataflow">🔀 附章二 · 完整数据流 + Decoder</a></li>
+    <li><a href="#summary">🎯 总结</a></li>
+  </ol>
 </div>
 
 <hr>

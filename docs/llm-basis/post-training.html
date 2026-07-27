@@ -129,9 +129,11 @@ tr:nth-child(even) { background: #f5faf6; }
   margin: 12px 0 18px;
 }
 .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
-.toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
-.toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
-.toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
+.toc > ol { margin: 8px 0 0 22px; list-style: none; counter-reset: toc; padding: 0; }
+.toc > ol > li { counter-increment: toc; margin: 4px 0; }
+.toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4a2e; }
+.toc a { color: #236b3e; text-decoration: none; font-size: 0.92em; }
+.toc a:hover { text-decoration: underline; color: #1a4a2e; }
 
 @media (max-width: 600px) {
   body { padding: 16px 12px; }
@@ -145,19 +147,19 @@ tr:nth-child(even) { background: #f5faf6; }
 
 <div class="toc">
   <div class="toc-title">目录</div>
-  <div class="toc-grid">
-    <a href="#definition">后训练的定义</a>
-    <a href="#sft">SFT</a>
-    <a href="#lora">LoRA SFT</a>
-    <a href="#lora-vs-full">LoRA SFT vs. 全参数 SFT</a>
-    <a href="#sft-vs-pretrain">SFT 与 Pre-train 的优化差异</a>
-    <a href="#rlhf">RLHF</a>
-    <a href="#rlhf-vs-pretrain">RLHF 的优化 vs. Pre-train / SFT 优化</a>
-    <a href="#no-forgetting">Post-training 怎么保证不遗忘 Pre-train 的知识</a>
-    <a href="#two-dimensions">两维度比较</a>
-    <a href="#quantization">模型量化与压缩</a>
-    <a href="#vs-agent">Post Training vs. Agent Engineer</a>
-  </div>
+  <ol>
+    <li><a href="#definition">后训练的定义</a></li>
+    <li><a href="#sft">SFT</a></li>
+    <li><a href="#lora">LoRA SFT</a></li>
+    <li><a href="#lora-vs-full">LoRA SFT vs. 全参数 SFT</a></li>
+    <li><a href="#sft-vs-pretrain">SFT 与 Pre-train 的优化差异</a></li>
+    <li><a href="#rlhf">RLHF</a></li>
+    <li><a href="#rlhf-vs-pretrain">RLHF 的优化 vs. Pre-train / SFT 优化</a></li>
+    <li><a href="#no-forgetting">Post-training 怎么保证不遗忘 Pre-train 的知识</a></li>
+    <li><a href="#two-dimensions">两维度比较</a></li>
+    <li><a href="#quantization">模型量化与压缩</a></li>
+    <li><a href="#vs-agent">Post Training vs. Agent Engineer</a></li>
+  </ol>
 </div>
 
 <hr>
