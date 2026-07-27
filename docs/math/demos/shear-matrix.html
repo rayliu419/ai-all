@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>从矩阵读回变换 — 剪切可视化</title>
+<style>
+:root { --bg: #f5faf6; --border: #c3dbcc; --text: #2d3a31; --accent: #3a7a4d; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding: 14px 16px; max-width: 680px; margin: 0 auto;
+}
+h3 { font-size: 1.02em; color: var(--accent); margin-bottom: 2px; }
+p.desc { font-size: 0.88em; color: #555; margin-bottom: 6px; }
+.legend { display: flex; gap: 14px; font-size: 0.82em; margin-bottom: 6px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 3px; }
+.dot { width: 14px; height: 3px; border-radius: 1px; display: inline-block; }
+
+.row { display: flex; gap: 14px; flex-wrap: wrap; }
+.col-canvas { text-align: center; }
+canvas { border: 1px solid var(--border); border-radius: 4px; background: #fff; max-width: 100%; }
+
+.col-panel { flex: 1; min-width: 160px; max-width: 210px; }
+.panel { background: #e8f5ec; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; }
+.panel h4 { font-size: 0.88em; color: var(--accent); margin-bottom: 3px; }
+.crd { font-family: 'SF Mono', monospace; font-size: 0.88em; margin: 2px 0; }
+
+.mblk { display: inline-flex; align-items: center; vertical-align: middle; margin: 2px auto; }
+.mblk .mb { font-size: 3.2em; font-weight: 100; color: #555; line-height: 0.65; font-family: serif; user-select: none; }
+.mblk .mg { display: inline-grid; text-align: center; font-family: 'SF Mono', monospace; font-size: 1.2em; }
+.mblk .mg.c2 { grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.mblk .mg .cl { font-size: 0.6em; color: #888; font-family: sans-serif; font-weight: 600; }
+.mblk .mg .sep { height: 1px; background: #bbb; grid-column: 1 / -1; }
+
+.ctrl-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; flex-wrap: wrap; }
+.ctrl-row label { font-size: 0.85em; }
+.ctrl-row input[type="range"] { flex: 1; min-width: 80px; }
+.ctrl-row .val { font-family: monospace; font-size: 0.85em; min-width: 28px; }
+</style>
+</head>
+<body>
+<h3>从矩阵读回线性变换 — 以剪切（Shear）为例</h3>
+<p class="desc">拿到剪切矩阵 M，查看 î' 和 ĵ' 就能知道空间怎么变。网格线在变换后依然平行、等距，这就是线性变换。</p>
+
+<div class="legend">
+  <span class="legend-item"><span class="dot" style="background:#d12"></span> î'</span>
+  <span class="legend-item"><span class="dot" style="background:#1b8a1b"></span> ĵ'</span>
+  <span class="legend-item"><span class="dot" style="background:#e8b831"></span> 原网格（淡黄参考）</span>
+</div>
+
+<div class="row">
+  <div class="col-canvas">
+    <canvas id="shearCanvas" width="400" height="400"></canvas>
+  </div>
+  <div class="col-panel">
+    <div class="panel" style="text-align:center;">
+      <h4 style="text-align:left;">变换矩阵 M</h4>
+      <div id="matDisplay" style="display:flex;justify-content:center;align-items:center;flex-direction:column;"></div>
+    </div>
+    <div class="panel">
+      <h4>基向量</h4>
+      <div class="crd" style="color:#d12">î' = (1, 0)</div>
+      <div class="crd" style="color:#1b8a1b">ĵ' = (<span id="jpx">0.00</span>, 1)</div>
+    </div>
+    <div class="panel">
+      <h4>线性变换特征</h4>
+      <div style="font-size:0.82em;">
+        <span style="color:var(--accent);">✔</span> 原点不动<br>
+        <span style="color:var(--accent);">✔</span> 网格线平行<br>
+        <span style="color:var(--accent);">✔</span> 网格线等距
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ctrl-row">
+  <label>剪切因子 k</label>
+  <input type="range" id="kSlider" min="-2" max="2" step="0.05" value="0.8">
+  <span class="val" id="kVal">0.80</span>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('shearCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const MARGIN = 30, RANGE = 5;
+  const sx = (W - 2 * MARGIN) / (2 * RANGE), sy = (H - 2 * MARGIN) / (2 * RANGE);
+  const [ox, oy] = [W / 2, H / 2];
+
+  function tw(wx, wy) { return [MARGIN + (wx + RANGE) * sx, MARGIN + (RANGE - wy) * sy]; }
+  function fmt(v) { return parseFloat(v.toFixed(2)).toString(); }
+
+  function drawArrow(x1, y1, x2, y2, color, lw, alpha) {
+    const [cx1, cy1] = tw(x1, y1), [cx2, cy2] = tw(x2, y2);
+    const dx = cx2 - cx1, dy = cy2 - cy1, len = Math.hypot(dx, dy);
+    if (len < 2) return;
+    ctx.save(); ctx.globalAlpha = alpha || 1;
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw || 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx1, cy1); ctx.lineTo(cx2, cy2); ctx.stroke();
+    const a = Math.atan2(dy, dx), hl = Math.min(10, len * 0.25);
+    ctx.beginPath(); ctx.moveTo(cx2, cy2);
+    ctx.lineTo(cx2 - hl * Math.cos(a - 0.35), cy2 - hl * Math.sin(a - 0.35));
+    ctx.lineTo(cx2 - hl * Math.cos(a + 0.35), cy2 - hl * Math.sin(a + 0.35));
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+
+  let k = 0.8;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+    const [ox, oy] = tw(0, 0);
+
+    // === Original grid (light yellow, for comparison) ===
+    ctx.save(); ctx.globalAlpha = 0.65; ctx.strokeStyle = '#e8b831'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    for (let i = -RANGE; i <= RANGE; i++) {
+      let [x1, y1] = tw(i, -RANGE), [x2, y2] = tw(i, RANGE);
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      [x1, y1] = tw(-RANGE, i); [x2, y2] = tw(RANGE, i);
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    }
+    ctx.restore();
+
+    // === Sheared grid (bold, dark green) ===
+    ctx.save(); ctx.strokeStyle = '#1a5a2e'; ctx.lineWidth = 1.4;
+    // Horizontal lines (unchanged for horizontal shear)
+    for (let y = -RANGE; y <= RANGE; y++) {
+      ctx.beginPath();
+      for (let x = -RANGE; x <= RANGE; x += 0.1) {
+        const sx2 = x + k * y;
+        const [px, py] = tw(sx2, y);
+        Math.abs(x + 0.05) > RANGE ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+    // Vertical lines (sheared — slanted)
+    for (let x = -RANGE; x <= RANGE; x++) {
+      ctx.beginPath();
+      for (let y = -RANGE; y <= RANGE; y += 0.08) {
+        const sx2 = x + k * y;
+        const [px, py] = tw(sx2, y);
+        Math.abs(y + 0.04) > RANGE ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Axes (sheared axes)
+    ctx.strokeStyle = '#888'; ctx.lineWidth = 1;
+    // x-axis: y=0 → x'=x, y'=0 (unchanged)
+    const [ax1, ay1] = tw(-RANGE, 0); const [ax2, ay2] = tw(RANGE, 0);
+    ctx.beginPath(); ctx.moveTo(ax1, ay1); ctx.lineTo(ax2, ay2); ctx.stroke();
+    // y-axis: x=0 → x'=k·y, y'=y (tipped)
+    ctx.beginPath();
+    const steps = 100;
+    for (let i = 0; i <= steps; i++) {
+      const y = -RANGE + 2 * RANGE * i / steps;
+      const sx2 = k * y;
+      const [px, py] = tw(sx2, y);
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Axis labels
+    ctx.save(); ctx.globalAlpha = 0.5; ctx.fillStyle = '#666'; ctx.font = '9px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (let i = -RANGE + 1; i < RANGE; i++) {
+      if (i === 0) continue;
+      const [px, py] = tw(i, 0); ctx.fillText(i, px, py + 3);
+    }
+    ctx.restore();
+
+    // === Basis vectors ===
+    // î' = (1, 0) — unchanged
+    drawArrow(0, 0, 1, 0, '#d12', 3.5);
+    // ĵ' = (k, 1) — sheared
+    drawArrow(0, 0, k, 1, '#1b8a1b', 3.5);
+
+    // Labels
+    ctx.save(); ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const [ix2, iy2] = tw(1, 0); ctx.fillStyle = '#d12'; ctx.fillText("î'", ix2 + 14, iy2);
+    const [jx2, jy2] = tw(k, 1); ctx.fillStyle = '#1b8a1b'; ctx.fillText("ĵ'", jx2 + 14, jy2);
+    ctx.restore();
+
+    // Origin
+    ctx.beginPath(); ctx.arc(ox, oy, 3, 0, Math.PI * 2); ctx.fillStyle = '#333'; ctx.fill();
+
+    // === Update panel ===
+    document.getElementById('matDisplay').innerHTML =
+      '<span class="mblk"><span class="mb">[</span><span class="mg c2">' +
+      '<span class="cl">î\'</span><span class="cl">ĵ\'</span>' +
+      '<span class="sep"></span>' +
+      '<span>1</span><span>' + fmt(k) + '</span>' +
+      '<span>0</span><span>1</span>' +
+      '</span><span class="mb">]</span></span>';
+    document.getElementById('jpx').textContent = fmt(k);
+  }
+
+  document.getElementById('kSlider').addEventListener('input', function() {
+    k = parseFloat(this.value);
+    document.getElementById('kVal').textContent = k.toFixed(2);
+    draw();
+  });
+
+  draw();
+})();
+</script>
+</body>
+</html>

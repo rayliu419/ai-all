@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D 线性相关性可视化</title>
+<style>
+:root { --bg: #f5faf6; --border: #c3dbcc; --text: #2d3a31; --accent: #3a7a4d; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 16px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+h3 { font-size: 1.02em; color: var(--accent); margin-bottom: 8px; }
+.mode-select { margin-bottom: 8px; }
+.mode-select button {
+  padding: 6px 14px; border: 1px solid var(--border); background: #fff;
+  color: var(--text); cursor: pointer; font-size: 0.92em;
+}
+.mode-select button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.mode-select button:first-child { border-radius: 4px 0 0 4px; }
+.mode-select button:last-child { border-radius: 0 4px 4px 0; }
+.plotly-wrap { width: 100%; height: 400px; }
+.info-display { font-family: monospace; font-size: 0.92em; margin-top: 8px; padding: 8px 10px; background: #fff; border: 1px solid var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+<h3>三维线性相关性</h3>
+<div class="mode-select">
+  <button id="modeDep" class="active">线性相关（w 在平面内）</button>
+  <button id="modeIndep">线性无关（w 指向新方向）</button>
+</div>
+<div class="plotly-wrap" id="plotly3d"></div>
+<div class="info-display" id="info3d">
+  w = 1.0·v₁ + 1.0·v₂ → w <strong>在</strong> v₁, v₂ 张成的平面内，<strong>线性相关</strong>，空间维度不变（2维）。
+</div>
+
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>
+(function() {
+  const v31 = [2, 1, 0], v32 = [1, 2, 0];
+  const wDep = [3, 3, 0], wIndep = [3, 3, 2.5];
+
+  function build3D(modeVal) {
+    const w = modeVal === 'dep' ? wDep : wIndep;
+    const n = 10;
+    const sRange = [-1.3, 1.3], tRange = [-1.3, 1.3];
+    const X = [], Y = [], Z = [];
+    const triI = [], triJ = [], triK = [];
+
+    for (let si = 0; si < n; si++) {
+      for (let ti = 0; ti < n; ti++) {
+        const s = sRange[0] + (sRange[1] - sRange[0]) * si / (n - 1);
+        const t = tRange[0] + (tRange[1] - tRange[0]) * ti / (n - 1);
+        X.push(s * v31[0] + t * v32[0]);
+        Y.push(s * v31[1] + t * v32[1]);
+        Z.push(s * v31[2] + t * v32[2]);
+      }
+    }
+    for (let si = 0; si < n - 1; si++) {
+      for (let ti = 0; ti < n - 1; ti++) {
+        const idx = si * n + ti;
+        triI.push(idx, idx + 1, idx + n);
+        triJ.push(idx + 1, idx + n + 1, idx + n + 1);
+        triK.push(idx + n, idx + n, idx + 1);
+      }
+    }
+
+    const traces = [
+      { type: 'scatter3d', mode: 'lines+markers', x: [0, v31[0]], y: [0, v31[1]], z: [0, v31[2]],
+        line: {color: '#3a6b9f', width: 6}, marker: {size: 3, color: '#3a6b9f'}, name: 'v₁ = (2, 1, 0)' },
+      { type: 'scatter3d', mode: 'lines+markers', x: [0, v32[0]], y: [0, v32[1]], z: [0, v32[2]],
+        line: {color: '#c0392b', width: 6}, marker: {size: 3, color: '#c0392b'}, name: 'v₂ = (1, 2, 0)' },
+      { type: 'scatter3d', mode: 'lines+markers', x: [0, w[0]], y: [0, w[1]], z: [0, w[2]],
+        line: {color: '#d4942b', width: 7}, marker: {size: 4, color: '#d4942b'},
+        name: modeVal === 'dep' ? 'w = v₁ + v₂ (相关)' : 'w = v₁ + v₂ + (0,0,2.5) (无关)' },
+      { type: 'mesh3d', x: X, y: Y, z: Z, i: triI, j: triJ, k: triK, opacity: 0.25, color: '#5ead6e',
+        name: 'span(v₁, v₂)' }
+    ];
+
+    const layout = {
+      autosize: true, height: 390,
+      margin: {l: 40, r: 20, b: 30, t: 10, pad: 0},
+      paper_bgcolor: '#f5faf6',
+      scene: {
+        xaxis: {title: 'x', range: [-4, 5]},
+        yaxis: {title: 'y', range: [-4, 5]},
+        zaxis: {title: 'z', range: [-1.5, 4]},
+        camera: {eye: {x: 2.5, y: 2.5, z: 1.2}},
+        aspectmode: 'cube'
+      },
+      legend: {font: {size: 10}, x: 0.02, y: 0.98, bgcolor: 'rgba(255,255,255,0.7)'}
+    };
+
+    Plotly.react('plotly3d', traces, layout, {responsive: true});
+    document.getElementById('info3d').innerHTML =
+      modeVal === 'dep'
+        ? 'w = 1.0·v₁ + 1.0·v₂ → w <strong>在</strong> v₁, v₂ 张成的平面内，<strong>线性相关</strong>，空间维度不变（2维）。'
+        : 'w = 1.0·v₁ + 1.0·v₂ + (0, 0, 2.5) → w <strong>不在</strong> v₁, v₂ 张成的平面内，<strong>线性无关</strong>，空间扩展到 3 维！';
+  }
+
+  document.getElementById('modeDep').addEventListener('click', function() {
+    this.classList.add('active');
+    document.getElementById('modeIndep').classList.remove('active');
+    build3D('dep');
+  });
+  document.getElementById('modeIndep').addEventListener('click', function() {
+    this.classList.add('active');
+    document.getElementById('modeDep').classList.remove('active');
+    build3D('indep');
+  });
+
+  build3D('dep');
+})();
+</script>
+</body>
+</html>

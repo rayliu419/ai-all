@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>线性代数读书笔记</title>
+<style>
+:root {
+  --bg: #f5faf6;
+  --card: #e8f5ec;
+  --border: #c3dbcc;
+  --text: #2d3a31;
+  --accent: #3a7a4d;
+  --accent-light: #5ead6e;
+  --highlight: #d4942b;
+  --highlight-bg: #fdf6e3;
+  --code-bg: #dceee2;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+}
+h1 { font-size: 1.35em; color: var(--accent); margin: 20px 0 8px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+h2 { font-size: 1.2em; color: var(--accent); margin: 18px 0 6px; }
+h3 { font-size: 1.02em; color: var(--accent); margin: 14px 0 4px; }
+h4 { font-size: 0.95em; color: var(--accent); margin: 10px 0 4px; }
+p { margin: 6px 0; }
+ul, ol { margin: 4px 0; padding-left: 20px; }
+li { margin: 2px 0; }
+code { font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+pre { font-size: 0.8em; background: var(--card); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); overflow-x: auto; margin: 8px 0; }
+table { font-size: 0.9em; border-collapse: collapse; width: 100%; margin: 8px 0; }
+th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+th { background: var(--accent); color: #fff; font-weight: 600; }
+tr:nth-child(even) { background: var(--card); }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
+.summary { background: var(--highlight-bg); border-left: 4px solid var(--highlight); border-radius: 4px; padding: 12px 16px; margin: 14px 0; }
+.summary strong { color: var(--highlight); }
+.highlight { background: var(--highlight-bg); border-left: 3px solid var(--highlight); padding: 8px 12px; margin: 8px 0; border-radius: 0 4px 4px 0; }
+.tag { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8em; padding: 1px 8px; border-radius: 10px; font-weight: 500; }
+.keyword { color: var(--accent); font-weight: 600; }
+.warm { background: #fdf6e3; border: 1px solid #eedca5; }
+
+/* ---- Demo iframe containers ---- */
+.demo-frame-wrap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 12px 0; background: var(--bg); }
+.demo-frame-wrap iframe { display: block; width: 100%; border: none; }
+
+/* ---- Table of contents ---- */
+
+  /* layout */
+  .page-layout { display: flex; gap: 30px; margin: 0 auto; padding: 28px 20px; min-height: 100vh; }
+  .sidebar { width: 200px; flex-shrink: 0; align-self: flex-start; position: sticky; top: 28px; max-height: calc(100vh - 56px); overflow-y: auto; }
+  .content { flex: 1; min-width: 0; }
+  .toc-inline { display: none; }
+  @media (max-width: 800px) {
+    .page-layout { flex-direction: column; padding: 16px 12px; }
+    .sidebar { display: none; }
+    .toc-inline { display: block; }
+    ul, ol { padding-left: 16px; }
+  }
+
+  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; }
+  .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
+  .toc > ol { margin: 8px 0 0 22px; list-style: none; counter-reset: toc; padding: 0; }
+  .toc > ol > li { counter-increment: toc; margin: 4px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4a2e; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.92em; }
+  .toc a:hover { text-decoration: underline; color: #1a4a2e; }
+</style>
+</head>
+<body>
+<div class="page-layout">
+  <aside class="sidebar">
+    <div class="toc">
+      <div class="toc-title">目录</div>
+      <ol>
+      <li><a href="#purpose-of-linear-algebra">一、线性代数是为了解决什么问题？</a></li>
+      <li><a href="#geometric-intuition">二、几何直觉：理解线性代数的关键</a></li>
+      <li><a href="#geometry-vs-computation">三、几何直觉 vs 数值计算</a></li>
+      <li><a href="#vectors">四、向量</a></li>
+      <li><a href="#basis-linear-independence">五、基与线性相关</a></li>
+      <li><a href="#matrices-linear-transformations">六、矩阵与线性变换</a></li>
+      <li><a href="#matrix-multiplication-composition">七、矩阵乘法与线性变换复合关系</a></li>
+      <li><a href="#three-dimensions">八、三维空间</a></li>
+      <li><a href="#determinants">九、行列式</a></li>
+      <li><a href="#non-square-matrices">十、非方阵</a></li>
+      <li><a href="#dot-product-duality">十一、点积与对偶性</a></li>
+      <li><a href="#change-of-basis">十二、基变换</a></li>
+      <li><a href="#eigenvectors-eigenvalues">十三、特征向量和特征值</a></li>
+      <li><a href="#abstract-vector-spaces">十四、抽象向量空间</a></li>
+      <li><a href="#resources">十五、推荐资源</a></li>
+      </ol>
+    </div>
+  </aside>
+  <main class="content">
+<h1 style="border:none; margin:4px 0;">📐 线性代数</h1>
+    <div class="toc toc-inline">
+      <div class="toc-title">目录</div>
+      <ol>
+      <li><a href="#purpose-of-linear-algebra">一、线性代数是为了解决什么问题？</a></li>
+      <li><a href="#geometric-intuition">二、几何直觉：理解线性代数的关键</a></li>
+      <li><a href="#geometry-vs-computation">三、几何直觉 vs 数值计算</a></li>
+      <li><a href="#vectors">四、向量</a></li>
+      <li><a href="#basis-linear-independence">五、基与线性相关</a></li>
+      <li><a href="#matrices-linear-transformations">六、矩阵与线性变换</a></li>
+      <li><a href="#matrix-multiplication-composition">七、矩阵乘法与线性变换复合关系</a></li>
+      <li><a href="#three-dimensions">八、三维空间</a></li>
+      <li><a href="#determinants">九、行列式</a></li>
+      <li><a href="#non-square-matrices">十、非方阵</a></li>
+      <li><a href="#dot-product-duality">十一、点积与对偶性</a></li>
+      <li><a href="#change-of-basis">十二、基变换</a></li>
+      <li><a href="#eigenvectors-eigenvalues">十三、特征向量和特征值</a></li>
+      <li><a href="#abstract-vector-spaces">十四、抽象向量空间</a></li>
+      <li><a href="#resources">十五、推荐资源</a></li>
+      </ol>
+    </div>
+<p style="color:var(--accent); margin:2px 0;">MIT 18.06 · 3Blue1Brown 线性代数的本质</p>
+</div>
+
+<p>人类大脑只擅长处理<strong>单变量</strong>问题——一个未知数 x，列一个方程，解一个答案。但真实世界从来不是单变量的：气象预报要处理温度、湿度、气压、风向等千万个变量；跨海大桥要计算几万个钢梁交接点的形变；短视频推荐要考虑用户历史、停留时间、点赞倾向等几百个特征。当变量成百上千时，传统代数方程彻底失效。</p>
+
+<div class="card">
+<p><strong>核心思想：</strong>无论系统里有三个变量还是三百万个变量，线性代数都可以把它们打包成一个简单的方程式：</p>
+<div style="text-align:center; font-size:1.3em; margin:8px 0; font-weight:bold; color:var(--accent);">Ax = b</div>
+<ul>
+  <li><strong>x</strong> — 不再是单一数字，而是包含所有未知数的<strong>状态向量</strong></li>
+  <li><strong>A</strong> — 包含所有相互作用关系的<strong>规则矩阵</strong></li>
+  <li><strong>b</strong> — 已知的结果</li>
+</ul>
+
+<h2 id="geometric-intuition">二、几何直觉：理解线性代数的关键</h2>
+
+<div class="summary">
+<strong>要想真正学懂线性代数，你必须建立几何直觉。</strong> 不要把矩阵看成数字表格，不要把向量看成一列数字。
+</div>
+
+<h3>2.1 向量是什么？</h3>
+<p><span class="keyword">向量</span> = 空间中的一个固定坐标或有向线段。它代表事物在当前空间下的<strong>一个状态</strong>。</p>
+
+<h3>2.2 矩阵是什么？</h3>
+<p><span class="keyword">矩阵</span> = 对空间进行操作的动作。它代表一种<strong>变换规则</strong>。</p>
+
+<div class="card">
+<p><strong>矩阵乘法 Ax 的几何意义：</strong>矩阵 A 对向量 x 施加一种<strong>空间变换</strong>——可能是拉伸、旋转或剪切。</p>
+<p><strong>"线性"的两个死要求：</strong></p>
+<ul>
+  <li>✔ 原点保持固定，不能乱跑</li>
+  <li>✔ 变换后的网格线依然<strong>平行</strong>，且<strong>等距分布</strong></li>
+</ul>
+<p style="margin-top:6px;">→ 空间不能被扭曲成麻花。你可以把变换前的空间也想象成由平行等距的网格线构成。</p>
+</div>
+
+<h3>2.3 矩阵乘法 AB 的意义</h3>
+<div class="highlight">
+<strong>AB</strong> = 先对空间施加 B 变换，再施加 A 变换。不是复杂的数字游戏，而是<strong>变换的复合</strong>。
+</div>
+
+<h3>2.4 秩</h3>
+<p><span class="keyword">秩</span> = 变换后空间保留下来的<strong>真实维度</strong>。</p>
+
+<h3>2.5 常见线性变换一览</h3>
+<table>
+  <tr><th>变换</th><th>矩阵（2D）</th><th>几何效果</th><th>det</th></tr>
+  <tr><td><strong>恒等</strong></td><td><code>[[1,0],[0,1]]</code></td><td>什么都不变</td><td>1</td></tr>
+  <tr><td><strong>缩放</strong></td><td><code>[[k,0],[0,k]]</code></td><td>均匀拉伸/压缩</td><td>k²</td></tr>
+  <tr><td><strong>拉伸</strong></td><td><code>[[a,0],[0,b]]</code></td><td>各轴独立缩放</td><td>a·b</td></tr>
+  <tr><td><strong>旋转</strong></td><td><code>[[cosθ,-sinθ],[sinθ,cosθ]]</code></td><td>绕原点旋转 θ</td><td>1</td></tr>
+  <tr><td><strong>反射</strong></td><td><code>[[1,0],[0,-1]]</code></td><td>沿某轴翻转</td><td>-1</td></tr>
+  <tr><td><strong>剪切</strong></td><td><code>[[1,k],[0,1]]</code></td><td>一面不动，一面平移</td><td>1</td></tr>
+  <tr><td><strong>投影</strong></td><td><code>[[1,0],[0,0]]</code></td><td>压到一条线/一个面</td><td>0</td></tr>
+  <tr><td><strong>零变换</strong></td><td><code>[[0,0],[0,0]]</code></td><td>压到原点</td><td>0</td></tr>
+</table>
+<div class="card warm">
+<p><strong>关键规律：</strong>行列式 (det) 告诉你变换的本质：</p>
+<ul>
+  <li><strong>det = 1</strong> → 保持面积（旋转、剪切、恒等），不放大不缩小</li>
+  <li><strong>det = -1</strong> → 保持面积但翻转了定向（反射）</li>
+  <li><strong>det = 0</strong> → 降维了，信息丢失，其矩阵不可逆（投影、零变换）</li>
+</ul>
+
+<h2 id="geometry-vs-computation">三、几何直觉 vs 数值计算</h2>
+
+<table>
+  <tr><th>角色</th><th>作用</th></tr>
+  <tr><td><span class="keyword">几何直觉</span></td><td>解决"用什么样的工具"的问题——建模</td></tr>
+  <tr><td><span class="keyword">数值计算</span></td><td>负责求解——计算机可以直接代劳</td></tr>
+</table>
+
+<div class="card warm" style="margin-top:12px; text-align:center;">
+  <p style="font-size:0.9em; color:#8a7a3a;">学线性代数，重点在<strong>几何直觉</strong>（理解变换），而非数值计算（计算机替你算）。</p>
+
+<h2 id="vectors">四、向量</h2>
+
+<p>看待向量有两种不同的视角，取决于你是在学数学还是在编程：</p>
+
+<div class="card">
+<h3 style="margin-top:0;">物理视角</h3>
+<p>向量是<span class="keyword">有方向的线段</span>——有大小、有方向。这是学习线性代数时应该使用的几何直觉。</p>
+</div>
+
+<div class="card">
+<h3 style="margin-top:0;">计算机视角</h3>
+<p>向量是<span class="keyword">有序的数字列表</span>——比如 <code>[特征1, 特征2, ..., 特征n]</code>。每个维度代表一个特征，向量的长度就是特征数。在处理计算机问题时（机器学习、数据分析），用这个视角。</p>
+</div>
+
+<h3>4.1 多个向量的可视化</h3>
+<p>单个向量可以画成一个有向线段。但向量数量多了以后，全都画成带箭头的线会非常杂乱——此时用<strong>终点（散点）</strong>来表示每个向量，清晰得多。</p>
+
+<div class="demo-frame-wrap">
+  <iframe src="demos/vector-scatter.html" style="height:560px;" title="多个向量的可视化"></iframe>
+
+<h2 id="basis-linear-independence">五、基与线性相关</h2>
+
+<h3>5.1 线性组合与线性空间</h3>
+<p>取两个向量 v₁, v₂，则它们的<strong>线性组合</strong> <code>a·v₁ + b·v₂</code>（a, b 为任意实数）可以生成的<strong>所有</strong>向量的集合，构成一个<strong>线性空间</strong>。</p>
+
+<h3>5.2 基</h3>
+<p>如果一组向量能通过线性组合生成整个空间，且它们之间<strong>线性无关</strong>（谁也"不能由其他向量生成"），它们就是这个空间的一组<span class="keyword">基</span>。</p>
+
+<p>通俗理解：基就是你在一个空间中能用来"指路"的<strong>最小单位方向</strong>。每个方向都不能被其他方向替代。</p>
+
+<div class="summary">
+<strong>增加一个新向量：</strong>如果它落在已有向量张成的空间中（线性相关），空间不变。如果它指向一个全新的方向（线性无关），空间维度就扩大了。
+</div>
+
+<h3>5.3 二维线性组合交互演示</h3>
+<p>拖动滑块调节两个系数的比例，观察向量 <code>v = a·v₁ + b·v₂</code> 如何变化。</p>
+<div class="demo-frame-wrap">
+  <iframe src="demos/2d-linear-combination.html" style="height:560px;" title="二维线性组合"></iframe>
+</div>
+
+<h3>5.4 三维线性相关性交互演示</h3>
+<p>三维空间中，观察两个向量 v₁, v₂ 张成的平面。第三个向量 w 是"待在平面内"（线性相关），还是"指向新方向"（线性无关）？</p>
+<div class="demo-frame-wrap">
+  <iframe src="demos/3d-linear-independence.html" style="height:510px;" title="三维线性相关性"></iframe>
+
+<h2 id="matrices-linear-transformations">六、矩阵与线性变换</h2>
+
+<div class="summary">
+<strong>不要把矩阵乘法看作是枯燥的"行乘列"公式，而要将其视为发生的几何变换。</strong> 线性变换的关键在于跟踪基向量 <strong>î</strong> 和 <strong>ĵ</strong> 的去向。
+</div>
+
+<h3>6.1 理解线性变换</h3>
+<ul>
+  <li>线性变换是将一个向量变成另外一个向量，类似于函数 <code>y = f(x)</code> 的变换</li>
+  <li>变换后必须满足：网格线依然<strong>平行</strong>，且<strong>等距分布</strong></li>
+  <li>原点不能动</li>
+</ul>
+
+<h3>6.2 关键：跟踪基向量的去向</h3>
+<div class="card">
+<p><strong>只要知道复合变换后基向量最终落在哪里，就能写出最终的矩阵。</strong></p>
+<p>对于任意向量 <strong>v = (x, y)</strong>：</p>
+<div style="text-align:center; font-size:1.15em; margin:8px 0; font-weight:bold; color:var(--accent);">v' = x·î' + y·ĵ'</div>
+<p>假设要计算矩阵 M，只需要计算 <strong>î</strong>, <strong>ĵ</strong> 变化后的终点，分别作为 M 的<strong>第一列和第二列</strong>。</p>
+<p style="margin-top:6px;">例如旋转 90°：</p>
+<ul>
+  <li>î = (1,0) → î' = (0,1) → M 第一列</li>
+  <li>ĵ = (0,1) → ĵ' = (-1,0) → M 第二列</li>
+  <li>矩阵 M = [[0, -1], [1, 0]]</li>
+</ul>
+</div>
+
+<h3>6.3 从矩阵读回变换</h3>
+<p>拿到一个矩阵 <code>M = [[1, k], [0, 1]]</code>，查看 <strong>î'</strong> 和 <strong>ĵ'</strong> 就能知道空间发生了什么——这就是<strong>剪切</strong>（Shear）。拖动滑块观察：变换后的网格依然平行、等距。</p>
+<div class="demo-frame-wrap">
+  <iframe src="demos/shear-matrix.html" style="height:560px;" title="剪切矩阵可视化"></iframe>
+</div>
+
+<h3>6.4 矩阵×向量：列组合视角</h3>
+<p>拖动角度滑块或拖拽向量 v 的顶点，观察基向量的去向如何构成矩阵，以及 M·v = x·î' + y·ĵ' 的计算过程。</p>
+<div class="demo-frame-wrap">
+  <iframe src="demos/matrix-transform.html" style="height:700px;" title="矩阵线性变换"></iframe>
+
+<h2 id="matrix-multiplication-composition">七、矩阵乘法与线性变换复合关系</h2>
+
+<div class="summary">
+<strong>A·B 有两种几何视角：列组合视角（每列分别变换）、变换复合视角（先 B 再 A）。</strong>
+</div>
+
+<h3>7.1 列组合视角</h3>
+<div class="card">
+<p><strong>A·B = [A·b₁  A·b₂  ...  A·bₚ]</strong></p>
+<p>把 B 的每一列看作一个向量，A·B 就是<strong>对每个列向量分别应用变换 A</strong>。</p>
+<p>结果矩阵的第 j 列 = A·bⱼ = (b₁ⱼ)·col₁(A) + (b₂ⱼ)·col₂(A)。这就是"列组合"——用 B 的列元素作为系数，组合 A 的列。</p>
+</div>
+
+<h3>7.2 变换复合视角</h3>
+<div class="card">
+<p><strong>AB</strong> = 先对空间施加 <strong>B</strong> 变换，再施加 <strong>A</strong> 变换。<strong>这是更常见的视角，后续的很多概念也围绕这个思想展开。</strong></p>
+<p>这类似于复合函数 <code>f(g(x))</code>——<strong>从右往左读</strong>：</p>
+<div style="text-align:center; font-size:1.15em; margin:8px 0; font-weight:bold; color:var(--accent);">(A·B)·v = A·(B·v)</div>
+<p>先对 v 做 B 变换，再对结果做 A 变换。</p>
+</div>
+
+<h3>7.3 复合变换交互演示</h3>
+<p>切换 A·B / B·A 两种顺序，用步骤按钮观察每一步的变化。同样的旋转和剪切，顺序不同 → 结果不同 → 直观理解为什么矩阵乘法<strong>不满足交换律</strong>。</p>
+<div class="demo-frame-wrap">
+  <iframe src="demos/composite-transform.html" style="height:580px;" title="复合变换与交换律"></iframe>
+</div>
+
+<h3>7.4 结合律交互演示</h3>
+<p>三个变换按相同顺序（C → B → A）施加到空间，无论怎么加括号，最终结果都相同。因为矩阵乘法对应<strong>函数复合</strong>，而函数复合天然满足结合律。</p>
+
+<div class="card">
+<p><strong>几何视角：</strong></p>
+<ul>
+  <li><strong>(A·B)·C</strong> — 先对向量施加 C 变换，然后将结果施加 (A·B) 变换。而 (A·B) 是"先 B 再 A"的复合，所以整体 = <strong>C → B → A</strong>。</li>
+  <li><strong>A·(B·C)</strong> — 先对向量施加 (B·C) 变换（即"先 C 再 B"），再对结果施加 A 变换。整体 = <strong>C → B → A</strong>。</li>
+</ul>
+<p>两者都表示"先 C、再 B、再 A"的<strong>同一串连续变换</strong>——括号只是标明了先计算哪两个矩阵的乘积，没有改变变换的顺序和内容，所以必然相等：</p>
+<div style="text-align:center; font-size:1.1em; margin:8px 0; font-weight:bold; color:var(--accent);">(A·B)·C = A·(B·C) = 先 C 再 B 再 A</div>
+</div>
+
+<div class="demo-frame-wrap">
+  <iframe src="demos/associative-property.html" style="height:590px;" title="矩阵乘法结合律"></iframe>
+</div>
+
+<h3>7.5 使用复合线性变换的角度推导矩阵乘法的计算方法</h3>
+<div class="card" style="text-align:center;">
+  <p>3Blue1Brown「线性代数的本质」— 矩阵乘法与复合变换（<strong>3:11 – 7:20</strong>）</p>
+  <div class="demo-frame-wrap">
+    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=5&t=191&autoplay=0" style="height:480px;" title="3Blue1Brown 线性代数的本质 - 矩阵乘法" allowfullscreen></iframe>
+  </div>
+
+<h2 id="three-dimensions">八、三维空间</h2>
+
+<p>以上二维空间的变换和几何视角，同样适用于<strong>三维空间</strong>。基向量从 î, ĵ 变为 î, ĵ, <strong>k̂</strong>，矩阵从 2×2 变为 3×3，但核心思想完全一致：</p>
+
+<div class="card">
+<ul>
+  <li>矩阵的每一列 = 变换后的基向量</li>
+  <li>矩阵乘法 = 复合变换</li>
+  <li>行列式 = 体积缩放因子</li>
+  <li>秩 = 变换后空间的维度</li>
+</ul>
+
+<h2 id="determinants">九、行列式</h2>
+
+<div class="summary">
+<strong>行列式描述了一个线性变换对空间拉伸或压缩的尺度。</strong> 对二维来说就是面积缩放因子，对三维来说就是体积缩放因子。
+</div>
+
+<h3>9.1 面积缩放因子</h3>
+<p>在做线性变换时，会对空间进行拉伸或挤压。关键特性：<strong>无论选哪个区域的面积</strong>，其缩放比例都是相同的（均匀缩放）。</p>
+
+<div class="card">
+<p style="margin-bottom:6px;"><strong>具体例子：</strong></p>
+<ul>
+  <li>行列式的值为 <strong>3</strong> → 对应矩阵变换将<strong>任意面积</strong>变成原来的 <strong>3 倍</strong></li>
+  <li>行列式为 <strong>0</strong> → 面积变成 0，说明变换将二维平面压缩成一条线或一个点（<strong>降维</strong>，矩阵不可逆）</li>
+</ul>
+</div>
+
+<h3>9.2 行列式的负值</h3>
+<div class="card">
+<p><strong>负值的含义——空间定向的翻转（Orientation Flip）。</strong></p>
+<p>如果把二维平面看成一张纸，行列式为负相当于变换把纸<strong>翻了一个面</strong>。</p>
+<p>以基向量 î, ĵ 判断：如果变换后 ĵ 相对于 î 的相对左右关系<strong>反了</strong>（原本在左侧，变换后到了右侧），行列式就是负值。</p>
+<p style="margin-top:6px;">行列式的<strong>绝对值</strong>依然表示缩放比例，负号仅代表方向翻转。</p>
+</div>
+
+<h3>9.3 三维空间的行列式</h3>
+<p>三维行列式 = <strong>体积的缩放因子</strong>。负值在三维中代表<strong>手性翻转</strong>（左手系 ↔ 右手系）。</p>
+
+<div class="card">
+<p><strong>关键规律总结：</strong></p>
+<ul>
+  <li><strong>|det| > 1</strong> → 空间被放大</li>
+  <li><strong>|det| = 1</strong> → 面积/体积不变（旋转、剪切）</li>
+  <li><strong>0 < |det| < 1</strong> → 空间被压缩</li>
+  <li><strong>det = 0</strong> → 降维了，信息丢失，矩阵不可逆</li>
+  <li><strong>det < 0</strong> → 空间定向翻转，绝对值仍表示缩放比例</li>
+</ul>
+</div>
+
+<h3>9.4 推荐视频</h3>
+<div class="card" style="text-align:center;">
+  <p>3Blue1Brown「线性代数的本质」— 行列式</p>
+  <div class="demo-frame-wrap">
+    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=6&autoplay=0" style="height:480px;" title="3Blue1Brown 线性代数 - 行列式" allowfullscreen></iframe>
+  </div>
+
+<h2 id="non-square-matrices">十、非方阵</h2>
+
+<p>前面讨论的都是方阵（二维→二维，三维→三维）。非方阵的几何含义是什么？</p>
+
+<h3>10.1 3行2列的矩阵（2D → 3D）</h3>
+<div class="card">
+<ul>
+  <li>矩阵有 <strong>2列</strong>，代表有 <strong>2个基向量</strong>（原始空间是二维）</li>
+  <li>矩阵有 <strong>3行</strong>，表示每个基向量都有 <strong>3个独立坐标</strong>来描述</li>
+  <li>这是 <strong>二维空间到三维空间</strong>的变换</li>
+  <li><strong>举例：</strong>将二维平面上的点 (x, y) 映射到三维空间中的 (ax + by, cx + dy, ex + fy)</li>
+</ul>
+</div>
+
+<h3>10.2 2行3列的矩阵（3D → 2D）</h3>
+<div class="card">
+<ul>
+  <li>矩阵有 <strong>3列</strong>，代表有 <strong>3个基向量</strong>（原始空间是三维）</li>
+  <li>矩阵有 <strong>2行</strong>，表示每个基向量都有 <strong>2个独立坐标</strong>来描述（变换后由2个坐标描述）</li>
+  <li>这是 <strong>三维空间到二维空间</strong>的变换</li>
+  <li><strong>举例：</strong>将三维空间中的点 (x, y, z) 投影到二维平面的 (ax + by + cz, dx + ey + fz)</li>
+</ul>
+</div>
+
+<h3>10.3 理解 A·x 的几何意义（线性变换的导航视角）</h3>
+<div class="card">
+<p><strong>变换前：</strong>向量 x = (x₁, x₂) 是一组<strong>导航指令</strong>——沿着标准基 î 走 x₁ 步，再沿着 ĵ 走 x₂ 步，到达终点。</p>
+<p><strong>变换 A：</strong>将基向量 î, ĵ 移动到新的位置 î', ĵ'（即矩阵 A 的第一列和第二列）。</p>
+<p><strong>变换后：</strong>同样的系数 x₁, x₂ 变成沿着<strong>新基向量</strong> î', ĵ' 导航——x₁ 步沿 î'，x₂ 步沿 ĵ'，到达终点 A·x。</p>
+<div class="highlight" style="margin-top:8px;">
+<strong>核心直觉：</strong>x 的分量没变，变的是它们导航所依赖的<strong>"地图"（基）</strong>。
+</div>
+<p style="margin-top:10px;"><strong>注意：</strong>输出用几个坐标描述（行数），不等于有效维度（秩）。例如 3行2列矩阵的列向量可能只张成一个平面，秩=2 &lt; 行数=3，"空维度"永远到不了。</p>
+</div>
+
+<div class="summary">
+<strong>关键规律：</strong>矩阵的列数 = 原始空间的维度（基向量个数），行数 = 变换后空间的维度（每个基向量的坐标数）。
+
+<h2 id="dot-product-duality">十一、点积与对偶性</h2>
+
+<div class="summary">
+<strong>点积有两种等价的视角：投影几何与线性变换。</strong> 前者直观，后者则揭示了点积与线性代数核心概念的深刻联系——对偶性。
+</div>
+
+<h3>11.1 投影几何视角</h3>
+<div class="card">
+<p style="text-align:center; font-size:1.15em; margin:6px 0; font-weight:bold; color:var(--accent);">
+  <strong>v &middot; w = ||v|| &middot; ||w|| &middot; cos(&theta;)</strong>
+</p>
+<ul>
+  <li>将向量 <strong>v</strong> 垂直投影到向量 <strong>w</strong> 的方向上（或者反过来）</li>
+  <li>将投影得到的长度，乘以 <strong>w</strong> 本身的长度</li>
+</ul>
+</div>
+
+<h3>11.2 线性变换视角（对偶性）</h3>
+<div class="card">
+<p>假设有一个线性变换 f，它把一个高维空间中的向量映射到<strong>一维数轴</strong>上。也就是说，这个变换的输入是一个<strong>向量</strong>，输出是一个普通的<strong>数字（标量）</strong>。</p>
+<ul>
+  <li>线性变换的核心性质：保持空间的网格平行且等距。当一个高维空间被"压扁"到一条一维数轴上时，空间中原本等距的网格线，在一维数轴上依然会映射成等距的点。</li>
+  <li>既然 f 是一个线性变换，我们只需要看它对标准基（î 和 ĵ）做了什么，就能完全确定这个变换。</li>
+</ul>
+</div>
+
+<h3>11.3 关键推导</h3>
+<div class="card">
+<p>假设线性变换 f 把 î 映射到了数轴上的数字 a，把 ĵ 映射到了数字 b。那么，对于任意向量 <strong>v = (x, y)</strong>：</p>
+<div style="text-align:center; font-size:1.05em; margin:8px 0; font-weight:bold; color:var(--accent);">
+  f(v) = x &middot; f(î) + y &middot; f(ĵ) = <strong>ax + by</strong>
+</div>
+<p>细心观察这个结果：<strong>ax + by</strong>。这不就是向量 (a, b) 和向量 (x, y) 的<strong>点积</strong>吗？</p>
+</div>
+
+<div class="highlight">
+<strong>核心洞察：</strong>当你计算两个向量 w &middot; v 的点积时，在几何上，你可以将 w 视为一个<strong>将高维空间压扁到一维的线性变换</strong>。点积的结果，就是向量 v 在这个变换（投影并根据 w 的长度进行缩放）之下的输出值。
+</div>
+
+<h3>11.4 与矩阵的统一</h3>
+<div class="card">
+<p>这个视角把点积的运算也看成了<strong>线性变换</strong>——与前面"矩阵=变换"的主线完全自洽：</p>
+<ul>
+  <li>向量 w 对应的线性变换，其矩阵就是 w 的<strong>转置</strong>（1 &times; n 矩阵）</li>
+  <li>w &middot; v = w<sup>T</sup> &middot; v —— 一个 1 &times; n 的矩阵乘以一个 n &times; 1 的向量（矩阵乘法）</li>
+  <li>所有的数学运算（乘法、求逆、点积）都统一到了<strong>"变换"的几何视角</strong>下</li>
+</ul>
+</div>
+
+<h3>11.5 推荐视频</h3>
+<div class="card" style="text-align:center;">
+  <p>3Blue1Brown「线性代数的本质」— 点积与对偶性</p>
+  <div class="demo-frame-wrap">
+    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=9&autoplay=0" style="height:480px;" title="3Blue1Brown 线性代数 - 点积与对偶性" allowfullscreen></iframe>
+  </div>
+
+<h2 id="change-of-basis">十二、基变换</h2>
+
+<div class="summary">
+<strong>基变换就是用不同的"镜头"（坐标系）来观察同一个几何对象（向量或线性变换）。</strong> 平面上的那个物理点就在那里，一动不动——改变的只是我们描述它的"数字"。
+</div>
+
+<h3>12.1 基与坐标系的多样性</h3>
+<div class="card">
+<p>我们最熟悉的直角坐标系，基向量是 <strong>î</strong> 和 <strong>ĵ</strong>。但这不是唯一的坐标系。</p>
+<p>想象"小明"选了两个倾斜的向量 <strong>b₁, b₂</strong> 作为他的基向量——在他的世界里，这两条线构成了他的"倾斜网格"，他同样认为自己用的是<strong>标准系</strong>。但原点重合。</p>
+<div class="highlight">
+<strong>核心几何事实：</strong>无论你用谁的网格，平面上的那一个物理点（向量）就在那里，一动不动。改变的只是我们描述它的"数字"。
+</div>
+</div>
+
+<h3>12.2 向量基变换：同一向量，不同语言</h3>
+<div class="card">
+<p>在你的标准坐标系里，向量表示为 <strong>(x, y)</strong>。在小明的倾斜坐标系里，它表示为 <strong>(x', y')</strong>。</p>
+<p><strong>问题：怎么把小明说的 (x', y') 翻译成你听得懂的 (x, y)？</strong></p>
+<p>需要问小明："你的基向量 <strong>b₁, b₂</strong> 在我的直角坐标系里长什么样？"</p>
+<ul>
+  <li>b₁ 在你看来是 <strong>(2, 1)</strong></li>
+  <li>b₂ 在你看来是 <strong>(-1, 1)</strong></li>
+</ul>
+<p>那么，小明眼中的 (x', y')（即 x'·b₁ + y'·b₂），在你眼里就是：</p>
+<div style="text-align:center; font-size:1.05em; margin:8px 0; font-weight:bold; color:var(--accent);">
+  x'·(2,1) + y'·(-1,1) = <strong>P · (x', y')</strong>
+</div>
+<p>其中 <span class="keyword">过渡矩阵</span> <strong>P = [b₁, b₂]</strong>，每一列就是新基在旧基下的坐标。</p>
+</div>
+
+<div class="summary">
+<strong>几何意义：</strong>矩阵 P 就像一个"向导"，把小明网格上的坐标，拉伸旋转，映射回你的标准直角网格上。反向翻译只需要求逆矩阵 <strong>P⁻¹</strong>。
+</div>
+
+<h3>12.3 核心变换关系</h3>
+<div class="card">
+<table>
+  <tr><th>场景</th><th>操作</th><th>数学表达</th></tr>
+  <tr>
+    <td>小明坐标 → 你的坐标</td>
+    <td>左乘过渡矩阵 P</td>
+    <td><strong>v<sub>你</sub> = P · v<sub>小明</sub></strong></td>
+  </tr>
+  <tr>
+    <td>你的坐标 → 小明坐标</td>
+    <td>左乘逆矩阵 P⁻¹</td>
+    <td><strong>v<sub>小明</sub> = P⁻¹ · v<sub>你</sub></strong></td>
+  </tr>
+</table>
+<div class="highlight" style="margin-top:8px;">
+<strong>关键洞察：</strong>向量的分量没变，变的是导航所依赖的"地图"（基）。这与非方阵部分提到的"导航视角"完全一致——变换矩阵的每一列就是新基在旧基下的坐标。
+</div>
+</div>
+
+<h3>12.4 线性变换的基变换：相似矩阵</h3>
+
+<div class="summary">
+<strong>同一线性变换，在不同基下对应不同的矩阵。</strong> 之前讨论的是"同一个向量在不同基下有不同的坐标"——现在更进一步：对于同一个<strong>几何动作</strong>（比如旋转90°），在不同坐标系中描述它的矩阵是不同的。
+</div>
+
+<div class="card">
+<p><strong>场景：</strong>在你的标准坐标系中，变换 A = [[0, -1], [1, 0]] 代表<strong>逆时针旋转 90°</strong>。小明想在自己倾斜的坐标系中也实现同样的旋转动作——他应该用什么矩阵？</p>
+<p>小明手上的向量 <strong>v<sub>小明</sub></strong> 在他的坐标系中描述。要想在你的世界里完成变换，他需要：</p>
+<ol>
+  <li><strong>翻译进来：</strong>v<sub>你</sub> = P · v<sub>小明</sub>（把小明坐标转为你的坐标）</li>
+  <li><strong>执行变换：</strong>A · v<sub>你</sub>（用你的变换矩阵做旋转）</li>
+  <li><strong>翻译回去：</strong>v<sub>小明</sub>' = P⁻¹ · (A · v<sub>你</sub>)（把结果转回小明的语言）</li>
+</ol>
+<div style="text-align:center; font-size:1.15em; margin:10px 0; font-weight:bold; color:var(--accent);">
+  v<sub>小明</sub>' = <strong>(P⁻¹ · A · P)</strong> · v<sub>小明</sub>
+</div>
+<p>所以小明用来描述"旋转90°"这个几何动作的矩阵是：<strong>M<sub>小明</sub> = P⁻¹ · A · P</strong>。</p>
+</div>
+
+<div class="highlight">
+<strong>核心公式：</strong>若 P 是过渡矩阵（新基在旧基下的坐标），则变换 A 在新基下的矩阵为 <strong>P⁻¹ · A · P</strong>。这就是<strong>相似变换 (Similarity Transformation)</strong>。
+</div>
+
+<h3>12.5 具体例子：用数字走一遍</h3>
+<div class="card">
+<p>沿用之前的设定：</p>
+<ul>
+  <li>过渡矩阵 <strong>P = [[2, -1], [1, 1]]</strong>（小明的基 b₁, b₂ 在你的坐标下的坐标）</li>
+  <li>你的变换 <strong>A = [[0, -1], [1, 0]]</strong>（逆时针旋转 90°）</li>
+  <li>小明有一个向量 <strong>v<sub>小明</sub> = (1, 0)</strong>（在他的世界里就是沿着 b₁ 方向走 1 步）</li>
+</ul>
+
+<table>
+  <tr><th>步骤</th><th>操作</th><th>矩阵 / 向量</th><th>结果</th><th>几何含义</th></tr>
+  <tr>
+    <td><strong>① 翻译</strong></td>
+    <td>P · v<sub>小明</sub></td>
+    <td><code>[[2,-1],[1,1]]·(1,0)</code></td>
+    <td><strong>(2, 1)</strong></td>
+    <td>小明说的 b₁ 方向，在你眼里是 (2, 1)——<strong>P 的第一列</strong></td>
+  </tr>
+  <tr>
+    <td><strong>② 旋转</strong></td>
+    <td>A · v<sub>你</sub></td>
+    <td><code>[[0,-1],[1,0]]·(2,1)</code></td>
+    <td><strong>(-1, 2)</strong></td>
+    <td>在你的坐标系中完成逆时针 90° 旋转</td>
+  </tr>
+  <tr>
+    <td><strong>③ 翻译回</strong></td>
+    <td>P⁻¹ · (-1, 2)</td>
+    <td><code>[[1/3,1/3],[-1/3,2/3]]·(-1,2)</code></td>
+    <td><strong>(1/3, 5/3)</strong></td>
+    <td>把旋转后的结果告诉小明——用他的语言描述</td>
+  </tr>
+</table>
+
+<div style="margin-top:10px;">
+<p><strong>验证：</strong>直接用小明的矩阵 M<sub>小明</sub> = P⁻¹AP 计算：</p>
+<div style="text-align:center; font-size:1em; margin:6px 0;">
+  M<sub>小明</sub> = P⁻¹ · A · P = <strong>[[1/3, -2/3], [5/3, -1/3]]</strong>
+</div>
+<p>M<sub>小明</sub> · v<sub>小明</sub> = (1/3, 5/3) ✓ 结果与三步法一致。</p>
+</div>
+</div>
+
+<h3>12.6 三大操作的矩阵一览</h3>
+<div class="card">
+<table>
+  <tr><th>操作</th><th>矩阵</th><th>几何含义</th></tr>
+  <tr>
+    <td><strong>过渡矩阵 P</strong></td>
+    <td><code>[[b₁, b₂]]</code></td>
+    <td>新基在旧基下的坐标。把"新语言"翻译成"旧语言"。</td>
+  </tr>
+  <tr>
+    <td><strong>逆矩阵 P⁻¹</strong></td>
+    <td><code>[[b₁, b₂]]⁻¹</code></td>
+    <td>把"旧语言"翻译回"新语言"。</td>
+  </tr>
+  <tr>
+    <td><strong>相似矩阵 P⁻¹AP</strong></td>
+    <td><code>P⁻¹ · A · P</code></td>
+    <td>同一个线性变换 A 在新基下的矩阵表示。</td>
+  </tr>
+</table>
+<div class="highlight" style="margin-top:10px;">
+<strong>关键理解：</strong>不是换了基向量后变换本身变了——<strong>变换（几何动作）始终是同一个</strong>（旋转 90°），只是在不同的坐标系中，描述这个动作的"数字"（矩阵）不同了。这就是"相似矩阵"的几何本质。
+</div>
+</div>
+
+<h3>12.7 总结与思考</h3>
+<div class="card">
+<ul>
+  <li><strong>同一个向量</strong>，在不同的基下有不同的坐标表示</li>
+  <li><strong>过渡矩阵 P</strong> 的列 = 新基在旧基下的坐标</li>
+  <li><strong>基变换 = 换语言</strong>，对象本身没变</li>
+  <li><strong>逆矩阵 P⁻¹</strong> 做反向翻译</li>
+</ul>
+</div>
+
+<h3>12.8 推荐视频</h3>
+<div class="card" style="text-align:center;">
+  <p>3Blue1Brown「线性代数的本质」— 基变换</p>
+  <div class="demo-frame-wrap">
+    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=10&autoplay=0" style="height:480px;" title="3Blue1Brown 线性代数 - 基变换" allowfullscreen></iframe>
+  </div>
+</div>
+
+<div class="card warm">
+<p><strong>思考题：</strong></p>
+<ul>
+  <li>如果小明想在他的坐标系中做"A 后再做 B"两个连续变换，对应的矩阵应该是什么？</li>
+  <li>相似对角化要找一个特殊的基，让变换矩阵变成对角矩阵——这个"特殊基"有什么几何意义？（见 <a href="#eigenvectors-eigenvalues">十三、特征向量和特征值</a>）</li>
+</ul>
+
+<h2 id="eigenvectors-eigenvalues">十三、特征向量和特征值</h2>
+
+<div class="summary">
+<strong>特征向量就是在矩阵变换后方向保持完全不变（或者恰好完全相反）的那些特殊向量。</strong> 特征值则描述了这些向量在变换中被拉伸或压缩的比例。
+</div>
+
+<div class="card">
+<h3>13.1 直觉：为什么会有"方向不变"的向量？</h3>
+<p>想象你桌上有一块印有网格的正方形橡皮桌布。现在你把双手放在它的左右两侧，用力往外水平拉伸它，使它的宽度变成原来的 2 倍，但垂直方向保持不变。</p>
+<ul>
+  <li><strong>水平方向的向量：</strong>它们的长度变成了原来的 2 倍，但方向完全没变。所以，所有水平方向的向量都是这个变换的<strong>特征向量</strong>，对应的<strong>特征值是 2</strong>。</li>
+  <li><strong>垂直方向的向量：</strong>它们的长度没变（缩放倍数是 1），方向也没变。所以，垂直方向的向量也是<strong>特征向量</strong>，对应的<strong>特征值是 1</strong>。</li>
+  <li><strong>斜对角方向的向量：</strong>在拉伸后，它们不仅变长了，角度也向水平方向倾斜了（方向改变了）。因此，斜对角方向的向量<strong>不是</strong>这个变换的特征向量。</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>13.2 核心公式</h3>
+<div style="text-align:center; font-size:1.2em; margin:8px 0; font-weight:bold; color:var(--accent);">
+  A<strong>v</strong> = &lambda;<strong>v</strong>
+</div>
+<ul>
+  <li><strong>A</strong>：线性变换（矩阵）</li>
+  <li><strong>v</strong>：特征向量（<strong>方向不变</strong>）</li>
+  <li><strong>&lambda;</strong>（lambda）：特征值（<strong>缩放倍数</strong>）</li>
+</ul>
+<p>在线性变换的过程中，绝大部分的向量都会改变长度和方向。然而，在整个空间被扭曲的过程中，总有一些特殊的向量非常固执——矩阵 <strong>A</strong> 乘以它们，仅仅是把它们拉长或缩短了 <strong>&lambda;</strong> 倍，方向纹丝不动。</p>
+</div>
+
+<div class="highlight">
+<strong>关键理解：</strong>特征向量告诉你变换的"主轴"在哪里，特征值告诉你沿着这些主轴的缩放力度。
+</div>
+
+<h3>13.3 并非所有变换都有特征向量</h3>
+<div class="card">
+<p>二维线性变换<strong>不一定</strong>有特征向量。</p>
+<p><strong>例子：旋转 90°</strong> —— 每个向量的长度虽然没变，但是<strong>方向都变了</strong>。没有任何一个向量能保持方向不变（或完全相反）。所以旋转 90° 的变换在实数域没有特征向量。</p>
+</div>
+
+<h3>13.4 特征基：当基向量恰好是特征向量</h3>
+<div class="card">
+<p>如果一个矩阵的所有基向量恰好都是特征向量，那么它的矩阵形式就是<strong>对角矩阵</strong>：</p>
+<div style="text-align:center; font-size:1.1em; margin:8px 0; color:var(--accent);">
+  <strong>D = [[&lambda;₁, 0], [0, &lambda;₂]]</strong>
+</div>
+<ul>
+  <li>对角线上的元素 <strong>&lambda;₁, &lambda;₂</strong> 就是对应的特征值</li>
+  <li>非对角线元素全是 0，意味着各轴之间<strong>没有耦合</strong>——每个轴独立缩放</li>
+  <li>对角矩阵的运算（乘法、幂、求逆）极其简单——只是对每个特征值分别操作</li>
+</ul>
+</div>
+
+<h3>13.5 特征基的力量：对角化</h3>
+<div class="card">
+<p>假设某个变换的特征向量足够多，使得它们的线性组合能<strong>张成整个空间</strong>（比如二维平面），那么就可以用这些特征向量作为<strong>新的基</strong>——即<strong>特征基</strong>。</p>
+<div style="text-align:center; font-size:1.1em; margin:10px 0; font-weight:bold; color:var(--accent);">
+  A = P · D · P<sup>-1</sup>
+</div>
+<ul>
+  <li><strong>P</strong>：特征向量作为列组成的过渡矩阵</li>
+  <li><strong>D</strong>：特征值组成的对角矩阵</li>
+  <li><strong>P<sup>-1</sup></strong>：把结果翻译回标准坐标系</li>
+</ul>
+<p><strong>为什么这是强大的？</strong>在标准坐标系中，很多操作（比如计算 A<sup>100</sup>）可能非常复杂。但如果把坐标系切换到特征基，变换变成了对角矩阵 D——幂次运算就只是对每个特征值分别求幂：</p>
+<div style="text-align:center; font-size:1.1em; margin:8px 0; color:var(--accent);">
+  A<sup>100</sup> = P · D<sup>100</sup> · P<sup>-1</sup>
+</div>
+<p>这与基变换章节中"标准系做操作 → 转去新坐标系运算 → 转回来"的思想完全一致。</p>
+</div>
+
+<div class="summary">
+<strong>总结：</strong>特征向量找到了变换中"方向不变"的骨架，特征基把复杂运算化简为对角矩阵上的独立运算。这就是<strong>相似对角化</strong>的几何本质——"转到对的坐标系，问题自然变简单"。
+</div>
+
+<h3>13.6 推荐视频</h3>
+<div class="card" style="text-align:center;">
+  <p>3Blue1Brown「线性代数的本质」— 特征向量与特征值</p>
+  <div class="demo-frame-wrap">
+    <iframe src="https://player.bilibili.com/player.html?bvid=BV1ib411t7YR&p=11&autoplay=0" style="height:480px;" title="3Blue1Brown 线性代数 - 特征向量与特征值" allowfullscreen></iframe>
+  </div>
+
+<h2 id="abstract-vector-spaces">十四、抽象向量空间</h2>
+
+<div class="summary">
+<strong>抽象向量空间将"向量"的概念从几何箭头推广到了更广泛的数学对象上。</strong> 只要一个集合里的元素满足加法和数乘的规则，它们就可以被称为"向量"——无论它们长得像箭头、函数、矩阵、还是多项式。
+</div>
+
+<h3>14.1 到底什么是向量？</h3>
+<div class="card">
+<ul>
+  <li><strong>几何视角：</strong>平面（或高维空间）中的一组箭头？但 4 维以上难以想象。</li>
+  <li><strong>数值视角：</strong>实数组（坐标对）？高维可以用数字理解。</li>
+  <li><strong>抽象视角：</strong>在线性代数中，抽象向量空间是将熟悉的二维平面、三维空间中的"几何向量"概念，<strong>推广到更广泛、更普遍的对象</strong>上的一种数学结构。</li>
+</ul>
+</div>
+
+<h3>14.2 向量空间的公理</h3>
+<div class="card">
+<p>只要一个集合里的元素满足两套规则，它就是一个<strong>向量空间</strong>，里面的元素就都可以被称为"向量"：</p>
+
+<p style="margin-top:10px;"><strong>① 加法封闭性</strong></p>
+<p>任意两个元素相加，结果仍在集合内。加法满足交换律、结合律，存在零元素和相反元素。</p>
+
+<p><strong>② 数乘封闭性</strong></p>
+<p>任意元素乘以一个实数（标量），结果仍在集合内。数乘满足分配律和结合律。</p>
+
+<div class="highlight" style="margin-top:8px;">
+<strong>关键洞察：</strong>这些规则只涉及"加法"和"缩放"——与元素的具体形状无关。只要满足这两条，函数、矩阵、多项式、信号……都可以被视为"向量"。
+</div>
+</div>
+
+<h3>14.3 为什么需要抽象？</h3>
+<div class="card">
+<p>数学家发现 <strong>很多不同类型的东西</strong>——比如函数、矩阵、多项式、甚至信号——它们的"加法"和"缩放"操作，和普通的几何向量惊人地相似。例如：</p>
+<ul>
+  <li><strong>函数可以相加</strong>：f + g 定义为一个新函数 (f+g)(x) = f(x) + g(x)</li>
+  <li><strong>函数可以缩放</strong>：a·f 定义为一个新函数 (a·f)(x) = a·f(x)</li>
+  <li>矩阵和多项式同样有类似的加法和数乘规则</li>
+</ul>
+<p>为了不用对每种东西都单独写一套理论，数学家把这些对象的<strong>共同特征提取出来</strong>，建立了一个统一的"游戏规则"。</p>
+</div>
+
+<div class="summary">
+<strong>意义：</strong>抽象向量空间让你可以用线性代数的工具去处理任何满足"加法 + 缩放"规则的数学对象——从解微分方程到信号处理，从量子力学到机器学习，这套框架无处不在。
+
+<h2 id="resources">十五、推荐资源</h2>
+<ul>
+  <li><a href="https://www.zhihu.com/question/358244660/answer/2016914765264462940" target="_blank">知乎：线性代数到底是为了解决什么问题被发明的？</a></li>
+  <li>MIT 18.06 线性代数课程</li>
+  <li>3Blue1Brown B站「线性代数的本质」视频系列</li>
+</ul>
+  </main>
+</div>
+
+</html>

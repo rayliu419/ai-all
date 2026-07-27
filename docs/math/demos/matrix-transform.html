@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>矩阵的线性变换可视化</title>
+<style>
+:root {
+  --bg: #f5faf6;
+  --border: #c3dbcc;
+  --text: #2d3a31;
+  --accent: #3a7a4d;
+  --red: #d12;
+  --green: #1b8a1b;
+  --blue: #3a6b9f;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 14px 16px;
+  max-width: 750px;
+  margin: 0 auto;
+}
+h3 { font-size: 1.02em; color: var(--accent); margin-bottom: 2px; }
+p.desc { font-size: 0.88em; color: #555; margin-bottom: 6px; }
+
+.legend { display: flex; gap: 14px; font-size: 0.85em; margin-bottom: 8px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 3px; }
+.dot { width: 14px; height: 3px; border-radius: 1px; display: inline-block; }
+
+.row { display: flex; gap: 14px; flex-wrap: wrap; }
+.col-canvas { text-align: center; }
+canvas { border: 1px solid var(--border); border-radius: 4px; background: #fff; max-width: 100%; }
+
+/* ---- Right panel ---- */
+.col-panel { flex: 1; min-width: 210px; max-width: 260px; }
+.panel { background: #e8f5ec; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; }
+.panel h4 { font-size: 0.9em; color: var(--accent); margin-bottom: 4px; }
+
+/* Matrix display */
+.matrix-wrap { display: flex; align-items: center; justify-content: center; gap: 3px; padding: 2px 0; }
+.matrix-bracket { font-size: 2.8em; font-weight: 100; color: #555; line-height: 0.85; font-family: serif; }
+.matrix-grid { display: grid; grid-template-rows: auto auto; gap: 2px; }
+.mg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mg-col-label { font-size: 0.75em; font-weight: 700; text-align: center; }
+.mg-val { font-family: 'SF Mono', 'Cascadia Code', monospace; font-size: 0.92em; text-align: center; }
+.mg-note { font-size: 0.78em; color: #888; text-align: center; margin-top: 2px; }
+
+/* Basis tracking */
+.crd { font-family: 'SF Mono', 'Cascadia Code', monospace; font-size: 0.88em; margin: 1px 0; }
+.small-note { font-size: 0.8em; color: #888; margin-top: 4px; }
+
+/* ---- Controls ---- */
+.controls { display: flex; align-items: center; gap: 10px; margin: 8px 0; flex-wrap: wrap; }
+.controls label { font-size: 0.88em; }
+.controls input[type="range"] { flex: 1; min-width: 80px; }
+.btn-group { display: flex; gap: 3px; }
+.btn-group button {
+  padding: 4px 9px; border: 1px solid var(--border); background: #fff;
+  color: var(--text); cursor: pointer; font-size: 0.82em; border-radius: 3px;
+}
+.btn-group button.active { background: var(--accent); color: #fff; }
+
+/* ---- Step-by-step computation ---- */
+.comp-section { margin-top: 10px; }
+.comp-section h4 { font-size: 0.92em; color: var(--accent); margin-bottom: 4px; }
+.comp-box { background: #fff; border: 1px solid var(--border); border-radius: 5px; padding: 10px 14px; }
+.comp { font-family: 'SF Mono', 'Cascadia Code', monospace; font-size: 0.88em; line-height: 1.6; }
+.comp .lbl { font-family: -apple-system, sans-serif; font-size: 0.85em; color: #666; margin-right: 6px; }
+
+/* Matrix block visual */
+.mv-row { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; margin: 3px 0; }
+.mv-row .lbl { font-family: -apple-system, sans-serif; font-size: 0.85em; color: #666; margin-right: 4px; }
+.mv-op { font-size: 1.15em; color: #555; margin: 0 1px; }
+.mblk { display: inline-flex; align-items: center; vertical-align: middle; }
+.mblk .mb { font-size: 2em; font-weight: 100; color: #555; line-height: 0.8; font-family: serif; user-select: none; }
+.mblk .mg { display: inline-grid; text-align: center; font-family: 'SF Mono', 'Cascadia Code', monospace; font-size: 0.95em; }
+.mblk .mg.c2 { grid-template-columns: 1fr 1fr; gap: 1px 10px; }
+.mblk .mg.c1 { grid-template-columns: 1fr; gap: 1px; }
+.c-red { color: var(--red); font-weight: 600; }
+.c-green { color: var(--green); font-weight: 600; }
+.c-blue { color: var(--blue); font-weight: 600; }
+.c-gray { color: #888; }
+</style>
+</head>
+<body>
+<h3>矩阵 = 线性变换：跟踪基向量形成矩阵</h3>
+<p class="desc">旋转二维空间，观察基向量 <strong>î</strong>, <strong>ĵ</strong> 变换后的去向，它们就是矩阵的<strong>列</strong>。</p>
+
+<div class="legend">
+  <span class="legend-item"><span class="dot" style="background:var(--red)"></span> î = (1,0)</span>
+  <span class="legend-item"><span class="dot" style="background:var(--green)"></span> ĵ = (0,1)</span>
+  <span class="legend-item"><span class="dot" style="background:var(--blue)"></span> v（可拖拽顶点）</span>
+  <span class="legend-item"><span class="dot" style="background:#bbb"></span> 变换前（淡色参考）</span>
+</div>
+
+<div class="row">
+  <div class="col-canvas">
+    <canvas id="matrixCanvas" width="380" height="380"></canvas>
+  </div>
+  <div class="col-panel">
+    <!-- Basis tracking FIRST -->
+    <div class="panel">
+      <h4>基向量追踪</h4>
+      <div class="crd" style="color:var(--red)">î (<span id="iCoord">1</span>,<span id="iCoordY">0</span>) → î' (<span id="iPX">0.00</span>, <span id="iPY">1.00</span>)</div>
+      <div class="crd" style="color:var(--green)">ĵ (<span id="jCoord">0</span>,<span id="jCoordY">1</span>) → ĵ' (<span id="jPX">-1.00</span>, <span id="jPY">0.00</span>)</div>
+    </div>
+    <!-- Matrix SECOND — columns = tracked basis vectors -->
+    <div class="panel">
+      <h4>变换矩阵 M</h4>
+      <div class="matrix-wrap">
+        <div class="matrix-bracket">[</div>
+        <div class="matrix-grid" id="matrixGrid">
+          <div class="mg-row">
+            <div class="mg-col-label" style="color:var(--red)">î'</div>
+            <div class="mg-col-label" style="color:var(--green)">ĵ'</div>
+          </div>
+          <div class="mg-row">
+            <div class="mg-val" id="m00">0.00</div>
+            <div class="mg-val" id="m01">-1.00</div>
+          </div>
+          <div class="mg-row">
+            <div class="mg-val" id="m10">1.00</div>
+            <div class="mg-val" id="m11">0.00</div>
+          </div>
+        </div>
+        <div class="matrix-bracket">]</div>
+      </div>
+      <div class="mg-note">← 第1列是 î'&ensp;← 第2列是 ĵ'</div>
+    </div>
+    <!-- Vector -->
+    <div class="panel">
+      <h4>向量坐标</h4>
+      <div class="crd" style="color:var(--blue)">v&ensp;= (<span id="v0">2.0</span>, <span id="v1">1.0</span>)</div>
+      <div class="crd" style="color:var(--blue)">v' = (<span id="vPX">-1.00</span>, <span id="vPY">2.00</span>)</div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <label>旋转</label>
+  <input type="range" id="angleSlider" min="0" max="360" step="1" value="90">
+  <span id="angleVal" style="font-family:monospace;font-size:0.9em;min-width:32px;">90°</span>
+  <div class="btn-group">
+    <button data-angle="0">0°</button>
+    <button data-angle="45">45°</button>
+    <button data-angle="90" class="active">90°</button>
+    <button data-angle="180">180°</button>
+    <button data-angle="-90">-90°</button>
+  </div>
+</div>
+
+<div class="comp-section">
+  <h4>变换过程详解  M·v = x·î' + y·ĵ' （列组合，不用背公式）</h4>
+  <div class="comp-box">
+    <div class="comp" id="compStep1">
+      <span class="lbl">① 原始向量</span> v = <span class="c-blue">2.00</span>·î + <span class="c-blue">1.00</span>·ĵ = <span class="c-blue">(2.00, 1.00)</span>
+    </div>
+    <div class="mv-row" id="compEqLine">
+      <span class="lbl">② 列组合计算</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('matrixCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const MARGIN = 30;
+  const RANGE = 5;
+  const sx = (W - 2 * MARGIN) / (2 * RANGE), sy = (H - 2 * MARGIN) / (2 * RANGE);
+  const [ox, oy] = [(W / 2), (H / 2)]; // origin in canvas coords
+
+  function toCanvas(wx, wy) {
+    return [MARGIN + (wx + RANGE) * sx, MARGIN + (RANGE - wy) * sy];
+  }
+  function degToRad(d) { return d * Math.PI / 180; }
+  function fmt(v) { return parseFloat(v.toFixed(2)).toString(); }
+
+  function drawArrow(x1, y1, x2, y2, color, lw, alpha) {
+    const [cx1, cy1] = toCanvas(x1, y1);
+    const [cx2, cy2] = toCanvas(x2, y2);
+    const dx = cx2 - cx1, dy = cy2 - cy1;
+    const len = Math.hypot(dx, dy);
+    if (len < 2) return;
+    ctx.save();
+    ctx.globalAlpha = alpha || 1;
+    ctx.strokeStyle = color; ctx.fillStyle = color;
+    ctx.lineWidth = lw || 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx1, cy1); ctx.lineTo(cx2, cy2); ctx.stroke();
+    const angle = Math.atan2(dy, dx);
+    const hl = Math.min(10, len * 0.25);
+    ctx.beginPath();
+    ctx.moveTo(cx2, cy2);
+    ctx.lineTo(cx2 - hl * Math.cos(angle - 0.35), cy2 - hl * Math.sin(angle - 0.35));
+    ctx.lineTo(cx2 - hl * Math.cos(angle + 0.35), cy2 - hl * Math.sin(angle + 0.35));
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawDashed(x1, y1, x2, y2, color, lw, alpha) {
+    const [cx1, cy1] = toCanvas(x1, y1);
+    const [cx2, cy2] = toCanvas(x2, y2);
+    const len = Math.hypot(cx2 - cx1, cy2 - cy1);
+    if (len < 1) return;
+    ctx.save();
+    ctx.globalAlpha = alpha || 0.5;
+    ctx.strokeStyle = color; ctx.lineWidth = lw || 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(cx1, cy1); ctx.lineTo(cx2, cy2); ctx.stroke();
+    ctx.restore();
+  }
+
+  let vx = 2, vy = 1;
+  let angle = 90;
+
+  function applyRotation(x, y, deg) {
+    const t = degToRad(deg);
+    const c = Math.cos(t), s = Math.sin(t);
+    return [c * x - s * y, s * x + c * y];
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, W, H);
+    const [cx0, cy0] = toCanvas(0, 0);
+
+    // Grid
+    ctx.strokeStyle = '#e0e8e2'; ctx.lineWidth = 0.5;
+    for (let i = -RANGE; i <= RANGE; i++) {
+      if (i === 0) continue;
+      let [x1, y1] = toCanvas(i, -RANGE), [x2, y2] = toCanvas(i, RANGE);
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      [x1, y1] = toCanvas(-RANGE, i); [x2, y2] = toCanvas(RANGE, i);
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#b0b8b2'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(MARGIN, cy0); ctx.lineTo(W - MARGIN, cy0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx0, MARGIN); ctx.lineTo(cx0, H - MARGIN); ctx.stroke();
+    ctx.fillStyle = '#888'; ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (let i = -RANGE + 1; i < RANGE; i++) {
+      if (i === 0) continue;
+      const [px, py] = toCanvas(i, 0); ctx.fillText(i, px, py + 3);
+      const [px2, py2] = toCanvas(0, i); ctx.fillText(i, px2 + 4, py2);
+    }
+
+    // Transformed
+    const [i1x, i1y] = applyRotation(1, 0, angle);
+    const [j1x, j1y] = applyRotation(0, 1, angle);
+    const [v1x, v1y] = applyRotation(vx, vy, angle);
+
+    // --- Component decomposition on canvas ---
+    // Show v' = x·î' + y·ĵ' as a parallelogram
+    if (vx !== 0 && vy !== 0) {
+      const scix = vx * i1x, sciy = vx * i1y;  // x·î'
+      const scjx = vy * j1x, scjy = vy * j1y;  // y·ĵ'
+      drawDashed(0, 0, scix, sciy, '#d12', 1.5, 0.35);
+      drawDashed(scix, sciy, v1x, v1y, '#1b8a1b', 1.5, 0.35);
+      drawDashed(0, 0, scjx, scjy, '#1b8a1b', 1.5, 0.35);
+      drawDashed(scjx, scjy, v1x, v1y, '#d12', 1.5, 0.35);
+    }
+
+    // Faded originals
+    drawArrow(0, 0, 1, 0, '#d12', 1.5, 0.2);
+    drawArrow(0, 0, 0, 1, '#1b8a1b', 1.5, 0.2);
+    drawArrow(0, 0, vx, vy, '#3a6b9f', 1.5, 0.15);
+
+    // Rotation arc
+    if (angle > 0 && angle < 360) {
+      const arcR = 0.5;
+      const theta = degToRad(angle);
+      ctx.save(); ctx.globalAlpha = 0.25;
+      ctx.strokeStyle = '#888'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let t = 0; t <= Math.min(theta, Math.PI * 2); t += 0.03) {
+        const [px, py] = toCanvas(arcR * Math.cos(t), arcR * Math.sin(t));
+        if (t === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke(); ctx.restore();
+      const mid = theta / 2;
+      const [lx, ly] = toCanvas((arcR + 0.2) * Math.cos(mid), (arcR + 0.2) * Math.sin(mid));
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.font = '9px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(angle + '°', lx, ly);
+    }
+
+    // Transformed vectors (bold)
+    drawArrow(0, 0, i1x, i1y, '#d12', 3.5);
+    drawArrow(0, 0, j1x, j1y, '#1b8a1b', 3.5);
+    drawArrow(0, 0, v1x, v1y, '#3a6b9f', 3.5);
+
+    // Origin dot
+    ctx.beginPath(); ctx.arc(cx0, cy0, 3, 0, Math.PI * 2); ctx.fillStyle = '#333'; ctx.fill();
+
+    // Labels on canvas
+    ctx.save(); ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const [ix, iy] = toCanvas(i1x, i1y);
+    ctx.fillStyle = '#d12'; ctx.fillText("î'", ix + 14, iy);
+    const [jx, jy] = toCanvas(j1x, j1y);
+    ctx.fillStyle = '#1b8a1b'; ctx.fillText("ĵ'", jx + 14, jy);
+    const [vpx, vpy] = toCanvas(v1x, v1y);
+    ctx.fillStyle = '#3a6b9f'; ctx.fillText("v'", vpx + 14, vpy);
+    // Label for component: "x·î'" and "y·ĵ'"
+    if (vx !== 0) {
+      const [six, siy] = toCanvas(vx * i1x, vx * i1y);
+      ctx.fillStyle = 'rgba(200,30,20,0.4)'; ctx.font = '10px sans-serif';
+      ctx.fillText('x·î\'', six - 10, siy - 8);
+    }
+    ctx.restore();
+
+    // === Update panel ===
+    const theta = degToRad(angle);
+    const c = Math.cos(theta), s = Math.sin(theta);
+    document.getElementById('m00').textContent = fmt(c);
+    document.getElementById('m01').textContent = fmt(-s);
+    document.getElementById('m10').textContent = fmt(s);
+    document.getElementById('m11').textContent = fmt(c);
+    document.getElementById('iPX').textContent = fmt(i1x);
+    document.getElementById('iPY').textContent = fmt(i1y);
+    document.getElementById('jPX').textContent = fmt(j1x);
+    document.getElementById('jPY').textContent = fmt(j1y);
+    document.getElementById('v0').textContent = fmt(vx);
+    document.getElementById('v1').textContent = fmt(vy);
+    document.getElementById('vPX').textContent = fmt(v1x);
+    document.getElementById('vPY').textContent = fmt(v1y);
+
+    // === Matrix block helpers (use global fmt) ===
+    function m2(a, b, c2, d) {
+      return '<span class="mblk"><span class="mb">[</span><span class="mg c2"><span>' + fmt(a) + '</span><span>' + fmt(b) + '</span><span>' + fmt(c2) + '</span><span>' + fmt(d) + '</span></span><span class="mb">]</span></span>';
+    }
+    function m1(a, b, clr) {
+      const st = clr ? ' style="color:' + clr + ';font-weight:600"' : '';
+      return '<span class="mblk"><span class="mb">[</span><span class="mg c1"><span' + st + '>' + fmt(a) + '</span><span' + st + '>' + fmt(b) + '</span></span><span class="mb">]</span></span>';
+    }
+
+    // === Update computation ===
+    document.getElementById('compStep1').innerHTML =
+      '<span class="lbl">① 原始向量</span> v = <span class="c-blue">' + fmt(vx) + '</span>·î + <span class="c-blue">' + fmt(vy) + '</span>·ĵ = <span class="c-blue">(' + fmt(vx) + ', ' + fmt(vy) + ')</span>';
+
+    document.getElementById('compEqLine').innerHTML =
+      '<span class="lbl">② 列组合计算</span>' +
+      ' v\' = M·v = ' +
+      m2(c, -s, s, c) + ' <span class="mv-op">·</span> ' + m1(vx, vy) +
+      ' <span class="mv-op">=</span> ' +
+      '<span style="color:#3a6b9f;font-weight:600">' + fmt(vx) + '</span>·' + m1(i1x, i1y, '#d12') +
+      ' <span class="mv-op">+</span> ' +
+      '<span style="color:#3a6b9f;font-weight:600">' + fmt(vy) + '</span>·' + m1(j1x, j1y, '#1b8a1b') +
+      ' <span class="mv-op">=</span> ' +
+      m1(v1x, v1y, '#3a6b9f');
+  }
+
+  // === Controls ===
+  const angleSlider = document.getElementById('angleSlider');
+  const angleVal = document.getElementById('angleVal');
+  const presetBtns = document.querySelectorAll('[data-angle]');
+
+  function update() {
+    angle = parseFloat(angleSlider.value);
+    angleVal.textContent = angle + '°';
+    draw();
+    presetBtns.forEach(btn => {
+      let ba = parseInt(btn.dataset.angle);
+      if (ba < 0) ba = 360 + ba;
+      btn.classList.toggle('active', Math.abs(ba - angle) < 0.5);
+    });
+  }
+
+  angleSlider.addEventListener('input', update);
+  presetBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      let a = parseInt(this.dataset.angle);
+      if (a < 0) a = 360 + a;
+      angleSlider.value = a;
+      update();
+    });
+  });
+
+  // Drag vector tip
+  let dragging = false;
+  function getMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (W / rect.width);
+    const my = (e.clientY - rect.top) * (H / rect.height);
+    const wx = (mx - MARGIN) / sx - RANGE;
+    const wy = RANGE - (my - MARGIN) / sy;
+    return [wx, wy];
+  }
+  canvas.addEventListener('mousedown', function(e) {
+    const [wx, wy] = getMousePos(e);
+    if (Math.hypot(wx - vx, wy - vy) < 0.5) dragging = true;
+  });
+  window.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    const [wx, wy] = getMousePos(e);
+    if (Math.abs(wx) < RANGE && Math.abs(wy) < RANGE) {
+      vx = Math.round(wx * 10) / 10;
+      vy = Math.round(wy * 10) / 10;
+      draw();
+    }
+  });
+  window.addEventListener('mouseup', () => dragging = false);
+  canvas.addEventListener('mouseleave', () => dragging = false);
+
+  // Coordinate display in legend
+  document.getElementById('iCoord').textContent = '1';
+  document.getElementById('iCoordY').textContent = '0';
+  document.getElementById('jCoord').textContent = '0';
+  document.getElementById('jCoordY').textContent = '1';
+
+  update();
+})();
+</script>
+</body>
+</html>

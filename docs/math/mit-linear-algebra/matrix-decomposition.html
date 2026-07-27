@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A 的 LU 分解 — MIT 18.06</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]});"></script>
+<style>
+:root {
+  --bg: #f5faf6;
+  --card: #e8f5ec;
+  --border: #c3dbcc;
+  --text: #2d3a31;
+  --accent: #3a7a4d;
+  --accent-light: #5ead6e;
+  --highlight: #d4942b;
+  --highlight-bg: #fdf6e3;
+  --code-bg: #dceee2;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+h1 { font-size: 1.35em; color: var(--accent); margin: 20px 0 8px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+h2 { font-size: 1.2em; color: var(--accent); margin: 18px 0 6px; }
+h3 { font-size: 1.02em; color: var(--accent); margin: 14px 0 4px; }
+h4 { font-size: 0.95em; color: var(--accent); margin: 10px 0 4px; }
+p { margin: 6px 0; }
+ul, ol { margin: 4px 0; padding-left: 20px; }
+li { margin: 2px 0; }
+code { font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+pre { font-size: 0.8em; background: var(--card); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); overflow-x: auto; margin: 8px 0; line-height: 1.3; }
+table { font-size: 0.9em; border-collapse: collapse; width: 100%; margin: 8px 0; }
+th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+th { background: var(--accent); color: #fff; font-weight: 600; }
+tr:nth-child(even) { background: var(--card); }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
+.summary { background: var(--highlight-bg); border-left: 4px solid var(--highlight); border-radius: 4px; padding: 12px 16px; margin: 14px 0; }
+.summary strong { color: var(--highlight); }
+.highlight { background: var(--highlight-bg); border-left: 3px solid var(--highlight); padding: 8px 12px; margin: 8px 0; border-radius: 0 4px 4px 0; }
+.tag { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8em; padding: 1px 8px; border-radius: 10px; font-weight: 500; }
+.keyword { color: var(--accent); font-weight: 600; }
+.warm { background: #fdf6e3; border: 1px solid #eedca5; }
+
+.toc { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
+.toc-title { font-weight: 600; color: var(--accent); font-size: 1em; margin-bottom: 6px; }
+.toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+.toc-grid a { color: var(--text); text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
+.toc-grid a:hover { background: var(--bg); color: var(--accent); }
+
+.katex-display { margin: 10px 0; }
+.math-row { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; margin: 10px 0; }
+.math-row > * { flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="card" style="text-align:center; margin-bottom:20px;">
+  <h1 style="border:none; margin:4px 0;">📐 A 的 LU 分解</h1>
+  <p style="color:var(--accent); margin:2px 0;">MIT 18.06 · L = Lower · U = Upper · 高效求解多右侧方程组</p>
+</div>
+
+<div class="toc">
+  <div class="toc-title">📖 目录</div>
+  <div class="toc-grid">
+    <a href="#why">一、为什么需要 LU 分解？</a>
+    <a href="#definition">二、什么是 LU 分解</a>
+    <a href="#efficiency">三、高效性：一次分解，多次使用</a>
+    <a href="#process">四、求解过程</a>
+    <a href="#summary">五、总结</a>
+  </div>
+</div>
+
+<!-- ============ SECTION 1 ============ -->
+<h2 id="why">一、为什么需要 LU 分解？</h2>
+
+<div class="summary">
+<strong>高斯消元法是"手动挡"，LU 分解是"自动挡"和"工业级方案"。</strong> 它的核心意义在于高效率、高复用性以及更低的计算成本。
+</div>
+
+<p>在初学线性代数时，高斯消元法已经能很好地解方程组了，为什么还要大费周折地把一个矩阵 $A$ 拆成一个下三角矩阵 $L$ 和一个上三角矩阵 $U$（即 $A = LU$）呢？</p>
+
+<div class="card warm">
+  <h4 style="margin-top:0;">💡 核心动机：多次求解同一系数矩阵</h4>
+  <p>在实际工程（如桥梁受力分析、电路模拟、图像处理）中，我们经常需要求解一系列方程组：</p>
+  <div style="text-align:center; margin:8px 0;">
+    $$A\mathbf{x} = \mathbf{b}_1, \quad A\mathbf{x} = \mathbf{b}_2, \quad A\mathbf{x} = \mathbf{b}_3, \quad \dots$$
+  </div>
+  <p>这里的系数矩阵 $A$ 是完全一样的（代表系统结构没变），但右边的常数项 $\mathbf{b}$ 在不断变化（代表外力、输入信号或时间在变）。</p>
+</div>
+
+<div class="highlight">
+  <strong>如果每次都用高斯消元法从头算起：</strong> 每次都要对整个 $A$ 做 $O(n^3)$ 的消元，极其浪费。<br>
+  <strong>LU 分解的思路：</strong> 对 $A$ 只做一次 $O(n^3)$ 的分解，后续每次求解仅需 $O(n^2)$。
+</div>
+
+<!-- ============ SECTION 2 ============ -->
+<h2 id="definition">二、什么是 LU 分解</h2>
+
+<div class="summary">
+<strong>LU 分解将矩阵 $A$ 分解为一个下三角矩阵 $L$ 和一个上三角矩阵 $U$ 的乘积：</strong>
+<div style="text-align:center; margin:8px 0; font-size:1.05em;">
+  $$A = L \cdot U$$
+</div>
+</div>
+
+<div class="card" style="text-align:center;">
+  <div class="math-row">
+    <div>
+      <p style="margin-bottom:4px;"><strong>A</strong>（原始矩阵）</p>
+      $$A = \begin{bmatrix}
+      a_{11} & a_{12} & a_{13} \\
+      a_{21} & a_{22} & a_{23} \\
+      a_{31} & a_{32} & a_{33}
+      \end{bmatrix}$$
+    </div>
+    <div style="font-size:1.5em; color:var(--accent-light);">=</div>
+    <div>
+      <p style="margin-bottom:4px;"><strong>L</strong>（下三角，Lower）</p>
+      $$L = \begin{bmatrix}
+      1 & 0 & 0 \\
+      l_{21} & 1 & 0 \\
+      l_{31} & l_{32} & 1
+      \end{bmatrix}$$
+    </div>
+    <div style="font-size:1.5em; color:var(--accent-light);">·</div>
+    <div>
+      <p style="margin-bottom:4px;"><strong>U</strong>（上三角，Upper）</p>
+      $$U = \begin{bmatrix}
+      u_{11} & u_{12} & u_{13} \\
+      0 & u_{22} & u_{23} \\
+      0 & 0 & u_{33}
+      \end{bmatrix}$$
+    </div>
+  </div>
+</div>
+
+<p>其中 $L$ 的对角线为 1（Doolittle 分解），$U$ 就是高斯消元得到的上三角矩阵。$L$ 中的 $l_{ij}$ 就是消元过程中使用的<strong>乘数</strong>（multipliers）。</p>
+
+<!-- ============ SECTION 3 ============ -->
+<h2 id="efficiency">三、高效性：一次分解，多次使用</h2>
+
+<p>如果用 LU 分解：只需要对 $A$ 做<strong>一次</strong> $LU$ 分解（成本 $O(n^3)$），后面就一劳永逸了。</p>
+
+<div class="card" style="text-align:center;">
+  <table>
+    <tr><th>方法</th><th>首次求解</th><th>后续每个新 $\mathbf{b}$</th><th>N 次求解总成本</th></tr>
+    <tr>
+      <td><span class="keyword">高斯消元</span></td>
+      <td>$O(n^3)$</td>
+      <td>$O(n^3)$（重做消元）</td>
+      <td>$N \cdot O(n^3)$</td>
+    </tr>
+    <tr>
+      <td><span class="keyword">LU 分解</span></td>
+      <td>$O(n^3)$（分解）</td>
+      <td>$O(n^2)$（仅回代）</td>
+      <td>$O(n^3) + N \cdot O(n^2)$</td>
+    </tr>
+  </table>
+</div>
+
+<div class="highlight">
+  <strong>当 N 很大时（工程中常见的场景），LU 分解的巨大优势就显现出来了。</strong> 例如 N = 1000，高斯消元需要做 1000 次 $O(n^3)$ 运算，而 LU 分解只需要 1 次 $O(n^3) + 1000$ 次 $O(n^2)$。
+</div>
+
+<!-- ============ SECTION 4 ============ -->
+<h2 id="process">四、求解过程</h2>
+
+<div class="summary">
+<strong>有了 $A = LU$ 后，求解 $A\mathbf{x} = \mathbf{b}$ 变成两步极快的回代。</strong>
+</div>
+
+<h3>4.1 思路</h3>
+
+<p>将 $A\mathbf{x} = \mathbf{b}$ 替换为 $LU\mathbf{x} = \mathbf{b}$，然后分两步走：</p>
+
+<div class="card" style="text-align:center;">
+  <p><strong>Step 1：</strong> 令 $U\mathbf{x} = \mathbf{y}$，先解下三角方程</p>
+  $$L\mathbf{y} = \mathbf{b}$$
+  <p style="margin-top:4px;">用<strong>前向回代</strong>（Forward Substitution）</p>
+</div>
+
+<div class="card" style="text-align:center;">
+  <p><strong>Step 2：</strong> 求出 $\mathbf{y}$ 后，再解上三角方程</p>
+  $$U\mathbf{x} = \mathbf{y}$$
+  <p style="margin-top:4px;">用<strong>后向回代</strong>（Back Substitution）</p>
+</div>
+
+<h3>4.2 为什么这么快？</h3>
+
+<p>因为 $L$ 和 $U$ 是<strong>三角矩阵</strong>，解这两个方程不需要任何消元，只需要一步步代入即可。解一次的计算量仅为 $O(n^2)$。</p>
+
+<div class="card warm">
+  <h4 style="margin-top:0;">🔍 前向回代详解</h4>
+  <p>以 $3 \times 3$ 为例，解 $L\mathbf{y} = \mathbf{b}$：</p>
+  <div style="text-align:center; margin:8px 0;">
+    $$\begin{bmatrix}
+    1 & 0 & 0 \\
+    l_{21} & 1 & 0 \\
+    l_{31} & l_{32} & 1
+    \end{bmatrix}
+    \begin{bmatrix} y_1 \\ y_2 \\ y_3 \end{bmatrix}
+    = \begin{bmatrix} b_1 \\ b_2 \\ b_3 \end{bmatrix}$$
+  </div>
+  <ul>
+    <li>$y_1 = b_1$（直接得到）</li>
+    <li>$y_2 = b_2 - l_{21} y_1$（代入 $y_1$）</li>
+    <li>$y_3 = b_3 - l_{31} y_1 - l_{32} y_2$（代入 $y_1, y_2$）</li>
+  </ul>
+  <p style="margin-top:4px;">每一步只需要一次乘法和一次减法，无需任何消元。</p>
+</div>
+
+<div class="card warm">
+  <h4 style="margin-top:0;">🔍 后向回代详解</h4>
+  <p>解 $U\mathbf{x} = \mathbf{y}$：</p>
+  <div style="text-align:center; margin:8px 0;">
+    $$\begin{bmatrix}
+    u_{11} & u_{12} & u_{13} \\
+    0 & u_{22} & u_{23} \\
+    0 & 0 & u_{33}
+    \end{bmatrix}
+    \begin{bmatrix} x_1 \\ x_2 \\ x_3 \end{bmatrix}
+    = \begin{bmatrix} y_1 \\ y_2 \\ y_3 \end{bmatrix}$$
+  </div>
+  <ul>
+    <li>$x_3 = y_3 / u_{33}$（从最后一行开始）</li>
+    <li>$x_2 = (y_2 - u_{23} x_3) / u_{22}$</li>
+    <li>$x_1 = (y_1 - u_{12} x_2 - u_{13} x_3) / u_{11}$</li>
+  </ul>
+  <p style="margin-top:4px;">从下往上代入，每次只需一次除法、若干乘法和减法。</p>
+</div>
+
+<h3>4.3 完整流程示例</h3>
+
+<div class="card" style="text-align:center;">
+  <p>已知 $A = LU$，求解 $A\mathbf{x} = \mathbf{b}$：</p>
+  <div class="math-row" style="margin:10px 0;">
+    <span style="font-size:0.9em;">$A\mathbf{x} = \mathbf{b}$</span>
+    <span style="font-size:1.2em; color:var(--accent-light);">⟹</span>
+    <span style="font-size:0.9em;">$LU\mathbf{x} = \mathbf{b}$</span>
+    <span style="font-size:1.2em; color:var(--accent-light);">⟹</span>
+    <span style="font-size:0.9em;">$\begin{cases} L\mathbf{y} = \mathbf{b} \\ U\mathbf{x} = \mathbf{y} \end{cases}$</span>
+  </div>
+  <p>两步回代即可得到 $\mathbf{x}$。</p>
+</div>
+
+<!-- ============ SECTION 5 ============ -->
+<h2 id="summary">五、总结</h2>
+
+<div class="card">
+  <ul>
+    <li><strong>$A = LU$</strong>：$L$ 是下三角（对角线为 1），$U$ 是上三角（消元结果）。</li>
+    <li><strong>为什么做？</strong> 实际工程中经常需要求解多个右侧向量不同的方程组，系数矩阵 $A$ 相同。</li>
+    <li><strong>高效性</strong>：一次 $O(n^3)$ 分解，后续每个 $\mathbf{b}$ 只需 $O(n^2)$ 回代。</li>
+    <li><strong>前向回代</strong>：解 $L\mathbf{y} = \mathbf{b}$，从上往下代入。</li>
+    <li><strong>后向回代</strong>：解 $U\mathbf{x} = \mathbf{y}$，从下往上代入。</li>
+    <li><strong>三角矩阵的优势</strong>：不需要消元，直接代入即可，极快。</li>
+  </ul>
+</div>
+
+<div class="summary">
+  <strong>一句话记住：</strong> LU 分解把"每来一个 $\mathbf{b}$ 就重新消元一次"变成"只分解一次，后面只管回代"——从 $N \cdot O(n^3)$ 降到 $O(n^3) + N \cdot O(n^2)$。
+</div>
+
+</body>
+</html>

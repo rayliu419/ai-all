@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>矩阵乘法 — MIT 18.06</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]});"></script>
+<style>
+:root {
+  --bg: #f5faf6;
+  --card: #e8f5ec;
+  --border: #c3dbcc;
+  --text: #2d3a31;
+  --accent: #3a7a4d;
+  --accent-light: #5ead6e;
+  --highlight: #d4942b;
+  --highlight-bg: #fdf6e3;
+  --code-bg: #dceee2;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+h1 { font-size: 1.35em; color: var(--accent); margin: 20px 0 8px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+h2 { font-size: 1.2em; color: var(--accent); margin: 18px 0 6px; }
+h3 { font-size: 1.02em; color: var(--accent); margin: 14px 0 4px; }
+h4 { font-size: 0.95em; color: var(--accent); margin: 10px 0 4px; }
+p { margin: 6px 0; }
+ul, ol { margin: 4px 0; padding-left: 20px; }
+li { margin: 2px 0; }
+code { font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+pre { font-size: 0.8em; background: var(--card); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); overflow-x: auto; margin: 8px 0; line-height: 1.3; }
+table { font-size: 0.9em; border-collapse: collapse; width: 100%; margin: 8px 0; }
+th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+th { background: var(--accent); color: #fff; font-weight: 600; }
+tr:nth-child(even) { background: var(--card); }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
+.summary { background: var(--highlight-bg); border-left: 4px solid var(--highlight); border-radius: 4px; padding: 12px 16px; margin: 14px 0; }
+.summary strong { color: var(--highlight); }
+.highlight { background: var(--highlight-bg); border-left: 3px solid var(--highlight); padding: 8px 12px; margin: 8px 0; border-radius: 0 4px 4px 0; }
+.tag { display: inline-block; background: var(--accent); color: #fff; font-size: 0.8em; padding: 1px 8px; border-radius: 10px; font-weight: 500; }
+.keyword { color: var(--accent); font-weight: 600; }
+.warm { background: #fdf6e3; border: 1px solid #eedca5; }
+
+.demo-frame-wrap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 12px 0; background: var(--bg); }
+.demo-frame-wrap iframe { display: block; width: 100%; border: none; }
+
+.toc { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
+.toc-title { font-weight: 600; color: var(--accent); font-size: 1em; margin-bottom: 6px; }
+.toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+.toc-grid a { color: var(--text); text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
+.toc-grid a:hover { background: var(--bg); color: var(--accent); }
+
+.katex-display { margin: 10px 0; }
+
+/* ---- Step animation boxes ---- */
+.anim-box { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 12px 0; overflow-x: auto; }
+.anim-step { display: flex; align-items: center; gap: 12px; margin: 8px 0; padding: 8px 10px; border-radius: 6px; background: var(--bg); }
+.anim-step .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85em; flex-shrink: 0; }
+.anim-step .step-desc { flex: 1; }
+.anim-step .step-math { font-size: 0.92em; white-space: nowrap; }
+.anim-arrow { text-align: center; color: var(--accent-light); font-size: 1.2em; margin: 2px 0; }
+</style>
+</head>
+<body>
+
+<div class="card" style="text-align:center; margin-bottom:20px;">
+  <h1 style="border:none; margin:4px 0;">📐 矩阵乘法</h1>
+  <p style="color:var(--accent); margin:2px 0;">MIT 18.06 · 四种视角 · 分块乘法 · 逆矩阵</p>
+</div>
+
+<div class="toc">
+  <div class="toc-title">📖 目录</div>
+  <div class="toc-grid">
+    <a href="#overview">一、总览：四种视角</a>
+    <a href="#view1">二、视角一：元素视角（点积）</a>
+    <a href="#view2">三、视角二：列视角</a>
+    <a href="#view3">四、视角三：行视角</a>
+    <a href="#view4">五、视角四：列 × 行</a>
+    <a href="#block">六、矩阵分块乘法</a>
+    <a href="#inverse">七、逆矩阵</a>
+    <a href="#quick-multiply">八、矩阵乘法的快速运算</a>
+    <a href="#summary">九、总结</a>
+  </div>
+</div>
+
+<!-- ============ SECTION 1 ============ -->
+<h2 id="overview">一、总览：四种视角</h2>
+
+<div class="summary">
+<strong>矩阵乘法 $C = AB$ 可以从四种不同视角理解，每种视角揭示不同的代数/几何含义。</strong> 对于一个具体问题，选择最合适的视角可以大幅简化推理。
+</div>
+
+<p>设 $A$ 为 $m \times n$ 矩阵，$B$ 为 $n \times p$ 矩阵，则 $C = AB$ 为 $m \times p$ 矩阵：</p>
+
+<div class="card">
+  <table>
+    <tr><th style="width:30px;">#</th><th>视角</th><th>核心观点</th><th>适用场景</th></tr>
+    <tr>
+      <td style="text-align:center;">1</td>
+      <td><span class="keyword">元素（点积）</span></td>
+      <td>$C_{ij} = \text{row}_i(A) \cdot \text{col}_j(B)$</td>
+      <td>标准数值计算</td>
+    </tr>
+    <tr>
+      <td style="text-align:center;">2</td>
+      <td><span class="keyword">列视角</span></td>
+      <td>C 的每列 = A 中列的线性组合</td>
+      <td>理解列空间、Ax = b</td>
+    </tr>
+    <tr>
+      <td style="text-align:center;">3</td>
+      <td><span class="keyword">行视角</span></td>
+      <td>C 的每行 = B 中行的线性组合</td>
+      <td>理解行空间</td>
+    </tr>
+    <tr>
+      <td style="text-align:center;">4</td>
+      <td><span class="keyword">列 × 行</span></td>
+      <td>$AB = \sum_{k=1}^n \text{col}_k(A) \cdot \text{row}_k(B)$</td>
+      <td>矩阵分解、低秩近似</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ============ SECTION 2 ============ -->
+<h2 id="view1">二、视角一：元素视角（点积）</h2>
+
+<div class="summary">
+<strong>最标准的计算方法：</strong> $C$ 中第 $i$ 行第 $j$ 列的元素，等于 $A$ 的第 $i$ 行与 $B$ 的第 $j$ 列逐项相乘再求和。
+</div>
+
+<p>公式表达：</p>
+
+<div class="card" style="text-align:center;">
+  $$C_{ij} = \sum_{k=1}^{n} A_{ik} B_{kj}$$
+  <p style="margin-top:6px;">即 $C_{ij}$ 与 $A_{i*}$ 和 $B_{*j}$ 之间的关系。</p>
+</div>
+
+<div class="card" style="text-align:center;">
+  <h4 style="margin-top:0;">数值例子</h4>
+  $$A = \begin{bmatrix}1 & 2 \\ 3 & 4\end{bmatrix},\qquad
+  B = \begin{bmatrix}0 & 1 \\ 1 & 0\end{bmatrix}$$
+  $$C_{11} = 1\cdot0 + 2\cdot1 = 2$$
+  $$C_{12} = 1\cdot1 + 2\cdot0 = 1$$
+  $$C_{21} = 3\cdot0 + 4\cdot1 = 4$$
+  $$C_{22} = 3\cdot1 + 4\cdot0 = 3$$
+  $$\Longrightarrow\; C = \begin{bmatrix}2 & 1 \\ 4 & 3\end{bmatrix}$$
+</div>
+
+<p>这是大学线性代数教材中最先教授的方法，适合程序实现和数值计算。但它的缺点是：<strong>不利于建立几何直觉</strong>——它把矩阵乘法降格为纯代数运算，掩盖了底层的向量空间结构。</p>
+
+<!-- ============ SECTION 3 ============ -->
+<h2 id="view2">三、视角二：列视角</h2>
+
+<div class="summary">
+<strong>C 的每一列是 A 中各列的线性组合，组合系数来自 B 的对应列。</strong> 这是理解线性代数最重要的视角。
+</div>
+
+<h3>3.1 核心思想</h3>
+
+<p>将 $B$ 按列拆分：</p>
+
+$$B = \begin{bmatrix}\mathbf{b}_1 & \mathbf{b}_2 & \cdots & \mathbf{b}_p\end{bmatrix}$$
+
+<p>则 $C$ 的第 $j$ 列为：</p>
+
+$$C_{*j} = A \mathbf{b}_j$$
+
+<p>展开来看，$A \mathbf{b}_j$ 就是 A 各列以 $\mathbf{b}_j$ 的分量为系数的线性组合：</p>
+
+<div class="card" style="text-align:center;">
+  $$C_{*j} = b_{1j} \cdot \text{col}_1(A) + b_{2j} \cdot \text{col}_2(A) + \cdots + b_{nj} \cdot \text{col}_n(A)$$
+</div>
+
+<div class="highlight">
+  <strong>关键洞察：</strong> B 的每一列告诉我们要用 A 的各列怎么组合。C 的第 j 列完全由 B 的第 j 列决定，其他列不参与运算。
+</div>
+
+<h3>3.2 数值例子</h3>
+
+<div class="card" style="text-align:center;">
+  $$A = \begin{bmatrix}1 & 2 \\ 3 & 0\end{bmatrix},\quad
+  B = \begin{bmatrix}0 & 1 \\ 1 & 0\end{bmatrix}$$
+  <p style="margin-top:8px;"><strong>看第一列：</strong></p>
+  $$C_{*1} = 0\cdot\begin{bmatrix}1 \\ 3\end{bmatrix} + 1\cdot\begin{bmatrix}2 \\ 0\end{bmatrix} = \begin{bmatrix}2 \\ 0\end{bmatrix}$$
+  <p style="margin-top:6px;"><strong>看第二列：</strong></p>
+  $$C_{*2} = 1\cdot\begin{bmatrix}1 \\ 3\end{bmatrix} + 0\cdot\begin{bmatrix}2 \\ 0\end{bmatrix} = \begin{bmatrix}1 \\ 3\end{bmatrix}$$
+  $$\Longrightarrow\; C = \begin{bmatrix}2 & 1 \\ 0 & 3\end{bmatrix}$$
+</div>
+
+<h3>3.3 逐列计算的"动画"</h3>
+
+<p>以下展示 C 按列生成的过程。A 固定，B 一列一列地"喂入"，每次输出 C 的一列：</p>
+
+<div class="anim-box">
+  <div class="anim-step">
+    <div class="step-num">1</div>
+    <div class="step-desc">
+      <strong>初始状态</strong>
+      <div style="font-size:0.85em; color:#666;">A 不动，B 和 C 等待操作</div>
+      <div class="step-math">$A = \begin{bmatrix}1&2\\3&0\end{bmatrix}\qquad B = \begin{bmatrix}0&1\\1&0\end{bmatrix}\qquad C = \begin{bmatrix}?&?\\?&?\end{bmatrix}$</div>
+    </div>
+  </div>
+  <div class="anim-arrow">↓</div>
+  <div class="anim-step">
+    <div class="step-num">2</div>
+    <div class="step-desc">
+      <strong>取 B 的第一列</strong>
+      <div style="font-size:0.85em; color:#666;">$b_1 = (0, 1)^T$ 作为组合系数</div>
+      <div class="step-math">$C_{*1} = 0\cdot\text{col}_1(A) + 1\cdot\text{col}_2(A) = \begin{bmatrix}2\\0\end{bmatrix}$</div>
+    </div>
+  </div>
+  <div class="anim-arrow">↓</div>
+  <div class="anim-step">
+    <div class="step-num">3</div>
+    <div class="step-desc">
+      <strong>C 的第一列确定</strong>
+      <div style="font-size:0.85em; color:#666;">填补 C 的第一列</div>
+      <div class="step-math">$C = \begin{bmatrix}2&?\\0&?\end{bmatrix}$</div>
+    </div>
+  </div>
+  <div class="anim-arrow">↓</div>
+  <div class="anim-step">
+    <div class="step-num">4</div>
+    <div class="step-desc">
+      <strong>取 B 的第二列</strong>
+      <div style="font-size:0.85em; color:#666;">$b_2 = (1, 0)^T$ 作为组合系数</div>
+      <div class="step-math">$C_{*2} = 1\cdot\text{col}_1(A) + 0\cdot\text{col}_2(A) = \begin{bmatrix}1\\3\end{bmatrix}$</div>
+    </div>
+  </div>
+  <div class="anim-arrow">↓</div>
+  <div class="anim-step">
+    <div class="step-num">5</div>
+    <div class="step-desc">
+      <strong>C 的第二列确定，完成！</strong>
+      <div style="font-size:0.85em; color:#666;">结果 C 的所有列都已补全</div>
+      <div class="step-math">$C = \begin{bmatrix}2&1\\0&3\end{bmatrix}$</div>
+    </div>
+  </div>
+</div>
+
+<div class="highlight">
+  <strong>应用：</strong> 这种视角在解线性方程组 $Ax = b$ 时非常直观——将 $x$ 视为系数，$Ax$ 就是 A 中各列的线性组合。列视角还直接引出<strong>列空间（Column Space）</strong>的概念。
+</div>
+
+<!-- ============ SECTION 4 ============ -->
+<h2 id="view3">四、视角三：行视角</h2>
+
+<div class="summary">
+<strong>C 的每一行是 B 中各行的线性组合，组合系数来自 A 的对应行。</strong> 与列视角对应——把 B 看成行向量，A 的行分量作为组合系数。
+</div>
+
+<h3>4.1 核心思想</h3>
+
+<p>将 $A$ 按行拆分：</p>
+
+$$A = \begin{bmatrix}\mathbf{a}_1 \\ \mathbf{a}_2 \\ \vdots \\ \mathbf{a}_m\end{bmatrix}$$
+
+<p>则 $C$ 的第 $i$ 行为：</p>
+
+$$C_{i*} = \mathbf{a}_i B$$
+
+<p>展开来看，$\mathbf{a}_i B$ 就是 B 各行以 $\mathbf{a}_i$ 的分量为系数的线性组合：</p>
+
+<div class="card" style="text-align:center;">
+  $$C_{i*} = a_{i1} \cdot \text{row}_1(B) + a_{i2} \cdot \text{row}_2(B) + \cdots + a_{in} \cdot \text{row}_n(B)$$
+</div>
+
+<h3>4.2 数值例子</h3>
+
+<div class="card" style="text-align:center;">
+  $$A = \begin{bmatrix}1 & 2 \\ 3 & 0\end{bmatrix},\quad
+  B = \begin{bmatrix}0 & 1 \\ 1 & 0\end{bmatrix}$$
+  <p style="margin-top:8px;"><strong>看第一行：</strong></p>
+  $$C_{1*} = 1\cdot\begin{bmatrix}0 & 1\end{bmatrix} + 2\cdot\begin{bmatrix}1 & 0\end{bmatrix} = \begin{bmatrix}2 & 1\end{bmatrix}$$
+  <p style="margin-top:6px;"><strong>看第二行：</strong></p>
+  $$C_{2*} = 3\cdot\begin{bmatrix}0 & 1\end{bmatrix} + 0\cdot\begin{bmatrix}1 & 0\end{bmatrix} = \begin{bmatrix}0 & 3\end{bmatrix}$$
+  $$\Longrightarrow\; C = \begin{bmatrix}2 & 1 \\ 0 & 3\end{bmatrix}$$
+</div>
+
+<h3>4.3 逐行计算的"动画"</h3>
+
+<p>以下展示 C 按行生成的过程。B 固定，A 一行一行地"处理"，每次输出 C 的一行：</p>
+
+<div class="anim-box">
+  <div class="anim-step">
+    <div class="step-num">1</div>
+    <div class="step-desc">
+      <strong>初始状态</strong>
+      <div style="font-size:0.85em; color:#666;">B 不动，A 和 C 等待操作</div>
+      <div class="step-math">$A = \begin{bmatrix}1&2\\3&0\end{bmatrix}\qquad B = \begin{bmatrix}0&1\\1&0\end{bmatrix}\qquad C = \begin{bmatrix}?&?\\?&?\end{bmatrix}$</div>
+    </div>
+  </div>
+  <div class="anim-arrow">↓</div>
+  <div class="anim-step">
+    <div class="step-num">2</div>
+    <div class="step-desc">
+      <strong>取 A 的第一行</strong>
+      <div style="font-size:0.85em; color:#666;">$a_1 = (1, 2)$ 作为组合系数</div>
+      <div class="step-math">$C_{1*} = 1\cdot\text{row}_1(B) + 2\cdot\text{row}_2(B) = \begin{bmatrix}2 & 1\end{bmatrix}$</div>
+    </div>
+  </div>
+  <div class="anim-arrow">↓</div>
+  <div class="anim-step">
+    <div class="step-num">3</div>
+    <div class="step-desc">
+      <strong>C 的第一行确定</strong>
+      <div style="font-size:0.85em; color:#666;">填补 C 的第一行</div>
+      <div class="step-math">$C = \begin{bmatrix}2&1\\?&?\end{bmatrix}$</div>
+    </div>
+  </div>
+  <div class="anim-arrow">↓</div>
+  <div class="anim-step">
+    <div class="step-num">4</div>
+    <div class="step-desc">
+      <strong>取 A 的第二行</strong>
+      <div style="font-size:0.85em; color:#666;">$a_2 = (3, 0)$ 作为组合系数</div>
+      <div class="step-math">$C_{2*} = 3\cdot\text{row}_1(B) + 0\cdot\text{row}_2(B) = \begin{bmatrix}0 & 3\end{bmatrix}$</div>
+    </div>
+  </div>
+  <div class="anim-arrow">↓</div>
+  <div class="anim-step">
+    <div class="step-num">5</div>
+    <div class="step-desc">
+      <strong>C 的第二行确定，完成！</strong>
+      <div style="font-size:0.85em; color:#666;">结果 C 的所有行都已补全</div>
+      <div class="step-math">$C = \begin{bmatrix}2&1\\0&3\end{bmatrix}$</div>
+    </div>
+  </div>
+</div>
+
+<div class="highlight">
+  <strong>应用：</strong> 行视角在理解<strong>行空间（Row Space）</strong>和<strong>线性变换对行的影响</strong>时很有用。例如，左乘一个矩阵就是对行进行线性组合。
+</div>
+
+<!-- ============ SECTION 5 ============ -->
+<h2 id="view4">五、视角四：列 × 行</h2>
+
+<div class="summary">
+<strong>将 AB 表示为一组"列 × 行"外积矩阵之和。</strong> 每个外积对应 $A$ 的一列乘以 $B$ 的一行，结果是 $m \times p$ 的秩-1 矩阵。
+</div>
+
+<h3>5.1 核心思想</h3>
+
+<p>设 $A$ 的列为 $\mathbf{c}_1, \mathbf{c}_2, \dots, \mathbf{c}_n$，$B$ 的行为 $\mathbf{r}_1, \mathbf{r}_2, \dots, \mathbf{r}_n$，则：</p>
+
+<div class="card" style="text-align:center;">
+  $$C = AB = \mathbf{c}_1 \mathbf{r}_1 + \mathbf{c}_2 \mathbf{r}_2 + \cdots + \mathbf{c}_n \mathbf{r}_n = \sum_{k=1}^n \mathbf{c}_k \mathbf{r}_k$$
+  <p style="margin-top:6px;">其中 $\mathbf{c}_k$ 是 $m \times 1$ 列向量，$\mathbf{r}_k$ 是 $1 \times p$ 行向量，$\mathbf{c}_k \mathbf{r}_k$ 是 $m \times p$ 矩阵。</p>
+</div>
+
+<p><strong>注意维度的匹配：</strong></p>
+<div class="card" style="text-align:center;">
+  <p>设 $A$ 为 $m \times n$，$B$ 为 $n \times p$：</p>
+  <ul style="list-style:none; padding:0;">
+    <li>$\mathbf{c}_k$: $m \times 1$（A 的一列）</li>
+    <li>$\mathbf{r}_k$: $1 \times p$（B 的一行）</li>
+    <li>$\mathbf{c}_k \mathbf{r}_k$: $(m \times 1) \cdot (1 \times p) = m \times p$</li>
+  </ul>
+</div>
+
+<h3>5.2 具体例子</h3>
+
+<div class="card" style="text-align:center;">
+  $$A = \begin{bmatrix}1 & 2 \\ 3 & 0\end{bmatrix},\quad
+  B = \begin{bmatrix}0 & 1 \\ 1 & 0\end{bmatrix}$$
+  <p style="margin-top:8px;"><strong>按列拆 A：</strong> $\mathbf{c}_1 = \begin{bmatrix}1 \\ 3\end{bmatrix},\; \mathbf{c}_2 = \begin{bmatrix}2 \\ 0\end{bmatrix}$</p>
+  <p><strong>按行拆 B：</strong> $\mathbf{r}_1 = \begin{bmatrix}0 & 1\end{bmatrix},\; \mathbf{r}_2 = \begin{bmatrix}1 & 0\end{bmatrix}$</p>
+  <p><strong>两个外积：</strong></p>
+  $$\mathbf{c}_1 \mathbf{r}_1 = \begin{bmatrix}1 \\ 3\end{bmatrix}\begin{bmatrix}0 & 1\end{bmatrix} = \begin{bmatrix}0 & 1 \\ 0 & 3\end{bmatrix}$$
+  $$\mathbf{c}_2 \mathbf{r}_2 = \begin{bmatrix}2 \\ 0\end{bmatrix}\begin{bmatrix}1 & 0\end{bmatrix} = \begin{bmatrix}2 & 0 \\ 0 & 0\end{bmatrix}$$
+  <p style="margin-top:6px;"><strong>求和：</strong></p>
+  $$C = \begin{bmatrix}0 & 1 \\ 0 & 3\end{bmatrix} + \begin{bmatrix}2 & 0 \\ 0 & 0\end{bmatrix} = \begin{bmatrix}2 & 1 \\ 0 & 3\end{bmatrix}\quad\checkmark$$
+</div>
+
+<h3>5.3 为什么这个视角重要？</h3>
+
+<div class="card">
+  <ol>
+    <li><strong>SVD 和低秩近似：</strong> 如果一个矩阵可以很好地近似为少数几个"列 × 行"项之和，就可以大幅压缩数据（图像压缩、推荐系统）。</li>
+    <li><strong>矩阵分解的直觉：</strong> $LU$、$QR$、$SVD$ 等分解本质上都是在寻找对矩阵进行"列 × 行"展开的更优方式。</li>
+    <li><strong>理解秩：</strong> 每个 $\mathbf{c}_k \mathbf{r}_k$ 是秩-1 矩阵，所以 $n$ 项之和的秩 ≤ $n$。这是为什么 $AB$ 的秩不超过 $A$ 或 $B$ 的秩。</li>
+  </ol>
+</div>
+
+<!-- ============ SECTION 6 ============ -->
+<h2 id="block">六、矩阵分块乘法</h2>
+
+<div class="summary">
+<strong>分块乘法（Block Multiplication）</strong> 将矩阵分割成子块（submatrices），每个子块作为一个"超级元素"参与乘法。只要分块维度匹配，乘法和普通矩阵乘法完全一样。
+</div>
+
+<h3>6.1 基本规则</h3>
+
+<p>将 $A$ 和 $B$ 分块，使列分块方式与行分块方式匹配：</p>
+
+<div class="card" style="text-align:center;">
+  $$A = \begin{bmatrix}A_{11} & A_{12} \\ A_{21} & A_{22}\end{bmatrix},\qquad
+  B = \begin{bmatrix}B_{11} & B_{12} \\ B_{21} & B_{22}\end{bmatrix}$$
+  <p style="margin-top:6px;">则：</p>
+  $$C = AB = \begin{bmatrix}
+  A_{11}B_{11} + A_{12}B_{21} & A_{11}B_{12} + A_{12}B_{22} \\
+  A_{21}B_{11} + A_{22}B_{21} & A_{21}B_{12} + A_{22}B_{22}
+  \end{bmatrix}$$
+</div>
+
+<div class="highlight">
+  <strong>关键要求：</strong> 分块后，对应的子块乘法维度必须匹配。即 $A_{ij}$ 的列数必须等于 $B_{jk}$ 的行数。
+</div>
+
+<h3>6.2 为什么分块乘法重要？</h3>
+
+<div class="card">
+  <ul>
+    <li><strong>大矩阵运算</strong>：把矩阵切分成适合 CPU 缓存或 GPU 显存的小块，可以极大提升计算效率。</li>
+    <li><strong>理论证明</strong>：很多线性代数定理可以通过分块的方式简洁证明，例如逆矩阵的公式。</li>
+    <li><strong>层次结构</strong>：分块乘法揭示了矩阵乘法在不同粒度上的自相似性——这其实是分治算法的代数基础。</li>
+  </ul>
+</div>
+
+<div class="card warm">
+  <h4 style="margin-top:0; margin-bottom:4px;">💡 分块与四种视角的关系</h4>
+  <p>仔细看会发现：视角二（列视角）是把 B 分成了"一列一块"；视角三（行视角）是把 A 分成了"一行一块"；视角四（列×行）是把 A 按列分、B 按行分。它们都是分块乘法的特例。</p>
+</div>
+
+<!-- ============ SECTION 7 ============ -->
+<h2 id="inverse">七、逆矩阵</h2>
+
+<div class="summary">
+<strong>对于方阵 $A$（$n \times n$），如果存在矩阵 $A^{-1}$ 使得 $A^{-1}A = I = AA^{-1}$，则 $A$ 可逆（非奇异）。</strong>
+</div>
+
+<h3>7.1 左逆 = 右逆</h3>
+
+<div class="card">
+  <p>对于方阵，如果存在逆矩阵，<strong>左逆必然等于右逆</strong>。即：</p>
+  <div style="text-align:center; font-size:1.05em; margin:8px 0;">
+    $$A^{-1}A = I \;\Longleftrightarrow\; AA^{-1} = I$$
+  </div>
+  <p>对于非方阵，左逆和右逆是不同概念（如果存在的话），但对于方阵它们等价。</p>
+</div>
+
+<h3>7.2 什么时候没有逆矩阵？</h3>
+
+<p>矩阵不可逆（奇异）有多种等价的判别方式，每一角度都揭示了奇异性的不同侧面：</p>
+
+<div class="card warm">
+  <h4 style="margin-top:0; margin-bottom:4px;">⚠️ 奇异矩阵的等价条件</h4>
+  <ul>
+    <li><strong>行列式为 0</strong>：$\det(A) = 0$</li>
+    <li><strong>列向量线性相关</strong>：列不满秩，无法张成整个空间</li>
+    <li><strong>存在非零向量 $\mathbf{x}$ 使 $A\mathbf{x} = \mathbf{0}$</strong></li>
+    <li>消元过程中出现全零行</li>
+  </ul>
+</div>
+
+<h4>非零向量 x 使 Ax = 0 的反证法</h4>
+
+<div class="card">
+  <p>如果 $A\mathbf{x} = \mathbf{0}$ 且 $\mathbf{x} \neq \mathbf{0}$，那么 $A$ 不可能有逆矩阵：</p>
+  <ol>
+    <li>假设 $A^{-1}$ 存在。</li>
+    <li>在等式 $A\mathbf{x} = \mathbf{0}$ 两边同时左乘 $A^{-1}$：</li>
+  </ol>
+  <div style="text-align:center; margin:10px 0;">
+    $$A^{-1}(A\mathbf{x}) = A^{-1}\mathbf{0} \;\Longrightarrow\; (A^{-1}A)\mathbf{x} = \mathbf{0} \;\Longrightarrow\; I\mathbf{x} = \mathbf{0} \;\Longrightarrow\; \mathbf{x} = \mathbf{0}$$
+  </div>
+  <ol start="3">
+    <li>得到 $\mathbf{x} = \mathbf{0}$，与假设矛盾。</li>
+  </ol>
+  <p style="margin-top:8px;"><strong>几何含义：</strong> 如果 $A$ 把非零向量压缩到零向量，说明 $A$ 降维了——一个降维的变换无法恢复原信息，因此不可逆。</p>
+</div>
+
+<h3>7.3 求逆矩阵与解方程组</h3>
+
+<div class="summary">
+<strong>求逆矩阵本质上就是求解多个线性方程组——区别只是右侧向量不同。</strong>
+</div>
+
+<p>考虑逆矩阵的定义方程：</p>
+
+<div class="card" style="text-align:center;">
+  $$A \cdot B = I$$
+  <p>其中 $B = A^{-1}$ 未知，$I$ 是单位矩阵。</p>
+</div>
+
+<p><strong>以列视角来看：</strong></p>
+<div class="card">
+  <p>将 $B$ 按列拆分，$B = [\mathbf{b}_1 \; \mathbf{b}_2 \; \cdots \; \mathbf{b}_n]$，则：</p>
+  <div style="text-align:center; margin:8px 0;">
+    $$A \cdot \mathbf{b}_1 = \begin{bmatrix}1 \\ 0 \\ \vdots \\ 0\end{bmatrix},\quad
+    A \cdot \mathbf{b}_2 = \begin{bmatrix}0 \\ 1 \\ \vdots \\ 0\end{bmatrix},\quad \dots,\quad
+    A \cdot \mathbf{b}_n = \begin{bmatrix}0 \\ 0 \\ \vdots \\ 1\end{bmatrix}$$
+  </div>
+  <ul>
+    <li>$\mathbf{b}_j$ 相当于方程组中的 $\mathbf{x}$</li>
+    <li>$I$ 的第 $j$ 列相当于右侧向量 $\mathbf{b}$（某个位置为 1 其余为 0）</li>
+    <li>所以求 $B$ 的每一列，相当于求解 $n$ 个不同的方程组</li>
+  </ul>
+  <p style="margin-top:6px;">所有方程组的<strong>系数矩阵 A 相同</strong>，只是右侧向量不同。这意味着消元步骤完全相同，只需要在回代时处理不同的右侧。</p>
+</div>
+
+<h3>7.4 Gauss-Jordan 方法：一次解决所有方程组</h3>
+
+<div class="summary">
+<strong>Gauss-Jordan 方法通过增广矩阵 $[A \mid I]$，一次性对所有右侧向量同步消元，左边变为 $I$ 时右边自动变成 $A^{-1}$。</strong>
+</div>
+
+<h4>操作步骤</h4>
+
+<div class="card" style="text-align:center;">
+  $$[A \mid I] \xrightarrow{\text{消元}} [I \mid A^{-1}]$$
+</div>
+
+<h4>为什么右边会变成 $A^{-1}$？</h4>
+
+<div class="card">
+  <ol>
+    <li>对矩阵进行<strong>初等行变换</strong>，等价于在它左边乘以一个对应的<strong>初等矩阵</strong>。</li>
+    <li>在 Gauss-Jordan 消元法中，我们对增广矩阵 $(A \mid I)$ 进行了一系列连续的行变换。假设依次做了第 $1, 2, \dots, k$ 步变换，可以把所有步骤合并成一个<strong>总变换矩阵</strong>，记为 $P$。</li>
+    <li>因为对整个增广矩阵 $(A \mid I)$ 的每一行进行同步变换，这相当于用矩阵 $P$ 左乘整个增广矩阵：</li>
+  </ol>
+  <div style="text-align:center; margin:10px 0;">
+    $$P (A \mid I) = (PA \mid PI)$$
+  </div>
+  <ol start="4">
+    <li>左边的部分变为了 $I$，即 $PA = I$。根据可逆矩阵的定义，如果 $PA = I$，则 $P = A^{-1}$。</li>
+    <li>再看右边：右边原本是 $PI$，既然 $P = A^{-1}$，那么右边自然变成了 $PI = P = A^{-1}$。</li>
+  </ol>
+  <p style="margin-top:8px;"><strong>结论：</strong> 左边化为 $I$ 时，整个增广矩阵变为 $(I \mid A^{-1})$——右边自动出现 $A^{-1}$。</p>
+</div>
+
+<!-- ============ SECTION 8 ============ -->
+<h2 id="quick-multiply">八、矩阵乘法的快速运算</h2>
+
+<div class="summary">
+<strong>利用矩阵乘法的四种视角，可以快速计算特定形式的矩阵乘法等式。</strong> 尤其是未知数在左边的场景（如寻找消元法对应的变换矩阵 $E$）。
+</div>
+
+<h3>8.1 核心思路</h3>
+
+<p>矩阵乘法 $C = AB$ 的四种视角本质上是同一种运算的不同理解方式。在具体问题中选择合适的视角，可以大幅简化计算：</p>
+
+<div class="card">
+  <table>
+    <tr><th>问题场景</th><th>推荐视角</th><th>理由</th></tr>
+    <tr>
+      <td>求 $C$ 的某一列</td>
+      <td><span class="keyword">列视角</span></td>
+      <td>$C_{*j} = A \cdot \mathbf{b}_j$，只关心 B 的一列</td>
+    </tr>
+    <tr>
+      <td>求 $C$ 的某一行</td>
+      <td><span class="keyword">行视角</span></td>
+      <td>$C_{i*} = \mathbf{a}_i \cdot B$，只关心 A 的一行</td>
+    </tr>
+    <tr>
+      <td>寻找左乘矩阵 $X$ 使 $XA = U$</td>
+      <td><span class="keyword">行视角</span></td>
+      <td>$X$ 的每一行决定 $U$ 的对应行如何由 $A$ 的行组合而成</td>
+    </tr>
+    <tr>
+      <td>矩阵分解 / 低秩近似</td>
+      <td><span class="keyword">列 × 行</span></td>
+      <td>$AB = \sum \mathbf{c}_k \mathbf{r}_k$，每一项是秩-1 矩阵</td>
+    </tr>
+  </table>
+</div>
+
+<h3>8.2 例：消元法对应的变换矩阵 $E$</h3>
+
+<p>在消元法中，我们需要找到一个矩阵 $E$，使得 $E \cdot A = U$（$U$ 是上三角矩阵）。这是典型的<strong>未知数在左边</strong>的矩阵乘法问题。</p>
+
+<div class="card warm">
+  <p><strong>从行视角出发：</strong> $E$ 的第 $i$ 行决定了 $U$ 的第 $i$ 行，即 $U_{i*} = E_{i*} \cdot A$。</p>
+  <p>所以想确定 $E$ 的第 $i$ 行，就问：<strong>$U$ 的第 $i$ 行是 $A$ 的各行如何组合得到的？</strong></p>
+</div>
+
+<p>以 $2 \times 2$ 矩阵为例，目标是用 row₁ 消去 row₂ 的第一列：</p>
+
+<div class="card" style="text-align:center;">
+  $$A = \begin{bmatrix}1 & 2 \\ 3 & 4\end{bmatrix},\quad
+  U = \begin{bmatrix}1 & 2 \\ 0 & -2\end{bmatrix}$$
+  <p style="margin-top:6px;">操作：$\text{row}_2 \gets \text{row}_2 - 3 \cdot \text{row}_1$</p>
+</div>
+
+<p><strong>用行视角快速确定 $E$：</strong></p>
+<div class="card">
+  <ul>
+    <li>$U$ 的第 1 行 $=$ $A$ 的第 1 行（不变）→ $E_{1*} = (1, 0)$</li>
+    <li>$U$ 的第 2 行 $=$ $A$ 的第 2 行 $-$ $3 \cdot$ $A$ 的第 1 行 → $E_{2*} = (-3, 1)$</li>
+  </ul>
+  <div style="text-align:center; margin:8px 0;">
+    $$\Longrightarrow\; E = \begin{bmatrix}1 & 0 \\ -3 & 1\end{bmatrix}$$
+  </div>
+</div>
+
+<div class="highlight">
+  <strong>关键：</strong> 不需要逐元素计算矩阵乘法，而是用
+行视角直接写出 $E$ 的每一行——$E$ 的第 $i$ 行就是 $U$ 的第 $i$ 行对 $A$ 的各行的组合系数。</p>
+</div>
+
+<!-- ============ SECTION 9 ============ -->
+<h2 id="summary">九、总结</h2>
+
+<div class="card">
+  <table>
+    <tr><th>视角</th><th>计算公式</th><th>几何含义</th><th>应用</th></tr>
+    <tr>
+      <td><span class="keyword">元素（点积）</span></td>
+      <td>$C_{ij} = \sum_k A_{ik}B_{kj}$</td>
+      <td>行与列对应位置相乘求和</td>
+      <td>数值计算、编程实现</td>
+    </tr>
+    <tr>
+      <td><span class="keyword">列视角</span></td>
+      <td>$C_{*j} = A\mathbf{b}_j$</td>
+      <td>C 的每列是 A 各列的线性组合</td>
+      <td>列空间、$Ax=b$</td>
+    </tr>
+    <tr>
+      <td><span class="keyword">行视角</span></td>
+      <td>$C_{i*} = \mathbf{a}_i B$</td>
+      <td>C 的每行是 B 各行的线性组合</td>
+      <td>行空间、线性变换</td>
+    </tr>
+    <tr>
+      <td><span class="keyword">列 × 行</span></td>
+      <td>$AB = \sum_k \mathbf{c}_k\mathbf{r}_k$</td>
+      <td>秩-1 矩阵的和</td>
+      <td>SVD、低秩近似</td>
+    </tr>
+    <tr>
+      <td><span class="keyword">分块乘法</span></td>
+      <td>子块作为元素参与乘法</td>
+      <td>不同粒度的自相似结构</td>
+      <td>大矩阵优化、理论证明</td>
+    </tr>
+  </table>
+</div>
+
+<div class="summary">
+  <strong>一句话记住：</strong> 矩阵乘法不是一个简单的数值运算，而是一架"视角转换器"——四种视角分别告诉你怎么看、怎么算、怎么理解。选择正确的视角，才能看到矩阵背后的几何世界。
+
+</div>
+
+
+</body>
+</html>
