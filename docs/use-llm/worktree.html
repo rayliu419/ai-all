@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>使用 AI 时的 Worktree 实践</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  /* layout */
+  .page-layout {
+    display: flex;
+    gap: 30px;
+    max-width: none;
+    margin: 0 auto;
+    padding: 28px 20px;
+    min-height: 100vh;
+  }
+  .sidebar {
+    width: 200px;
+    flex-shrink: 0;
+    align-self: flex-start;
+    position: sticky;
+    top: 28px;
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  .content {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+  }
+
+  /* typography */
+  h1 { font-size: 1.35em; margin: 0 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+  h2 { font-size: 1.2em; margin: 16px 0 8px; color: #1f4a2e; }
+  h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+  p { margin: 6px 0; }
+  ul, ol { padding-left: 20px; margin: 4px 0; }
+  li { margin: 2px 0; }
+
+  /* cards */
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card.warm {
+    background: #fdf6ec;
+    border-color: #e6d5b8;
+  }
+
+  /* toc */
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
+  .toc > ol { margin: 8px 0 0 22px; list-style: none; counter-reset: toc; padding: 0; }
+  .toc > ol > li { counter-increment: toc; margin: 4px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4a2e; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.92em; }
+  .toc a:hover { text-decoration: underline; color: #1a4a2e; }
+
+  /* inline toc fallback (hidden by default) */
+  .toc-inline { display: none; }
+
+  strong { color: #1a4a2a; }
+  em { color: #3d6a4f; }
+  code {
+    font-size: 0.88em;
+    background: #e2efe5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4a2a;
+  }
+  pre {
+    font-size: 0.8em;
+    background: #e2efe5;
+    border: 1px solid #c3dbcc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+  hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+  a { color: #1f4a2e; text-decoration: none; }
+  a:hover { text-decoration: underline; color: #2a8f4f; }
+  blockquote {
+    border-left: 3px solid #2d8f5a;
+    background: #e8f5ec;
+    padding: 6px 12px;
+    margin: 8px 0;
+    border-radius: 0 4px 4px 0;
+    color: #1a4a2e;
+    font-size: 0.95em;
+  }
+  .highlight {
+    background: #e8f5ec;
+    border-left: 4px solid #2a8f4f;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #1a4a2a;
+  }
+  .highlight.accent {
+    border-left-color: #d97706;
+    background: #fef7e6;
+    color: #7c5200;
+  }
+
+  /* narrow screen: collapse sidebar */
+  @media (max-width: 800px) {
+    .page-layout { flex-direction: column; padding: 16px 12px; }
+    .sidebar { display: none; }
+    .toc-inline { display: block; }
+    ul, ol { padding-left: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-layout">
+
+<aside class="sidebar">
+  <div class="toc">
+    <div class="toc-title">目录</div>
+    <ol>
+      <li><a href="#core">核心主张</a></li>
+      <li><a href="#why">为什么 Worktree 变得重要</a></li>
+      <li><a href="#compare">Worktree vs. Clone</a></li>
+      <li><a href="#practice">Best Practice 示例</a></li>
+      <li><a href="#notes">注意事项</a></li>
+    </ol>
+  </div>
+</aside>
+
+<main class="content">
+
+<h1>使用 AI 时的 Worktree 实践</h1>
+
+<!-- inline toc for narrow screens -->
+<div class="toc-inline">
+  <div class="toc">
+    <div class="toc-title">目录</div>
+    <ol>
+      <li><a href="#core">核心主张</a></li>
+      <li><a href="#why">为什么 Worktree 变得重要</a></li>
+      <li><a href="#compare">Worktree vs. Clone</a></li>
+      <li><a href="#practice">Best Practice 示例</a></li>
+      <li><a href="#notes">注意事项</a></li>
+    </ol>
+  </div>
+</div>
+
+<div class="card" style="text-align:center; border:2px solid #d97706;">
+  <p><strong>在 AI 编程场景下，worktree 从"可选工具"变成了"必要基建"。</strong><br>AI 需要隔离的工作区、需要对比、需要同时维护多个上下文，worktree 提供了最轻量的解决方案。</p>
+</div>
+
+<hr>
+
+<!-- ============ CORE ============ -->
+<h2 id="core">核心主张</h2>
+
+<div class="card warm">
+  <p>Git Worktree 允许一个仓库同时 checkout 多个分支到不同目录，共享同一个 <code>.git</code> 对象存储。</p>
+</div>
+
+<ul>
+  <li>AI 编程工具（Claude Code, Cursor, Copilot 等）会在目录中生成缓存、索引、历史记录。如果 AI 和人在同一目录轮流工作，双方的上下文相互污染。</li>
+  <li>AI 工作区的独立性不再是"整洁偏好"，而是能否跑对的关键前提。</li>
+</ul>
+
+<hr>
+
+<!-- ============ WHY ============ -->
+<h2 id="why">为什么 AI 场景下 Worktree 变得重要？</h2>
+
+<h3>1. AI 需要独立工作区</h3>
+<div class="card">
+  <p>AI 编程工具会在目录中生成各种状态文件（对话历史、索引缓存、临时文件）。如果 AI 和人在同一目录切换使用，AI 的缓存会干扰你的操作，你的操作也会破坏 AI 的上下文。</p>
+</div>
+
+<h3>2. 分支切换不再无害</h3>
+<div class="card warm">
+  <p>传统开发中切分支只是代码变更。但 AI 编程工具有自己的状态——打开文件、对话历史、上下文缓存。在 AI session 中间切分支，AI 记忆中的代码结构和实际目录状态会不一致，直接导致<strong>幻觉</strong>。</p>
+</div>
+
+<h3>3. 需要并行 Hold 多个上下文</h3>
+<div class="card">
+  <p>AI 经常需要同时处理多个任务（一个任务等待测试结果时，另一个任务已经开始）。一个目录只有一个 working tree，无法支持真正的并行。Worktree 让每个任务拥有独立目录和独立状态。</p>
+</div>
+
+<h3>4. AI 生成代码需要独立 Review</h3>
+<div class="card">
+  <p>AI 生成的代码需要与主分支代码进行完整对比。Worktree 天然提供隔离，review 时通过 <code>git diff</code> 即可清晰看到 AI 的全部变更。</p>
+</div>
+
+<h3>5. 不同 AI 工具各司其职</h3>
+<div class="card warm">
+  <p>Claude Code 用 worktree A 做后端开发，Cursor 用 worktree B 做前端，互不干扰。每个工具在自己的沙箱中工作。</p>
+</div>
+
+<hr>
+
+<!-- ============ COMPARE ============ -->
+<h2 id="compare">Worktree vs. Clone 对比</h2>
+
+<p>最直接的替代方案是 clone。但 worktree 在 AI 场景下有显著优势：</p>
+
+<div class="card" style="overflow-x:auto; padding:0;">
+<table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+  <thead>
+    <tr style="background:#d4e8db;">
+      <th style="padding:8px 10px; text-align:left; border-bottom:2px solid #2a8f4f;">对比维度</th>
+      <th style="padding:8px 10px; text-align:left; border-bottom:2px solid #2a8f4f;">Worktree</th>
+      <th style="padding:8px 10px; text-align:left; border-bottom:2px solid #2a8f4f;">Clone</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><strong>创建速度</strong></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">即时（秒级）</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">慢（取决于仓库大小，可能数分钟）</td></tr>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><strong>磁盘占用</strong></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">仅一份 .git，共享对象存储</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">每个 clone 一份完整 .git</td></tr>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><strong>分支可见性</strong></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">所有分支、tag 自动可见</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">需要手动 fetch、添加 remote</td></tr>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><strong>同步机制</strong></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">自动共享 ref，无需手动同步</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">需要 push/pull 来同步</td></tr>
+    <tr><td style="padding:6px 10px;"><strong>AI 适配性</strong></td><td style="padding:6px 10px;">随时创建/销毁，适合 AI 试错迭代</td><td style="padding:6px 10px;">相对重量，不适合频繁创建</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="highlight">
+  <p>一句话：Worktree 是"轻量隔离"，Clone 是"重量副本"。AI 的试错迭代特性和 worktree 的瞬时创建/销毁天然匹配。</p>
+</div>
+
+<hr>
+
+<!-- ============ PRACTICE ============ -->
+<h2 id="practice">Best Practice 示例</h2>
+
+<p>场景：你在 <code>main</code> 分支上工作，同时让 AI 在 <code>feature/new-api</code> 上开发新功能。</p>
+
+<h3>基础流程</h3>
+
+<pre>
+# 1. 基于当前仓库创建一个 AI 专用 worktree
+git worktree add ../project-ai feature/new-api
+
+# 2. AI 在 ../project-ai 目录下工作
+#    - 目录与主工作区完全独立
+#    - AI 可以随意修改、测试、调试
+#    - 你在主目录继续开发互不干扰
+
+# 3. AI 完成任务后，在主目录 review 变更
+git diff feature/new-api
+
+# 4. 确认无误后合并
+git merge feature/new-api
+
+# 5. 清理 worktree
+git worktree remove ../project-ai
+</pre>
+
+<h3>并行任务循环</h3>
+
+<div class="card">
+  <p><strong>Cycle 结构</strong></p>
+  <pre style="background:none; border:none; padding:0;">main worktree（你） → AI worktree → review → merge → 清理
+                     ↘ 另一个 AI worktree（并行任务）</pre>
+</div>
+
+<p>进阶用法——为不同 AI 任务创建独立 worktree：</p>
+
+<pre>
+# 为不同 AI 任务创建独立 worktree
+git worktree add ../project-ai/feature-a feature/new-api
+git worktree add ../project-ai/refactor-b refactor/db-opt
+
+# AI 在各自的 worktree 中独立工作
+# 你在主目录 review 每个 worktree 的 diff，选择性合并
+</pre>
+
+<h3>配合 Review 流程</h3>
+
+<pre>
+# 用 IDE 或 diff 工具对比两个 worktree
+git diff worktree-a/main..worktree-b/feature/new-api
+
+# 也可以在两个目录之间直接 diff
+diff -rq project-main/ project-ai/ | grep -v '.git' | head -30
+</pre>
+
+<hr>
+
+<!-- ============ NOTES ============ -->
+<h2 id="notes">注意事项</h2>
+
+<div class="card">
+  <ul>
+    <li>Worktree 的 HEAD 分支不能被删除，除非先 <code>git worktree remove</code>。</li>
+    <li>删除 worktree 前确保代码已合并或 stash。</li>
+    <li>不同 worktree 可以 checkout 同一个分支，但只有一个是 writable，其余会被设为 detached HEAD。</li>
+    <li>AI 工具最好从 worktree 目录启动，不要在 parent 目录设 <code>--work-tree</code> 参数——这会导致 AI 对文件位置产生困惑。</li>
+    <li>建议在 CLAUDE.md 或 project rules 中加入 worktree 使用说明，让 AI 知道自己运行在 worktree 环境中。</li>
+  </ul>
+</div>
+
+<div class="highlight accent">
+  <p>最关键的教训：不要贪图方便让 AI 直接在你主目录上改代码。花 10 秒建一个 worktree，能省 10 小时的 debug 时间。</p>
+</div>
+
+</main>
+</div>
+
+</body>
+</html>
