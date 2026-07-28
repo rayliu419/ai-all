@@ -81,19 +81,8 @@ tr:nth-child(even) { background: var(--card); }
 /* KaTeX inline fix */
 .katex { font-size: 1.02em; }
 
-  /* layout */
-  .page-layout { display: flex; gap: 30px; margin: 0 auto; padding: 28px 20px; min-height: 100vh; }
-  .sidebar { width: 200px; flex-shrink: 0; align-self: flex-start; position: sticky; top: 28px; max-height: calc(100vh - 56px); overflow-y: auto; }
-  .content { flex: 1; min-width: 0; }
-  .toc-inline { display: none; }
-  @media (max-width: 800px) {
-    .page-layout { flex-direction: column; padding: 16px 12px; }
-    .sidebar { display: none; }
-    .toc-inline { display: block; }
-    ul, ol { padding-left: 16px; }
-  }
 
-  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; }
+  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
   .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
   .toc > ol { margin: 8px 0 0 22px; list-style: none; counter-reset: toc; padding: 0; }
   .toc > ol > li { counter-increment: toc; margin: 4px 0; }
@@ -106,21 +95,9 @@ tr:nth-child(even) { background: var(--card); }
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
 </head>
 <body>
-<div class="page-layout">
-  <aside class="sidebar">
-    <div class="toc">
-      <div class="toc-title">目录</div>
-      <ol>
-      <li><a href="#overview">一、微积分概览</a></li>
-      <li><a href="#essence-of-derivatives">二、导数的本质</a></li>
-      <li><a href="#chain-rule-product-rule">三、链式法则与乘积法则</a></li>
-      <li><a href="#directional-derivative-gradient">四、方向导数和梯度</a></li>
-      </ol>
-    </div>
-  </aside>
-  <main class="content">
+<main>
 <h1 style="border:none; margin:4px 0;">📈 微积分基础</h1>
-    <div class="toc toc-inline">
+    <div class="toc">
       <div class="toc-title">目录</div>
       <ol>
       <li><a href="#overview">一、微积分概览</a></li>
@@ -317,6 +294,5 @@ $$\text{总敏感度} = g'(h(x)) \cdot h'(x)$$
   </div>
 </div>
   </main>
-</div>
 
 </html>

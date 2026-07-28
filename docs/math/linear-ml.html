@@ -131,19 +131,8 @@ kbd {
   padding: 1px 5px;
 }
 
-  /* layout */
-  .page-layout { display: flex; gap: 30px; margin: 0 auto; padding: 28px 20px; min-height: 100vh; }
-  .sidebar { width: 200px; flex-shrink: 0; align-self: flex-start; position: sticky; top: 28px; max-height: calc(100vh - 56px); overflow-y: auto; }
-  .content { flex: 1; min-width: 0; }
-  .toc-inline { display: none; }
-  @media (max-width: 800px) {
-    .page-layout { flex-direction: column; padding: 16px 12px; }
-    .sidebar { display: none; }
-    .toc-inline { display: block; }
-    ul, ol { padding-left: 16px; }
-  }
 
-  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; }
+  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
   .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
   .toc > ol { margin: 8px 0 0 22px; list-style: none; counter-reset: toc; padding: 0; }
   .toc > ol > li { counter-increment: toc; margin: 4px 0; }
@@ -153,21 +142,9 @@ kbd {
 </style>
 </head>
 <body>
-<div class="page-layout">
-  <aside class="sidebar">
-    <div class="toc">
-      <div class="toc-title">目录</div>
-      <ol>
-      <li><a href="#linear-transformations">1. 线性变换：神经网络如何理解空间</a></li>
-      <li><a href="#geometric-interpretation">2. 经典算法的几何解释</a></li>
-      <li><a href="#data-visualization">3. 数据可视化：机器学习全流程的"眼睛"</a></li>
-      <li><a href="#summary">总结</a></li>
-      </ol>
-    </div>
-  </aside>
-  <main class="content">
+<main>
 <h1>线性代数的几何视角和机器学习</h1>
-    <div class="toc toc-inline">
+    <div class="toc">
       <div class="toc-title">目录</div>
       <ol>
       <li><a href="#linear-transformations">1. 线性变换：神经网络如何理解空间</a></li>
@@ -319,6 +296,5 @@ kbd {
 <p style="margin-top:10px;"><strong>一句话：</strong>机器学习 = 在合适的高维空间中找到合适的数据表示。几何视角让你"看到"模型在做什么，而不是盲调参数。</p>
 </div>
   </main>
-</div>
 
 </html>

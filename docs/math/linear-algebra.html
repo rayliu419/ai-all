@@ -51,19 +51,8 @@ tr:nth-child(even) { background: var(--card); }
 
 /* ---- Table of contents ---- */
 
-  /* layout */
-  .page-layout { display: flex; gap: 30px; margin: 0 auto; padding: 28px 20px; min-height: 100vh; }
-  .sidebar { width: 200px; flex-shrink: 0; align-self: flex-start; position: sticky; top: 28px; max-height: calc(100vh - 56px); overflow-y: auto; }
-  .content { flex: 1; min-width: 0; }
-  .toc-inline { display: none; }
-  @media (max-width: 800px) {
-    .page-layout { flex-direction: column; padding: 16px 12px; }
-    .sidebar { display: none; }
-    .toc-inline { display: block; }
-    ul, ol { padding-left: 16px; }
-  }
+  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
 
-  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; }
   .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
   .toc > ol { margin: 8px 0 0 22px; list-style: none; counter-reset: toc; padding: 0; }
   .toc > ol > li { counter-increment: toc; margin: 4px 0; }
@@ -73,8 +62,8 @@ tr:nth-child(even) { background: var(--card); }
 </style>
 </head>
 <body>
-<div class="page-layout">
-  <aside class="sidebar">
+<main>
+<h1 style="border:none; margin:4px 0;">📐 线性代数</h1>
     <div class="toc">
       <div class="toc-title">目录</div>
       <ol>
@@ -95,31 +84,7 @@ tr:nth-child(even) { background: var(--card); }
       <li><a href="#resources">十五、推荐资源</a></li>
       </ol>
     </div>
-  </aside>
-  <main class="content">
-<h1 style="border:none; margin:4px 0;">📐 线性代数</h1>
-    <div class="toc toc-inline">
-      <div class="toc-title">目录</div>
-      <ol>
-      <li><a href="#purpose-of-linear-algebra">一、线性代数是为了解决什么问题？</a></li>
-      <li><a href="#geometric-intuition">二、几何直觉：理解线性代数的关键</a></li>
-      <li><a href="#geometry-vs-computation">三、几何直觉 vs 数值计算</a></li>
-      <li><a href="#vectors">四、向量</a></li>
-      <li><a href="#basis-linear-independence">五、基与线性相关</a></li>
-      <li><a href="#matrices-linear-transformations">六、矩阵与线性变换</a></li>
-      <li><a href="#matrix-multiplication-composition">七、矩阵乘法与线性变换复合关系</a></li>
-      <li><a href="#three-dimensions">八、三维空间</a></li>
-      <li><a href="#determinants">九、行列式</a></li>
-      <li><a href="#non-square-matrices">十、非方阵</a></li>
-      <li><a href="#dot-product-duality">十一、点积与对偶性</a></li>
-      <li><a href="#change-of-basis">十二、基变换</a></li>
-      <li><a href="#eigenvectors-eigenvalues">十三、特征向量和特征值</a></li>
-      <li><a href="#abstract-vector-spaces">十四、抽象向量空间</a></li>
-      <li><a href="#resources">十五、推荐资源</a></li>
-      </ol>
-    </div>
 <p style="color:var(--accent); margin:2px 0;">MIT 18.06 · 3Blue1Brown 线性代数的本质</p>
-</div>
 
 <p>人类大脑只擅长处理<strong>单变量</strong>问题——一个未知数 x，列一个方程，解一个答案。但真实世界从来不是单变量的：气象预报要处理温度、湿度、气压、风向等千万个变量；跨海大桥要计算几万个钢梁交接点的形变；短视频推荐要考虑用户历史、停留时间、点赞倾向等几百个特征。当变量成百上千时，传统代数方程彻底失效。</p>
 
@@ -783,6 +748,5 @@ tr:nth-child(even) { background: var(--card); }
   <li>3Blue1Brown B站「线性代数的本质」视频系列</li>
 </ul>
   </main>
-</div>
 
 </html>
