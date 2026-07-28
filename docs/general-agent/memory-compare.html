@@ -40,11 +40,11 @@
 
   .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
   .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
-  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
-  .toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
-  .toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
-
-  .highlight {
+  .toc > ol { margin: 0; padding-left: 0; list-style: none; counter-reset: toc; }
+  .toc > ol > li { counter-increment: toc; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc > ol > li a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; display: inline-block; }
+  .toc > ol > li a:hover { background: #f5faf6; color: #1a4a2a; }.highlight {
     background: #e8f5ec;
     border-left: 4px solid #2a8f4f;
     padding: 8px 12px;
@@ -177,16 +177,14 @@
 
 <div class="toc">
   <div class="toc-title">📖 目录</div>
-  <div class="toc-grid">
-    <a href="#why-memory">为什么需要 Memory</a>
-    <a href="#difficulties">Memory 系统的难点</a>
-    <a href="#design-patterns">当前的主要设计模式</a>
-    <a href="#schemes">各方案详解</a>
-    <a href="#comparison">各方案横向对比</a>
-    <a href="#cache-conflict">动态 Memory 与 Cache 的冲突</a>
-  </div>
-</div>
-
+    <ol>
+    <li><a href="#why-memory">为什么需要 Memory</a></li>
+    <li><a href="#difficulties">Memory 系统的难点</a></li>
+    <li><a href="#design-patterns">当前的主要设计模式</a></li>
+    <li><a href="#schemes">各方案详解</a></li>
+    <li><a href="#comparison">各方案横向对比</a></li>
+    <li><a href="#cache-conflict">动态 Memory 与 Cache 的冲突</a></li></div>
+  </ol>
 </div>
 
 <hr>

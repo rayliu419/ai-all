@@ -48,10 +48,11 @@ tr:nth-child(even) { background: var(--card); }
 .warm { background: #fdf6e3; border: 1px solid #eedca5; }
   .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
   .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
-  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
-  .toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
-  .toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
-</style>
+  .toc > ol { margin: 0; padding-left: 0; list-style: none; counter-reset: toc; }
+  .toc > ol > li { counter-increment: toc; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc > ol > li a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; display: inline-block; }
+  .toc > ol > li a:hover { background: #f5faf6; color: #1a4a2a; }</style>
 </head>
 <body>
 
@@ -62,14 +63,13 @@ tr:nth-child(even) { background: var(--card); }
 
 <div class="toc">
   <div class="toc-title">📖 目录</div>
-  <div class="toc-grid">
-    <a href="#overview">一、概述</a>
-    <a href="#core-flow">二、核心流程与机制</a>
-    <a href="#llm-vs-embedding">三、LLM vs Embedding 模型</a>
-    <a href="#rag-post-training">四、RAG 后训练</a>
-    <a href="#long-context-vs-rag">五、注入上下文</a>
-    <a href="#summary">六、总结</a>
-  </div>
+    <ol>
+    <li><a href="#overview">概述</a></li>
+    <li><a href="#core-flow">核心流程与机制</a></li>
+    <li><a href="#llm-vs-embedding">LLM vs Embedding 模型</a></li>
+    <li><a href="#rag-post-training">RAG 后训练</a></li>
+    <li><a href="#long-context-vs-rag">注入上下文</a></li>
+    <li><a href="#summary">总结</a></li></div>
 </div>
 
 <!-- ============ OVERVIEW ============ -->

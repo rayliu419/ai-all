@@ -73,10 +73,11 @@ details { margin: 6px 0; }
 details[open] { margin-bottom: 10px; }
   .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
   .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
-  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
-  .toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
-  .toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
-</style>
+  .toc > ol { margin: 0; padding-left: 0; list-style: none; counter-reset: toc; }
+  .toc > ol > li { counter-increment: toc; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc > ol > li a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; display: inline-block; }
+  .toc > ol > li a:hover { background: #f5faf6; color: #1a4a2a; }</style>
 </head>
 <body>
 
@@ -84,13 +85,13 @@ details[open] { margin-bottom: 10px; }
 
 <div class="toc">
   <div class="toc-title">📖 目录</div>
-  <div class="toc-grid">
-    <a href="#llm-to-agent-pipeline">一、LLM → Agent 的完整链路</a>
-    <a href="#post-training-for-agents">二、Post-training 形成 Agent</a>
-    <a href="#memory">三、Memory</a>
-    <a href="#long-context">四、长上下文概念的理解</a>
-    <a href="#agent-architecture">五、LLM Agent 架构全景</a>
-  </div>
+    <ol>
+    <li><a href="#llm-to-agent-pipeline">LLM → Agent 的完整链路</a></li>
+    <li><a href="#post-training-for-agents">Post-training 形成 Agent</a></li>
+    <li><a href="#memory">Memory</a></li>
+    <li><a href="#long-context">长上下文概念的理解</a></li>
+    <li><a href="#agent-architecture">LLM Agent 架构全景</a></li>
+  </ol>
 </div>
 
 <h2 id="llm-to-agent-pipeline">LLM → Agent 的完整链路</h2>

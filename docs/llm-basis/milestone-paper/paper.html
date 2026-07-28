@@ -181,10 +181,11 @@
   }
   .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
   .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
-  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
-  .toc-grid a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
-  .toc-grid a:hover { background: #f5faf6; color: #1a4a2a; }
-</style>
+  .toc > ol { margin: 0; padding-left: 0; list-style: none; counter-reset: toc; }
+  .toc > ol > li { counter-increment: toc; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc > ol > li a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; display: inline-block; }
+  .toc > ol > li a:hover { background: #f5faf6; color: #1a4a2a; }</style>
 </head>
 <body>
 
@@ -196,14 +197,13 @@
 
 <div class="toc">
   <div class="toc-title">📖 目录</div>
-  <div class="toc-grid">
-    <a href="#architecture-revolution">一、基础架构革命</a>
-    <a href="#pretraining-scaling-laws">二、预训练与缩放定律</a>
-    <a href="#alignment">三、对齐技术</a>
-    <a href="#efficiency">四、效率优化</a>
-    <a href="#inference-agent">五、推理、Agent 与 Test-Time Scaling</a>
-    <a href="#rl-milestones">六、强化学习里程碑</a>
-  </div>
+    <ol>
+    <li><a href="#architecture-revolution">基础架构革命</a></li>
+    <li><a href="#pretraining-scaling-laws">预训练与缩放定律</a></li>
+    <li><a href="#alignment">对齐技术</a></li>
+    <li><a href="#efficiency">效率优化</a></li>
+    <li><a href="#inference-agent">推理、Agent 与 Test-Time Scaling</a></li>
+    <li><a href="#rl-milestones">强化学习里程碑</a></li></div>
 </div>
 
 <div class="container">

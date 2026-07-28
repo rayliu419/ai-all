@@ -56,11 +56,11 @@ tr:nth-child(even) { background: var(--card); }
 
 .toc { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
 .toc-title { font-weight: 600; color: var(--accent); font-size: 1em; margin-bottom: 6px; }
-.toc-grid { display: grid; grid-template-columns: 1fr; gap: 2px 16px; }
-.toc-grid a { color: var(--text); text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
-.toc-grid a:hover { background: var(--bg); color: var(--accent); }
-
-.katex-display { margin: 10px 0; }
+.toc > ol { margin: 0; padding-left: 0; list-style: none; counter-reset: toc; }
+  .toc > ol > li { counter-increment: toc; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc > ol > li a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; display: inline-block; }
+  .toc > ol > li a:hover { background: #f5faf6; color: #1a4a2a; }.katex-display { margin: 10px 0; }
 .math-row { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; margin: 10px 0; }
 .math-row > * { flex-shrink: 0; }
 </style>
@@ -74,15 +74,15 @@ tr:nth-child(even) { background: var(--card); }
 
 <div class="toc">
   <div class="toc-title">📖 目录</div>
-  <div class="toc-grid">
-    <a href="#matrix-multiply-column-view">一、矩阵乘法与列视角</a>
-    <a href="#four-subspaces">二、四个基本子空间</a>
-    <a href="#column-space">三、列空间（Column Space）</a>
-    <a href="#null-space">四、零空间（Null Space）</a>
-    <a href="#row-space">五、行空间（Row Space）</a>
-    <a href="#left-null-space">六、左零空间（Left Null Space）</a>
-    <a href="#summary">七、总结与关系图</a>
-  </div>
+    <ol>
+    <li><a href="#matrix-multiply-column-view">矩阵乘法与列视角</a></li>
+    <li><a href="#four-subspaces">四个基本子空间</a></li>
+    <li><a href="#column-space">列空间（Column Space）</a></li>
+    <li><a href="#null-space">零空间（Null Space）</a></li>
+    <li><a href="#row-space">行空间（Row Space）</a></li>
+    <li><a href="#left-null-space">左零空间（Left Null Space）</a></li>
+    <li><a href="#summary">总结与关系图</a></li>
+  </ol>
 </div>
 
 <!-- ============ 矩阵乘法与列视角 ============ -->

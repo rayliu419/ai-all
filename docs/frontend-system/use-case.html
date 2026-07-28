@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>浏览器存储机制：生命周期与适用范围</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 28px 20px;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 1.35em; margin: 18px 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+  h2 { font-size: 1.2em; margin: 22px 0 8px; color: #1f4a2e; }
+  h3 { font-size: 1.02em; margin: 14px 0 6px; color: #245a36; }
+  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+  p { margin: 6px 0; }
+  ul, ol { padding-left: 20px; margin: 4px 0; }
+  li { margin: 2px 0; }
+
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card.warm {
+    background: #fdf6ec;
+    border-color: #e6d5b8;
+  }
+  .card.blue {
+    background: #e8f0f5;
+    border-color: #b8cce6;
+  }
+
+  .highlight {
+    background: #e8f5ec;
+    border-left: 4px solid #2a8f4f;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #1a4a2a;
+  }
+
+  strong { color: #1a4a2a; }
+  em { color: #3d6a4f; }
+
+  code {
+    font-size: 0.88em;
+    background: #e2efe5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4a2a;
+  }
+  pre {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 5px;
+    padding: 10px 14px;
+    margin: 8px 0;
+    overflow-x: auto;
+    font-size: 0.8em;
+    line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; font-size: 1em; }
+
+  hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    margin: 10px 0;
+  }
+  th, td {
+    border: 1px solid #c3dbcc;
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #d4e8db;
+    color: #1a4a2a;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: #f5faf6; }
+
+  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
+  .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
+  .toc > ol { margin: 0; padding-left: 0; list-style: none; counter-reset: toc; }
+  .toc > ol > li { counter-increment: toc; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc > ol > li a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; display: inline-block; }
+  .toc > ol > li a:hover { background: #f5faf6; color: #1a4a2a; }.takeaway {
+    background: #e8f5ec;
+    border: 1px solid #2a8f4f;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 0.95em;
+  }
+  .takeaway-title {
+    font-weight: 700;
+    color: #1a4a2a;
+    margin-bottom: 4px;
+  }
+
+  .katex { font-size: 1em; }
+
+  @media (max-width: 600px) {
+    body { padding: 16px 12px; }
+    ul, ol { padding-left: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>浏览器存储机制：生命周期与适用范围</h1>
+
+<div class="toc">
+  <div class="toc-title">目录</div>
+    <ol>
+    <li><a href="#overview">概述</a></li>
+    <li><a href="#same-origin">同源策略</a></li>
+    <li><a href="#cookie">Cookie</a></li>
+    <li><a href="#sessionstorage">sessionStorage</a></li>
+    <li><a href="#localstorage">localStorage</a></li>
+    <li><a href="#indexeddb">IndexedDB</a></li>
+    <li><a href="#modern-practice">推荐的现代做法</a></li>
+    <li><a href="#summary">总结</a></li>
+    <li><a href="#case-study">案例分析：电商结算与 MFA 验证</a></li>
+    </ol>
+</div>
+
+<hr>
+
+<!-- ============ OVERVIEW ============ -->
+<h2 id="overview">概述</h2>
+
+<p>前端开发中，浏览器提供了多种客户端存储方案。最常用的四种是 <strong>Cookie</strong>、<strong>sessionStorage</strong>、<strong>localStorage</strong> 和 <strong>IndexedDB</strong>。它们各有不同的生命周期、容量限制、作用域和适用场景。理解这些差异，才能在选择时做出正确决策。</p>
+
+<hr>
+
+<!-- ============ SAME ORIGIN ============ -->
+<h2 id="same-origin">同源策略</h2>
+
+<h3>同源的定义</h3>
+
+<p><strong>同源策略（Same-Origin Policy）</strong> 是浏览器最核心的安全机制。它限制来自不同源（origin）的文档或脚本对彼此资源的访问。一个 <strong>源（origin）</strong> 由三部分组成：</p>
+
+<pre><code>协议（scheme） + 主机名（host） + 端口（port）</code></pre>
+
+<ul>
+  <li><code>https://example.com:443</code> 和 <code>https://example.com</code>（默认端口）为同源</li>
+  <li><code>http://example.com</code>（协议不同）和 <code>https://api.example.com</code>（子域名不同）则为不同源</li>
+</ul>
+
+<h3>同源策略的作用</h3>
+
+<p>同源策略的本质是<strong>隔离</strong>：</p>
+<ul>
+  <li>页面 A 的脚本不能读取页面 B 的数据，除非它们同源</li>
+  <li>这使得恶意网站无法通过 iframe 或 script 标签窃取用户在其他站点的数据</li>
+  <li>跨域请求可以通过 CORS（Cross-Origin Resource Sharing）机制获得服务器的明确许可</li>
+</ul>
+<p>对于浏览器存储来说，同源策略意味着：一个源只能读写属于自己源的数据，无法访问其他源的数据。这是所有存储机制的共同基础。</p>
+
+<h3>各存储机制的同源规则对比</h3>
+
+<table>
+  <tr>
+    <th>存储机制</th>
+    <th>同源规则</th>
+    <th>特殊行为</th>
+  </tr>
+  <tr>
+    <td><strong>Cookie</strong></td>
+    <td>作用域由 <strong>域名 + 路径</strong> 共同决定，与严格 origin 不同</td>
+    <td>
+      <ul>
+        <li>子域名可共享（如 <code>app.example.com</code> 读取 <code>example.com</code> 的 Cookie）</li>
+        <li>可通过 <code>Domain</code> 控制子域名共享范围，<code>Path</code> 限定目录</li>
+        <li>默认不区分端口</li>
+        <li><code>SameSite</code> 属性控制跨站发送行为</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Web Storage</strong><br/>（sessionStorage / localStorage）</td>
+    <td><strong>严格按 origin 隔离</strong>：协议、主机名、端口必须完全一致</td>
+    <td>
+      <ul>
+        <li><code>http://example.com</code> 和 <code>https://example.com</code> 视为不同源</li>
+        <li>同一域的不同路径共享同一份存储</li>
+        <li>无法通过配置放宽同源限制</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><strong>IndexedDB</strong></td>
+    <td><strong>严格按 origin 隔离</strong></td>
+    <td>
+      <ul>
+        <li>不同源页面无法读写彼此的数据库</li>
+        <li>一个 origin 下可创建多个数据库，库名在同一 origin 内唯一</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+<h3>第三方内容的影响</h3>
+
+<p>当第三方内容通过 <code>&lt;iframe&gt;</code> 嵌入时：</p>
+<ul>
+  <li><code>&lt;script&gt;</code> 注入的第三方脚本运行在主页面源的上下文中，读写的是<strong>主页面的存储</strong></li>
+  <li><code>&lt;iframe&gt;</code> 中的第三方内容拥有自己的 origin，读写的是<strong>自己的存储</strong></li>
+  <li>如果用户禁用了第三方 Cookie，部分浏览器也会阻止第三方 iframe 访问 Web Storage</li>
+</ul>
+
+<hr>
+
+<!-- ============ COOKIE ============ -->
+<h2 id="cookie">Cookie</h2>
+
+<h3>生命周期</h3>
+
+<p>Cookie 的生命周期由 <code>Expires</code> 或 <code>Max-Age</code> 属性控制：</p>
+<ul>
+  <li><strong>会话 Cookie</strong>：不设置 <code>Expires</code> 和 <code>Max-Age</code>，关闭浏览器时清除。但部分浏览器支持"会话恢复"功能，可能使会话 Cookie 持续更久</li>
+  <li><strong>持久 Cookie</strong>：设置 <code>Expires</code>（过期日期）或 <code>Max-Age</code>（存活秒数）。到期后自动删除</li>
+  <li><strong>立即删除</strong>：将 <code>Expires</code> 设为过去时间，或 <code>Max-Age</code> 设为 <code>0</code> / 负数</li>
+</ul>
+
+<h3>适用范围</h3>
+
+<pre><code>客户端与服务器之间维护状态
+├── 用户登录凭证 / Session ID
+├── CSRF Token
+├── 用户偏好（如语言、主题）
+└── 追踪 / 分析（第三方 Cookie）</code></pre>
+
+<h3>特点</h3>
+
+<ul>
+  <li><strong>自动发送</strong>：每次 HTTP 请求都会带上同域 Cookie（可通过 <code>SameSite</code> 控制跨站行为），这在存储大量数据时会显著增加请求体积</li>
+  <li><strong>安全控制</strong>：支持 <code>Secure</code>（仅 HTTPS）、<code>HttpOnly</code>（禁止 JS 读取）、<code>SameSite</code>（跨站限制）等属性</li>
+  <li><strong>容量极小</strong>：每个 Cookie ~4KB，每个域名一般限制几十到上百个</li>
+  <li><strong>同源 + 路径</strong>：作用域可以限定到特定路径，不同于其他存储机制仅以 Origin 为单位</li>
+</ul>
+
+<h3>不适用场景</h3>
+<ul>
+  <li>存储大量数据（导致每次请求体积膨胀）</li>
+  <li>存储敏感结构化数据（仅支持字符串）</li>
+</ul>
+
+<hr>
+
+<!-- ============ sessionStorage ============ -->
+<h2 id="sessionstorage">sessionStorage</h2>
+
+<h3>生命周期</h3>
+
+<p><strong>存在于标签页（或窗口）的会话期间</strong>：</p>
+<ul>
+  <li>关闭标签页或窗口时，数据被完全清除</li>
+  <li>刷新页面或通过链接导航到同源页面，数据仍然保留</li>
+  <li>不同标签页/窗口的数据完全隔离，即使打开的是同一个站点</li>
+  <li>浏览器崩溃后重启，部分浏览器会恢复 sessionStorage，但无统一标准</li>
+</ul>
+
+<h3>适用范围</h3>
+
+<pre><code>与当前会话绑定的临时数据
+├── 表单填写进度（多步骤表单防丢失）
+├── 单页应用的路由状态 / 滚动位置
+├── 临时选择的商品（未提交购物车）
+├── 用户本次访问的临时偏好
+└── 页面间临时传递数据（替代 URL 参数）</code></pre>
+
+<h3>特点</h3>
+<ul>
+  <li><strong>标签页隔离</strong>：不同标签页即使同源也互不共享，适合多标签独立操作</li>
+  <li><strong>同步操作</strong>：会阻塞主线程，不适合频繁大量读写</li>
+  <li><strong>容量有限</strong>：通常 5-10MB</li>
+  <li><strong>仅字符串</strong>：存取前需要 <code>JSON.stringify</code> / <code>JSON.parse</code></li>
+</ul>
+
+<hr>
+
+<!-- ============ localStorage ============ -->
+<h2 id="localstorage">localStorage</h2>
+
+<h3>生命周期</h3>
+
+<p><strong>持久存储，直到手动删除</strong>：</p>
+<ul>
+  <li>关闭浏览器、重启设备后数据仍然保留</li>
+  <li>数据不会自动过期</li>
+  <li>清除方式：用户通过浏览器设置手动清除，或通过 JS 代码调用 <code>removeItem()</code> / <code>clear()</code></li>
+  <li>浏览器在存储空间不足时可能选择性地清除（视为 best-effort 数据）</li>
+</ul>
+
+<h3>适用范围</h3>
+
+<pre><code>跨会话持久化的简单数据
+├── 用户偏好（深色模式、字体大小、布局设置）
+├── 已浏览教程的「已读」标记
+├── 离线缓存的应用配置
+├── 购物车内容（非敏感、需跨会话保留）
+└── 本地游戏最高分记录</code></pre>
+
+<h3>特点</h3>
+<ul>
+  <li><strong>同源共享</strong>：同一域名下所有页面共享同一份 localStorage</li>
+  <li><strong>同步阻塞</strong>：读写操作同步，大量数据时影响 UI 响应</li>
+  <li><strong>容量有限</strong>：通常 5-10MB</li>
+  <li><strong>仅字符串</strong>：结构化数据需要手动序列化</li>
+</ul>
+
+<h3>限制与注意事项</h3>
+<ul>
+  <li>不应存储认证 Token 等敏感数据（XSS 攻击可读取）</li>
+  <li>Service Worker 和 Web Worker 无法直接访问</li>
+  <li>浏览器可能因磁盘空间不足而清理（best-effort），但实践中极少发生</li>
+</ul>
+
+<hr>
+
+<!-- ============ IndexedDB ============ -->
+<h2 id="indexeddb">IndexedDB</h2>
+
+<h3>生命周期</h3>
+
+<p><strong>持久存储，直到手动删除</strong>：</p>
+<ul>
+  <li>数据在浏览器关闭后仍然保留</li>
+  <li>无自动过期机制，需要代码显式删除</li>
+  <li>可请求 <strong>持久存储模式</strong>（<code>navigator.storage.persist()</code>），用户不会在浏览时丢失数据</li>
+  <li>私密浏览模式下，退出时数据通常被清除</li>
+</ul>
+
+<h3>适用范围</h3>
+
+<pre><code>大量结构化数据的客户端存储
+├── 离线 Web 应用（PWA）的全部数据
+├── 邮件客户端（缓存邮件列表、附件）
+├── 笔记 / 编辑器（文档内容、历史版本）
+├── 音视频元数据缓存
+├── 数据库快照、配置数据
+├── 用户生成的文件（通过 File / Blob 存储）
+└── 需要索引查询的复杂数据</code></pre>
+
+<h3>特点</h3>
+<ul>
+  <li><strong>大容量</strong>：实际可用空间取决于磁盘，一般可达数百 MB 甚至 GB。Chrome 允许使用总磁盘的 60%（每个 origin），Firefox 允许每个 eTLD+1 组最大 2GB</li>
+  <li><strong>异步 API</strong>：不阻塞主线程，适合大量数据处理</li>
+  <li><strong>支持结构化数据</strong>：可存储对象、数组、File、Blob 等，支持结构化克隆算法</li>
+  <li><strong>索引查询</strong>：支持创建索引，高效检索（类似 SQL 的 WHERE + ORDER BY）</li>
+  <li><strong>事务支持</strong>：读写操作在事务内执行，保证数据一致性</li>
+  <li><strong>Worker 可访问</strong>：在 Web Worker 和 Service Worker 中都可以使用</li>
+  <li><strong>API 较复杂</strong>：原生的 IndexedDB API 基于事件回调，推荐使用封装库（如 idb、Dexie.js）</li>
+</ul>
+
+<hr>
+
+<!-- ============ MODERN PRACTICE ============ -->
+<h2 id="modern-practice">推荐的现代做法</h2>
+
+<ol>
+  <li><strong>Cookie</strong> 只用于认证和服务器状态同步，不应作为通用存储方案</li>
+  <li><strong>localStorage</strong> 适合少量的、跨会话的简单键值数据，注意同步阻塞问题</li>
+  <li><strong>sessionStorage</strong> 适合标签页隔离的临时状态</li>
+  <li><strong>IndexedDB</strong> 是大多数"离线优先"应用的首选——利用异步特性，配合封装库（如 Dexie.js、idb）降低使用门槛</li>
+  <li>对于 PWA 的资源缓存，使用 <strong>Cache Storage API</strong>（通过 Service Worker）而非这些存储方案</li>
+</ol>
+
+<hr>
+
+<!-- ============ SUMMARY ============ -->
+<h2 id="summary">总结</h2>
+
+<table>
+  <tr>
+    <th>存储方案</th>
+    <th>生命周期</th>
+    <th>容量</th>
+    <th>核心用途</th>
+  </tr>
+  <tr>
+    <td><strong>Cookie</strong></td>
+    <td>按配置过期</td>
+    <td>~4KB</td>
+    <td>管通信</td>
+  </tr>
+  <tr>
+    <td><strong>sessionStorage</strong></td>
+    <td>随标签页消亡</td>
+    <td>~5-10MB</td>
+    <td>管会话</td>
+  </tr>
+  <tr>
+    <td><strong>localStorage</strong></td>
+    <td>持久保留</td>
+    <td>~5-10MB</td>
+    <td>管配置</td>
+  </tr>
+  <tr>
+    <td><strong>IndexedDB</strong></td>
+    <td>持久保留</td>
+    <td>GB 级</td>
+    <td>管数据</td>
+  </tr>
+</table>
+
+<div class="takeaway">
+  <div class="takeaway-title">💡 选择原则</div>
+  <p>选择存储方案时，应优先考虑异步方案（IndexedDB），避免同步 API 阻塞主线程影响用户体验。Cookie 只做通信，sessionStorage 管会话，localStorage 管配置，IndexedDB 管数据。</p>
+</div>
+
+<hr>
+
+<!-- ============ CASE STUDY ============ -->
+<h2 id="case-study">实际案例分析：电商结算与 MFA 验证</h2>
+
+<h3>场景描述</h3>
+
+<p>用户在电商网站上将商品加入购物车，进入 Cart 页面。点击「去结算」，系统要求进行 MFA 验证（如短信验证码或 TOTP），验证通过后才进入 Checkout 结算页面。</p>
+
+<p>Cart 页持有即将结算的数据，包括：</p>
+<ul>
+  <li>购物车商品列表（sku、数量、价格）</li>
+  <li>选中的收货地址</li>
+  <li>选中的配送方式</li>
+  <li>优惠券信息</li>
+  <li>订单备注等</li>
+</ul>
+
+<div class="highlight">
+  问题核心：<strong>MFA 验证作为一个中间环节，如何确保 Cart 侧的数据完整传递到 Checkout 侧？</strong>
+</div>
+
+<hr>
+
+<!-- ============ PLAN A ============ -->
+<h3>方案 A：重定向路由</h3>
+
+<h4>实现流程</h4>
+
+<pre><code>Cart 页面  ──(1) 携带数据跳转──►  MFA 页面  ──(2) 验证通过跳转──►  Checkout 页面
+               /mfa?redirect=/checkout            /checkout</code></pre>
+
+<ul>
+  <li>步骤 1：Cart 页面跳转到独立的 MFA 页面（URL 变为 <code>/mfa</code>），完成完整的页面卸载和重新加载</li>
+  <li>步骤 2：MFA 验证成功后，后端（或前端）重定向到 <code>/checkout</code>，再次发生页面卸载和重新加载</li>
+  <li>两次跳转都是<strong>浏览器级导航</strong>，JavaScript 内存中的状态完全丢失</li>
+</ul>
+
+<h4>数据如何跨跳转存活</h4>
+
+<p>每次导航都是全新的 JS 上下文，数据必须从<strong>持久化存储</strong>中恢复。有哪些选择？</p>
+
+<table>
+  <tr>
+    <th>存储方案</th>
+    <th>能否存活两次跳转？</th>
+    <th>评价</th>
+  </tr>
+  <tr>
+    <td><strong>JavaScript 内存</strong>（变量/State/Redux）</td>
+    <td>❌ 页面卸载即丢失</td>
+    <td>完全不可用</td>
+  </tr>
+  <tr>
+    <td><strong>URL query 参数</strong></td>
+    <td>✅ 但受 URL 长度限制</td>
+    <td>只能传少量非敏感数据（如订单 ID），不适合传完整购物车</td>
+  </tr>
+  <tr>
+    <td><strong>sessionStorage</strong></td>
+    <td>✅ 同源导航下持久保留</td>
+    <td><strong>最佳选择</strong>，生命周期与标签页绑定，数据用完可清除</td>
+  </tr>
+  <tr>
+    <td><strong>localStorage</strong></td>
+    <td>✅ 持久保留</td>
+    <td>可用但数据会残留在磁盘上，需额外清理</td>
+  </tr>
+  <tr>
+    <td><strong>IndexedDB</strong></td>
+    <td>✅ 持久保留</td>
+    <td>异步 API 配合复杂，临时数据场景用力过猛</td>
+  </tr>
+  <tr>
+    <td><strong>Cookie</strong></td>
+    <td>✅ 随请求发送</td>
+    <td>容量仅 ~4KB，且每次 HTTP 请求都带上，浪费带宽</td>
+  </tr>
+  <tr>
+    <td><strong>服务端 Session</strong></td>
+    <td>✅ 服务端存储，客户端只留 Session ID</td>
+    <td>依赖后端实现，需要 API 查询还原数据</td>
+  </tr>
+</table>
+
+<h4>sessionStorage 方案详解（推荐）</h4>
+
+<pre><code>// Cart 页面：跳转前缓存数据
+const checkoutData = {
+  items: cartItems,
+  address: selectedAddress,
+  shipping: selectedShipping,
+  coupon: appliedCoupon
+};
+sessionStorage.setItem('checkout_data', JSON.stringify(checkoutData));
+
+// 然后跳转到 /mfa
+window.location.href = '/mfa?redirect=/checkout';
+
+// ------------------------------------------------
+
+// Checkout 页面：加载时恢复数据
+const saved = sessionStorage.getItem('checkout_data');
+if (saved) {
+  const checkoutData = JSON.parse(saved);
+  // 渲染结算页面
+  sessionStorage.removeItem('checkout_data'); // 用完后清除
+}</code></pre>
+
+<div class="card">
+  <p><strong>为什么 sessionStorage &gt; localStorage？</strong></p>
+  <ol>
+    <li><strong>生命周期匹配</strong>：sessionStorage 随标签页关闭而销毁。用户完成结算后关闭标签页，数据自动消失，无需手动清理</li>
+    <li><strong>安全性更高</strong>：localStorage 跨会话持久保留，敏感结算数据残留在磁盘上时间越长，风险越大</li>
+    <li><strong>标签页隔离</strong>：用户同时打开多个标签页对比购物车时，每个标签页的结算数据互不干扰</li>
+  </ol>
+</div>
+
+<h4>服务端 Session 方案（替代方案）</h4>
+
+<pre><code>Cart 页面  ── POST /api/checkout/init ──►  服务端保存订单草稿，返回 checkoutId
+           ── 跳转 /mfa?checkoutId=xxx  ──►  MFA 页面
+                                            │
+           ◄── 验证成功，跳转 /checkout?checkoutId=xxx ──┘
+Checkout 页面  ── GET /api/checkout/draft?checkoutId=xxx ──►  服务端返回完整数据</code></pre>
+
+<ul>
+  <li>URL 只传一个 ID，不暴露敏感数据</li>
+  <li>服务端承担存储责任，前端只负责拿 ID 复原</li>
+  <li>缺点：需要额外的后端接口，增加网络往返</li>
+</ul>
+
+<hr>
+
+<!-- ============ PLAN B ============ -->
+<h3>方案 B：弹窗（Modal）</h3>
+
+<h4>实现流程</h4>
+
+<pre><code>Cart 页面  ── 当前页面弹出 MFA Modal ──►  用户输入验证码 ──►  Modal 关闭 ──►  进入 Checkout
+                  (前端路由不变)                         (同页面 / 前端路由跳转)</code></pre>
+
+<ul>
+  <li>MFA 验证以弹窗（Modal / Drawer）形式在当前页面上展开</li>
+  <li>整个过程中 Cart 页面<strong>从未卸载</strong>，JavaScript 上下文持续存在</li>
+  <li>MFA 验证通过后，可以原地切换到 Checkout 视图（同一路由下切换组件），或通过前端路由跳转到 <code>/checkout</code></li>
+</ul>
+
+<h4>数据流分析</h4>
+
+<p><strong>情景 1：Cart 和 Checkout 在同一路由下（SPA 组件切换）</strong></p>
+
+<pre><code>CartComponent ──(状态存储在父组件/Store中)──►  MfaModal
+                                                  │
+                   ◄── 验证成功 ───────────────┘
+                                                  │
+                   └── 切换为 CheckoutComponent（数据仍在 Store 中）</code></pre>
+
+<ul>
+  <li>数据完全在<strong>内存</strong>中流转，不需要任何持久化存储</li>
+  <li>Component state、Redux/Zustand store、React Context 等均可直接传递</li>
+  <li>MFA 验证本质上是同一次页面会话中的一个步骤，没有跨导航问题</li>
+</ul>
+
+<p><strong>情景 2：Cart 和 Checkout 是不同前端路由（SPA 路由跳转）</strong></p>
+
+<p>即使 Modal 关闭后通过 <code>react-router</code> 或 <code>vue-router</code> 跳转到 <code>/checkout</code>：</p>
+<ul>
+  <li>如果使用客户端路由（history.push/replace），仍然是<strong>同一页面上下文</strong>，JavaScript 状态不丢失</li>
+  <li>Redux/Zustand store 中的数据在路由切换后仍然可用</li>
+  <li><strong>不需要</strong> sessionStorage 或任何浏览器存储来传递数据</li>
+</ul>
+
+<h4>对存储的需求</h4>
+
+<table>
+  <tr>
+    <th>场景</th>
+    <th>Cart → MFA → Checkout</th>
+    <th>是否需要浏览器存储？</th>
+  </tr>
+  <tr>
+    <td>同路由组件切换</td>
+    <td>MFA Modal 打开/关闭，页面不跳转</td>
+    <td>❌ 不需要</td>
+  </tr>
+  <tr>
+    <td>前端路由跳转</td>
+    <td>history.push 切换路由，JS 上下文不丢</td>
+    <td>❌ 不需要</td>
+  </tr>
+  <tr>
+    <td>浏览器刷新</td>
+    <td>用户意外刷新 F5</td>
+    <td>✅ sessionStorage 可作为<strong>降级恢复</strong></td>
+  </tr>
+</table>
+
+<hr>
+
+<!-- ============ PLAN COMPARISON ============ -->
+<h3>方案对比</h3>
+
+<table>
+  <tr>
+    <th>对比维度</th>
+    <th>重定向路由</th>
+    <th>弹窗（Modal）</th>
+  </tr>
+  <tr>
+    <td><strong>页面导航次数</strong></td>
+    <td>2 次完整导航（Cart→MFA→Checkout）</td>
+    <td>0 次（同页完成）</td>
+  </tr>
+  <tr>
+    <td><strong>数据传递方式</strong></td>
+    <td>需持久化存储（sessionStorage / 服务端 Session）</td>
+    <td>内存直接传递</td>
+  </tr>
+  <tr>
+    <td><strong>数据安全风险</strong></td>
+    <td>MFA 页面可访问存储，需防 XSS</td>
+    <td>数据仅在当前页面内存中</td>
+  </tr>
+  <tr>
+    <td><strong>网络开销</strong></td>
+    <td>MFA 页独立加载，额外 HTML/CSS/JS 下载</td>
+    <td>无额外页面加载</td>
+  </tr>
+  <tr>
+    <td><strong>用户体验</strong></td>
+    <td>白屏等待两次，URL 路径清晰 / SEO 友好</td>
+    <td>无整页刷新，流程连贯</td>
+  </tr>
+  <tr>
+    <td><strong>浏览器兼容</strong></td>
+    <td>所有浏览器工作一致</td>
+    <td>需前端 SPA 框架支持</td>
+  </tr>
+  <tr>
+    <td><strong>URL 可分享性</strong></td>
+    <td>每个步骤有独立 URL</td>
+    <td>MFA 过程不能在 URL 中体现</td>
+  </tr>
+  <tr>
+    <td><strong>实现复杂度</strong></td>
+    <td>低，服务端渲染场景天然合适</td>
+    <td>需 Modal 状态管理，MFA 逻辑内聚在当前页</td>
+  </tr>
+  <tr>
+    <td><strong>从刷新中恢复</strong></td>
+    <td>天然恢复（数据在存储中）</td>
+    <td>需额外用 sessionStorage 做降级</td>
+  </tr>
+</table>
+
+<h3>存储方案选择总结</h3>
+
+<pre><code>实现方式  ──  数据传递方式  ──  推荐存储方案
+
+重定向路由  ──  跨导航持久  ──  sessionStorage（首选）
+                                   ├── 生命周期匹配会话
+                                   ├── 同源导航下可靠存活
+                                   ├── 用完即清除
+                                   └── 多标签页隔离
+                              或 服务端 Session（备选）
+                                   ├── 数据不上客户端
+                                   ├── 需要额外 API
+                                   └── URL 只传 ID 更安全
+
+弹窗(Modal) ──  内存传递    ──  无需存储（理想情况）
+                                  使用 sessionStorage 作为
+                                  意外刷新的兜底恢复策略</code></pre>
+
+<h3>结论</h3>
+
+<table>
+  <tr>
+    <th>项目类型</th>
+    <th>推荐方案</th>
+    <th>理由</th>
+  </tr>
+  <tr>
+    <td>传统 MPA（多页应用）</td>
+    <td>重定向路由 + sessionStorage</td>
+    <td>天然多页面架构，sessionStorage 是唯一无需后端的可靠方案</td>
+  </tr>
+  <tr>
+    <td>传统 MPA（安全性优先）</td>
+    <td>重定向路由 + 服务端 Session</td>
+    <td>数据不落客户端，适合金融等高安全场景</td>
+  </tr>
+  <tr>
+    <td>SPA（单页应用）</td>
+    <td>弹窗 + 内存传递</td>
+    <td>体验流畅，无数据迁移问题，sessionStorage 仅作为 F5 刷新的兜底</td>
+  </tr>
+  <tr>
+    <td>SPA（合规强制 MFA URL）</td>
+    <td>前端路由跳转 + 内存传递</td>
+    <td>保留 SPA 优势，数据通过 Store 传递，URL 体现 MFA 步骤</td>
+  </tr>
+</table>
+
+<h3>与文档前述知识的关联</h3>
+
+<table>
+  <tr>
+    <th>概念</th>
+    <th>本例中的应用</th>
+  </tr>
+  <tr>
+    <td><strong>sessionStorage 生命周期</strong></td>
+    <td>电商结算是一次典型会话，sessionStorage 的「标签页关闭即销毁」完美匹配「结算完成即结束」</td>
+  </tr>
+  <tr>
+    <td><strong>localStorage 不适合临时数据</strong></td>
+    <td>如果错误使用 localStorage，用户下次打开浏览器还能看到上次结算残留数据，需要额外清理逻辑</td>
+  </tr>
+  <tr>
+    <td><strong>Cookie 容量限制</strong></td>
+    <td>购物车数据通常远超 4KB，Cookie 无法承载</td>
+  </tr>
+  <tr>
+    <td><strong>IndexedDB 异步特性</strong></td>
+    <td>如果选择 IndexedDB 做结算暂存，异步读取会拖慢 Checkout 页面渲染，且临时数据不值得用 DB</td>
+  </tr>
+  <tr>
+    <td><strong>同源策略</strong></td>
+    <td>Cart、MFA、Checkout 必须在同一 origin 下，否则 sessionStorage 无法共享</td>
+  </tr>
+  <tr>
+    <td><strong>SPA vs MPA 架构差异</strong></td>
+    <td>决定是否需要浏览器存储参与数据流，本质是「JS 上下文是否持续存在」</td>
+  </tr>
+</table>
+
+<hr>
+
+<div class="takeaway">
+  <div class="takeaway-title">💡 核心原则</div>
+  <p>选择浏览器存储方案时，从生命周期 → 容量 → 同步/异步 → 安全性逐层考量。Cookie 只做通信，sessionStorage 管临时会话，localStorage 管跨会话偏好，IndexedDB 管大规模结构化数据。架构选择（SPA vs MPA）决定了数据传递方式，进而决定存储需求。</p>
+</div>
+
+<div style="text-align:center;color:#6a8f7a;font-size:0.9em;margin-top:20px;">
+  浏览器存储机制 · 整理笔记
+</div>
+
+</body>
+</html>

@@ -61,11 +61,11 @@ tr:nth-child(even) { background: var(--card); }
 /* ---- Table of contents ---- */
 .toc { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
 .toc-title { font-weight: 600; color: var(--accent); font-size: 1em; margin-bottom: 6px; }
-.toc-grid { display: grid; grid-template-columns: 1fr; gap: 2px 16px; }
-.toc-grid a { color: var(--text); text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; }
-.toc-grid a:hover { background: var(--bg); color: var(--accent); }
-
-/* KaTeX display math spacing */
+.toc > ol { margin: 0; padding-left: 0; list-style: none; counter-reset: toc; }
+  .toc > ol > li { counter-increment: toc; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc > ol > li a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; display: inline-block; }
+  .toc > ol > li a:hover { background: #f5faf6; color: #1a4a2a; }/* KaTeX display math spacing */
 .katex-display { margin: 10px 0; }
 </style>
 </head>
@@ -78,16 +78,15 @@ tr:nth-child(even) { background: var(--card); }
 
 <div class="toc">
   <div class="toc-title">📖 目录</div>
-  <div class="toc-grid">
-    <a href="#matrix-form">一、矩阵形式</a>
-    <a href="#row-picture">二、Row Picture（行图像）</a>
-    <a href="#column-picture">三、Column Picture（列图像）</a>
-    <a href="#comparison">四、Row vs Column 对比</a>
-    <a href="#solvability">五、对于任意 b，是否都有解？</a>
-    <a href="#matrix-vector-multiplication">六、矩阵与向量相乘的计算方式</a>
-    <a href="#elimination">七、消元法</a>
-    <a href="#summary">八、总结</a>
-  </div>
+    <ol>
+    <li><a href="#matrix-form">矩阵形式</a></li>
+    <li><a href="#row-picture">Row Picture（行图像）</a></li>
+    <li><a href="#column-picture">Column Picture（列图像）</a></li>
+    <li><a href="#comparison">Row vs Column 对比</a></li>
+    <li><a href="#solvability">对于任意 b，是否都有解？</a></li>
+    <li><a href="#matrix-vector-multiplication">矩阵与向量相乘的计算方式</a></li>
+    <li><a href="#elimination">消元法</a></li>
+    <li><a href="#summary">总结</a></li></div>
 </div>
 
 <!-- ============ SECTION 1 ============ -->
