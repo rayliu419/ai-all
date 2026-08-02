@@ -21,7 +21,9 @@ body {
   background: var(--bg);
   color: var(--text);
   font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-
+  padding: 24px 16px;
+  max-width: 820px;
+  margin: 0 auto;
 }
 h1 { font-size: 1.35em; color: var(--accent); margin: 20px 0 8px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
 h2 { font-size: 1.2em; color: var(--accent); margin: 18px 0 6px; }
@@ -107,7 +109,6 @@ tr:nth-child(even) { background: var(--card); }
       </ol>
     </div>
 <p style="color:var(--accent); margin:2px 0;">聚焦导数与梯度 · 深度学习所需的微积分直觉</p>
-</div>
 
 <h2 id="overview">一、微积分概览</h2>
 
@@ -122,6 +123,7 @@ tr:nth-child(even) { background: var(--card); }
   <li><span class="keyword">链式法则</span> — 将复合函数的导数逐层分解，是反向传播的理论基石</li>
 </ul>
 <p style="margin-top:6px;">以下内容围绕这两个核心概念展开，目标是建立直观理解，而非陷入严格的数学推导。</p>
+</div>
 
 <h2 id="essence-of-derivatives">二、导数的本质</h2>
 
@@ -152,6 +154,7 @@ tr:nth-child(even) { background: var(--card); }
 
 <div class="summary">
 <strong>瞬时速度不是一个违反直觉的"零时间里的速度"，而是极限这一数学思想赋予"某一时刻运动状态"的精确定义。</strong> 这也正是微积分最深刻的思想之一——通过研究无限接近的过程，来定义那些不能直接计算的量。
+</div>
 
 <h2 id="chain-rule-product-rule">三、直观理解链式法则和乘积法则</h2>
 
@@ -233,6 +236,7 @@ $$\text{总敏感度} = g'(h(x)) \cdot h'(x)$$
 <div class="card warm" style="margin-top:12px;">
 <p><strong>思考延伸：</strong>链式法则的"多条数轴联动"视角与反向传播的"误差从输出层逐层传回输入层"的机制完全对应。每一层的导数就是该层对误差的"传导系数"——这就是为什么反向传播的本质就是微积分链式法则在神经网络中的应用。</p>
 <p style="margin-top:4px;">↪ 详见 <a href="../llm-basis/pre-training.html#backprop-calc">预训练笔记 — 反向传播的微积分</a></p>
+</div>
 
 <h2 id="directional-derivative-gradient">四、方向导数和梯度</h2>
 
@@ -294,5 +298,5 @@ $$\text{总敏感度} = g'(h(x)) \cdot h'(x)$$
   </div>
 </div>
   </main>
-
+</body>
 </html>

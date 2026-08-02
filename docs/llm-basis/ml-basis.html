@@ -188,6 +188,14 @@
     body { padding: 16px 10px; font-size: 12px; }
     table { font-size: 0.82em; }
   }
+
+  .toc { background: #e8f5ec; border: 1px solid #c3dbcc; border-radius: 8px; padding: 12px 16px; margin: 12px 0 18px; }
+  .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
+  .toc > ol { margin: 0; padding-left: 0; list-style: none; counter-reset: toc; }
+  .toc > ol > li { counter-increment: toc; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc > ol > li a { color: #2d3a31; text-decoration: none; font-size: 0.92em; padding: 2px 4px; border-radius: 3px; display: inline-block; }
+  .toc > ol > li a:hover { background: #f5faf6; color: #1a4a2a; }
 </style>
 </head>
 <body>
@@ -200,10 +208,28 @@
 </blockquote>
 <p style="color:#4d7059; font-size:0.9em; margin-top:4px;">最后更新：2026-07-09</p>
 
+<div class="toc">
+  <div class="toc-title">📖 目录</div>
+  <ol>
+    <li><a href="#regression-evaluation">回归问题评估</a></li>
+    <li><a href="#classification-evaluation">分类问题评估</a></li>
+    <li><a href="#bias-variance">Bias 和 Variance</a></li>
+    <li><a href="#l1-l2-regularization">L1 正则化 / L2 正则化</a></li>
+    <li><a href="#decision-tree-pruning">决策树剪枝</a></li>
+    <li><a href="#imbalanced-data">样本不平衡</a></li>
+    <li><a href="#overfitting">过拟合</a></li>
+    <li><a href="#bayesian-theory">贝叶斯理论</a></li>
+    <li><a href="#naive-bayes">朴素贝叶斯（Naive Bayes）</a></li>
+    <li><a href="#accuracy-vs-performance">模型的准确性（Accuracy）和性能（Performance）哪个更重要？</a></li>
+    <li><a href="#ensemble">Ensemble（集成学习）</a></li>
+    <li><a href="#interview-qa">常见面试问题速查</a></li>
+  </ol>
+</div>
+
 <!-- ══════════════════════════════════════════ -->
 <!--  Regression Evaluation                    -->
 <!-- ══════════════════════════════════════════ -->
-<h2>回归问题评估</h2>
+<h2 id="regression-evaluation">回归问题评估</h2>
 
 <table>
   <tr>
@@ -258,7 +284,7 @@
 <!-- ══════════════════════════════════════════ -->
 <!--  Classification Evaluation                -->
 <!-- ══════════════════════════════════════════ -->
-<h2>分类问题评估</h2>
+<h2 id="classification-evaluation">分类问题评估</h2>
 
 <h3>混淆矩阵</h3>
 
@@ -376,7 +402,7 @@ F_\beta = (1 + \beta^2) \cdot \frac{Precision \cdot Recall}{\beta^2 \cdot Precis
 <!-- ══════════════════════════════════════════ -->
 <!--  Bias & Variance                          -->
 <!-- ══════════════════════════════════════════ -->
-<h2>Bias 和 Variance</h2>
+<h2 id="bias-variance">Bias 和 Variance</h2>
 
 <p><strong>偏差-方差权衡：</strong></p>
 <pre>
@@ -402,7 +428,7 @@ High Bias     High Variance
 <!-- ══════════════════════════════════════════ -->
 <!--  L1 / L2 Regularization                   -->
 <!-- ══════════════════════════════════════════ -->
-<h2>L1 正则化 / L2 正则化</h2>
+<h2 id="l1-l2-regularization">L1 正则化 / L2 正则化</h2>
 
 <h3>数学形式</h3>
 <p>线性回归损失函数加入正则项：</p>
@@ -429,7 +455,7 @@ High Bias     High Variance
 <!-- ══════════════════════════════════════════ -->
 <!--  Decision Tree Pruning                    -->
 <!-- ══════════════════════════════════════════ -->
-<h2>决策树剪枝</h2>
+<h2 id="decision-tree-pruning">决策树剪枝</h2>
 
 <h3>预剪枝（Pre-pruning）</h3>
 <ul>
@@ -453,7 +479,7 @@ High Bias     High Variance
 <!-- ══════════════════════════════════════════ -->
 <!--  Imbalanced Data                          -->
 <!-- ══════════════════════════════════════════ -->
-<h2>样本不平衡</h2>
+<h2 id="imbalanced-data">样本不平衡</h2>
 
 <table>
   <tr><th>方法</th><th>说明</th></tr>
@@ -473,7 +499,7 @@ High Bias     High Variance
 <!-- ══════════════════════════════════════════ -->
 <!--  Overfitting                              -->
 <!-- ══════════════════════════════════════════ -->
-<h2>过拟合</h2>
+<h2 id="overfitting">过拟合</h2>
 
 <h3>原因</h3>
 <ul>
@@ -498,7 +524,7 @@ High Bias     High Variance
 <!-- ══════════════════════════════════════════ -->
 <!--  Bayesian Theory                          -->
 <!-- ══════════════════════════════════════════ -->
-<h2>贝叶斯理论</h2>
+<h2 id="bayesian-theory">贝叶斯理论</h2>
 
 <p>\[
 P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)}
@@ -535,7 +561,7 @@ P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)}
 <!-- ══════════════════════════════════════════ -->
 <!--  Naive Bayes                              -->
 <!-- ══════════════════════════════════════════ -->
-<h2>朴素贝叶斯（Naive Bayes）</h2>
+<h2 id="naive-bayes">朴素贝叶斯（Naive Bayes）</h2>
 
 <h3>核心假设</h3>
 <p><strong>特征条件独立假设：</strong> 在给定类别 \(c_k\) 的条件下，各个特征之间相互独立。</p>
@@ -584,7 +610,7 @@ P(x_i | c_k) = \frac{N_{ki} + \alpha}{N_k + \alpha \cdot d}
 <!-- ══════════════════════════════════════════ -->
 <!--  Accuracy vs Performance                  -->
 <!-- ══════════════════════════════════════════ -->
-<h2>模型的准确性（Accuracy）和性能（Performance）哪个更重要？</h2>
+<h2 id="accuracy-vs-performance">模型的准确性（Accuracy）和性能（Performance）哪个更重要？</h2>
 
 <p><strong>关键理解：</strong> 准确性是性能的一部分，性能包括多种衡量指标（F1、AUC、Precision、Recall、Log Loss 等）。</p>
 
@@ -604,7 +630,7 @@ P(x_i | c_k) = \frac{N_{ki} + \alpha}{N_k + \alpha \cdot d}
 <!-- ══════════════════════════════════════════ -->
 <!--  Ensemble                                  -->
 <!-- ══════════════════════════════════════════ -->
-<h2>Ensemble（集成学习）</h2>
+<h2 id="ensemble">Ensemble（集成学习）</h2>
 
 <h3>Bagging（并行训练）</h3>
 <pre>
@@ -652,7 +678,7 @@ P(x_i | c_k) = \frac{N_{ki} + \alpha}{N_k + \alpha \cdot d}
 <!-- ══════════════════════════════════════════ -->
 <!--  Interview Q&A                            -->
 <!-- ══════════════════════════════════════════ -->
-<h2>常见面试问题速查</h2>
+<h2 id="interview-qa">常见面试问题速查</h2>
 
 <table>
   <tr><th>问题</th><th>一句话回答</th></tr>
