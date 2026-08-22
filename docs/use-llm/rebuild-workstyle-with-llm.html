@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用 LLM 重造工作方式</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  /* layout */
+  .page-layout {
+    margin: 0 auto;
+    padding: 28px 20px;
+    max-width: 880px;
+  }
+  .content { min-width: 0; }
+
+  /* typography */
+  h1 { font-size: 1.35em; margin: 0 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+  h2 { font-size: 1.2em; margin: 20px 0 8px; color: #1f4a2e; }
+  h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+  p { margin: 6px 0; }
+  ul, ol { padding-left: 20px; margin: 4px 0; }
+  li { margin: 2px 0; }
+
+  /* toc (numbered, per-doc convention) */
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 12px 0 16px;
+  }
+  .toc h2 { font-size: 1em; color: #1a4f2e; margin: 0 0 8px; border: none; padding: 0; background: none; }
+  .toc > ol { margin: 0; list-style: none; counter-reset: toc; }
+  .toc > ol > li { counter-increment: toc; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.9em; }
+  .toc a:hover { text-decoration: underline; color: #1a4f2e; }
+
+  /* cards */
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card.accent {
+    background: #fef7e6;
+    border-color: #e6d5b8;
+  }
+
+  strong { color: #1a4a2a; }
+  em { color: #3d6a4f; }
+  code {
+    font-size: 0.88em;
+    background: #e2efe5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4a2a;
+  }
+  pre {
+    font-size: 0.8em;
+    background: #e2efe5;
+    border: 1px solid #c3dbcc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+  hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+  a { color: #1f4a2e; text-decoration: none; }
+  a:hover { text-decoration: underline; color: #2a8f4f; }
+  blockquote {
+    border-left: 3px solid #2d8f5a;
+    background: #e8f5ec;
+    padding: 6px 12px;
+    margin: 8px 0;
+    border-radius: 0 4px 4px 0;
+    color: #1a4a2e;
+    font-size: 0.95em;
+  }
+  .highlight {
+    background: #e8f5ec;
+    border-left: 4px solid #2a8f4f;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #1a4a2a;
+  }
+  .highlight.accent {
+    border-left-color: #d97706;
+    background: #fef7e6;
+    color: #7c5200;
+  }
+
+  /* diagram */
+  .diagram { margin: 12px 0 6px; }
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .diagram-caption { color: #5a7a6a; font-size: 0.82em; text-align: center; margin-bottom: 10px; }
+
+  /* table */
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 0.9em; }
+  th, td { border: 1px solid #c3dbcc; padding: 6px 10px; text-align: left; }
+  th { background: #e8f5ec; color: #1a3a24; }
+  td { color: #2d3a31; }
+
+  .tag {
+    display: inline-block;
+    background: #dcefe0;
+    color: #1f4a2e;
+    border: 1px solid #b6d6c0;
+    border-radius: 12px;
+    padding: 1px 9px;
+    font-size: 0.78em;
+    margin-right: 5px;
+  }
+
+  @media (max-width: 800px) {
+    .page-layout { padding: 16px 12px; }
+    ul, ol { padding-left: 16px; }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="page-layout">
+
+<main class="content">
+<h1>用 LLM 重造工作方式</h1>
+<p class="tag">vision</p><p class="tag">workbench</p><p class="tag">cli tooling</p>
+
+<div class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#why">为什么 LLM 会改变工作方式</a></li>
+    <li><a href="#build-tools">Build Tools：用 AI 造可管子的能力</a></li>
+    <li><a href="#build-workbench">Build Workbench：all-in-one 聚合与编排</a></li>
+    <li><a href="#architecture">Workbench 分层架构</a></li>
+    <li><a href="#design">交互与设计考量</a></li>
+    <li><a href="#roadmap">落地路径：从哪开始</a></li>
+    <li><a href="#interactive-bridge">附录：交互式工具打通</a></li>
+  </ol>
+</div>
+
+<hr>
+
+<!-- ============ 1. why ============ -->
+<h2 id="why">为什么 LLM 会改变工作方式</h2>
+
+<blockquote>当「造一个工具」的成本趋近于零，任何重复做两次以上的操作，都值得被工具化。这才是 LLM 对工作方式的真正改变。</blockquote>
+
+<p>过去搭一个工具是有成本的：要理解需求、写逻辑、处理边界、测试。所以人只肯把最高频、最痛的流程做成工具，剩下的都靠记忆和手工。<strong>而 LLM 把「造工具」这件事本身变成了一条低成本的流水线。</strong></p>
+
+<p>成本结构变了，决策就反转了：</p>
+<ul>
+  <li>以前 <em>「这个操作人肉做吧，写工具不划算」</em>；现在 <em>「让 AI 花几分钟生成一个 cli，以后都是确定性的」</em>。</li>
+  <li>以前工具是一次性的脚本，用完即弃；现在工具是<strong>可复用、可组合、可被再次编排</strong>的能力资产。</li>
+  <li>人从「记住怎么做」转向「把做法沉淀成工具」，工作是<strong>沉淀</strong>出来的，而不是<strong>执行</strong>出来的。</li>
+</ul>
+
+<div class="highlight accent">核心论题：LLM 普及 → 工具成本趋近于零 → 「要不要做工具」的决策反转 → 工作方式的重造。</div>
+
+<p>落到具体，这个「重造」有两个抓手，互为表里：</p>
+<ul>
+  <li><strong>Build Tools：</strong>用 AI 大量生产<strong>原子化的命令行能力</strong>（可管道化、可单独跑）。</li>
+  <li><strong>Build Workbench：</strong>把这些能力<strong>聚合、编排成一个统一入口</strong>（一个网页）。</li>
+</ul>
+
+<hr>
+
+<!-- ============ 2. build-tools ============ -->
+<h2 id="build-tools">Build Tools：用 AI 造可管子的能力</h2>
+
+<p>核心主张：<strong>用 AI 大量造命令行工具，采用 Unix 管道式设计。</strong>每个工具既是独立可运行的原子，也是 workbench 可编排的积木。</p>
+
+<div class="card">
+  <h4>工具设计原则</h4>
+  <ul>
+    <li><strong>原子 & 单一职责：</strong>一个工具只做一件事，避免「什么都干」的重型脚本。</li>
+    <li><strong>管道式 I/O：</strong>读 <code>stdin</code>、写 <code>stdout</code>，可 <code>A | B | C</code> 自由组合。</li>
+    <li><strong>确定性优先：</strong>能用固定逻辑/程序实现的，别靠概率——显式指定能显著降低幻觉。</li>
+    <li><strong>独立可手动运行：</strong>脱离 workbench 也能在终端跑，作为兜底与调试入口。</li>
+    <li><strong>可读的错误反馈：</strong>报错要带细节（校验、堆栈、边界），让人和 AI 都能据此自我纠错。</li>
+  </ul>
+</div>
+
+<p>具体到这个工作场景，先挑最容易量化的高频操作，比如：</p>
+<ul>
+  <li><code>publish</code>：触发一次发布 / 发一条评论（类似现有 <code>publish.py</code> 的定位）。</li>
+  <li><code>override</code>：做一次配置 / 特性覆盖。</li>
+  <li><code>query</code> / <code>graph</code>：快速拉取上下文、画关系图。</li>
+</ul>
+
+<div class="highlight">关键的转变不是「用某个工具」，而是「批量生产工具」。给 AI 一套「工具生成模板 / SOP」，让造工具本身进入流水线——这是 harness 里「确定性 SOP」思路的延伸。</div>
+
+<hr>
+
+<!-- ============ 3. build-workbench ============ -->
+<h2 id="build-workbench">Build Workbench：all-in-one 聚合与编排</h2>
+
+<p>核心主张：<strong>把常用操作集成到一个网页，做成 all-in-one。</strong>它不做具体的事，而是做<strong>入口 + 编排</strong>。</p>
+
+<p>为什么用 web 聚合：</p>
+<ul>
+  <li><strong>统一入口：</strong>发布、override、查询……都从一个地方触达，不用记一堆命令。</li>
+  <li><strong>可视化与低门槛：</strong>把 cli 的输入参数、返回结果变成表单和视图，人人可用。</li>
+  <li><strong>可编排：</strong>web 端可以串联多个 cli 工具，组成一个「操作流」。</li>
+</ul>
+
+<div class="card accent">
+  <h4>dsh 类比 → 插件模式</h4>
+  <p>类似 <code>dsh</code> 那样把高频操作集中在一个工具里；更进一步，把它<strong>拆成插件模式</strong>——每个能力登记成可插拔的 <code>cli tool</code>，随用随加。workbench 只负责调度，具体能力由插件提供。</p>
+</div>
+
+<p><strong>workbench 与 tools 的关系：</strong>workbench 是编排者，tools 是被编排的原子；<em>tools 也能脱离 workbench 手动运行</em>。这样既保留「命令行原教旨」的灵活，又提供「一站式网页」的方便。</p>
+
+<hr>
+
+<!-- ============ 4. architecture ============ -->
+<h2 id="architecture">Workbench 分层架构</h2>
+
+<div class="diagram">
+<svg viewBox="0 0 840 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Workbench 分层架构图">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#2a8f4f"/>
+    </marker>
+    <marker id="arrowDash" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#8bbaa0"/>
+    </marker>
+  </defs>
+
+  <style>
+    .layerTitle { font-weight: 700; fill: #1f4a2e; font-size: 15px; }
+    .layerSub { fill: #2d3a31; font-size: 12px; }
+    .box { fill: #e8f5ec; stroke: #a9c9b5; stroke-width: 1.4; }
+    .boxTop { fill: #dcefe0; stroke: #a9c9b5; stroke-width: 1.4; }
+    .chip { fill: #ffffff; stroke: #b6d6c0; stroke-width: 1; rx: 6; }
+    .chipText { fill: #1f4a2e; font-size: 11px; }
+    .link { stroke: #2a8f4f; stroke-width: 1.8; fill: none; }
+    .linkDash { stroke: #8bbaa0; stroke-width: 1.6; fill: none; stroke-dasharray: 5 4; }
+    .linkLabel { fill: #5a7a6a; font-size: 10.5px; }
+  </style>
+
+  <!-- Web front -->
+  <rect class="boxTop" x="90" y="20" width="520" height="58" rx="9"/>
+  <text class="layerTitle" x="112" y="45">Web 前端 · Workbench 入口</text>
+  <text class="layerSub" x="112" y="64">统一入口 · 操作可视化 · 一键触达</text>
+
+  <!-- connector -->
+  <line class="link" x1="350" y1="78" x2="350" y2="116" marker-end="url(#arrow)"/>
+
+  <!-- Orchestrator -->
+  <rect class="box" x="90" y="116" width="520" height="58" rx="9"/>
+  <text class="layerTitle" x="112" y="141">编排 / 交互层 · Orchestrator</text>
+  <text class="layerSub" x="112" y="160">调度 · 参数校验 · 错误信息 surface</text>
+
+  <line class="link" x1="350" y1="174" x2="350" y2="212" marker-end="url(#arrow)"/>
+
+  <!-- CLI registry -->
+  <rect class="box" x="90" y="212" width="520" height="86" rx="9"/>
+  <text class="layerTitle" x="112" y="237">可插拔 Tool 注册表 · CLI 能力</text>
+  <text class="layerSub" x="112" y="256">Unix 管道式 · 原子化 · 可组合</text>
+  <g>
+    <rect class="chip" x="112" y="270" width="78" height="20"/>
+    <text class="chipText" x="128" y="284">publish</text>
+    <rect class="chip" x="198" y="270" width="82" height="20"/>
+    <text class="chipText" x="216" y="284">override</text>
+    <rect class="chip" x="288" y="270" width="66" height="20"/>
+    <text class="chipText" x="303" y="284">query</text>
+    <rect class="chip" x="362" y="270" width="66" height="20"/>
+    <text class="chipText" x="377" y="284">graph</text>
+    <rect class="chip" x="436" y="270" width="54" height="20"/>
+    <text class="chipText" x="448" y="284">…</text>
+  </g>
+
+  <!-- connectors to bottom -->
+  <path class="link" d="M350,298 L350,338 L214,338 L214,372" marker-end="url(#arrow)"/>
+  <path class="link" d="M350,298 L350,338 L486,338 L486,372" marker-end="url(#arrow)"/>
+  <text class="linkLabel" x="351" y="322">调用 / 管道</text>
+
+  <!-- Java backend -->
+  <rect class="boxTop" x="90" y="372" width="248" height="60" rx="9"/>
+  <text class="layerTitle" x="112" y="398">Java 后端</text>
+  <text class="layerSub" x="112" y="418">HTTP / API</text>
+
+  <!-- External -->
+  <rect class="boxTop" x="362" y="372" width="248" height="60" rx="9"/>
+  <text class="layerTitle" x="384" y="398">外部服务 / 系统</text>
+  <text class="layerSub" x="384" y="418">数据源 · 服务</text>
+
+  <!-- manual run -->
+  <path class="linkDash" d="M610,258 L650,272" marker-end="url(#arrowDash)"/>
+  <rect class="box" x="650" y="248" width="162" height="56" rx="9"/>
+  <text class="layerTitle" x="670" y="273" style="font-size:13px;">手动运行</text>
+  <text class="layerSub" x="670" y="292" style="font-size:11px;">终端 · 脱离 Workbench</text>
+</svg>
+</div>
+<div class="diagram-caption">图：Workbench 分层架构，从上到下是前端、编排、可插拔 CLI 注册表，再下探到后端 / 外部系统；CLI 层也保留独立手动运行的通道。</div>
+
+<p><strong>解读：</strong>「前端」只做入口与展示；「编排层」是真正的中枢，负责参数校验、任务调度、把底层工具的返回变成可读反馈；「CLI 注册表」是能力层，即插即用；底层接 Java 后端与外部系统。图中右侧的虚线表示 <em>CLI 也能脱离 workbench 在终端单独跑</em>——这是刻意的冗余，保证工具永远可自助、可调试。</p>
+
+<hr>
+
+<!-- ============ 5. design ============ -->
+<h2 id="design">交互与设计考量</h2>
+
+<h3>怎么跟不同工具交互</h3>
+<p>工具形态不同，交互契约也得统一：<code>Java 后端</code>走 HTTP / API，<code>cli</code> 走进程 / 管道。编排层需要一层<strong>适配</strong>，把各种调用变成统一的 <em>「输入参数 → 执行 → 输出/错误」</em>契约，否则调度逻辑会和具体工具耦合。</p>
+
+<h3>错误反馈是生命线</h3>
+<p>呼应 loop engineering：workbench 要能自我纠错，前提是工具把错误<strong>说得够细</strong>——校验失败原因、堆栈、边界情况，而不是一句「出错」。否则 AI / 用户都无从调整，闭环转不起来。</p>
+
+<h3>上下文与确定性</h3>
+<ul>
+  <li>能用确定性算法 / 固定逻辑的，别靠概率；显式指定能降低幻觉。</li>
+  <li>workbench 只注入「工具看不到的知识」，别重复塞模型能从环境里自己拿到的上下文——context 是稀缺资源。</li>
+</ul>
+
+<h3>workbench 与 tools 的角色分工</h3>
+<table>
+  <thead>
+    <tr><th>维度</th><th>Build Tools（CLI）</th><th>Build Workbench（Web）</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>定位</td><td>原子能力，一件事只做一件事</td><td>入口 + 编排，不做具体事</td></tr>
+    <tr><td>运行方式</td><td>终端 / 管道，独立可跑</td><td>网页，聚合可视</td></tr>
+    <tr><td>可复用性</td><td>可组合成管道，可被再次编排</td><td>按需接入能力插件</td></tr>
+    <tr><td>关键价值</td><td>确定性的执行保障</td><td>低门槛、一站式的使用体验</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- ============ 6. roadmap ============ -->
+<h2 id="roadmap">落地路径：从哪开始</h2>
+
+<ol>
+  <li><strong>先做最高频、最重复的 cli：</strong>发布、override、查询——那些「两周内会重复做>2 次」的操作，优先工具化。</li>
+  <li><strong>搭一个最小 web 入口：</strong>先把这几个 cli 串成一个页面，验证「入口 + 编排」手感。</li>
+  <li><strong>引入插件注册表 + 编排层 + 适配层：</strong>把工具登记成可插拔能力，统一调用契约。</li>
+  <li><strong>沉淀工具生成模板 / SOP：</strong>让 AI 造工具这件事本身稳定下来，形成可复制的流水线。</li>
+</ol>
+
+<div class="highlight">一句话收束：<strong>让 LLM 把「做工具」变便宜，本质上是在把工作方式从「靠人执行」重造为「靠能力沉淀」。</strong></div>
+
+
+<!-- ============ 附录：交互式工具打通 ============ -->
+<h2 id="interactive-bridge">附录：交互式工具打通</h2>
+
+<p>workbench 要编排的不只是「跑完即返回」的一次性 cli，还有<strong>交互式工具</strong>（需要多轮输入/输出来回）。打通它们的关键不是「该不该用终端仿真」，而是<strong>这个工具能不能被"结构化地驱动"</strong>。按这个能力，把工具分成三档：</p>
+
+<h3>三条路线：先分清工具能被怎么驱动</h3>
+<table>
+  <thead><tr><th>路线</th><th>怎么驱动</th><th>例子</th><th>要不要 PTY</th></tr></thead>
+  <tbody>
+    <tr><td><strong>① SDK / RPC / JSON 模式</strong></td><td>工具暴露结构化程序化接口，web 渲染成聊天 / 卡片</td><td><code>pi --mode rpc</code>、pi SDK、<code>git status --porcelain</code></td><td>否</td></tr>
+    <tr><td><strong>② 批处理 / 管道</strong></td><td>参数驱动、输出可解析、跑完即退出；web 拿 stdout 解析</td><td><code>ls</code>、<code>grep</code>、<code>jq</code>、<code>curl</code>、<code>awk</code></td><td>否（普通 spawn + pipe）</td></tr>
+    <tr><td><strong>③ PTY + 终端仿真</strong></td><td>后端 PTY 起进程，浏览器 <code>xterm.js</code> 仿真终端，双向转发字节</td><td>vim、htop、fzf、psql、REPL</td><td>是</td></tr>
+  </tbody>
+</table>
+
+<div class="card accent">
+  <h4>适配层怎么选</h4>
+  <p>这不是「A 还是 B」二选一，而是<strong>适配层按每个工具动态选路</strong>：能批处理 / 管道化的 cli 走 ②（这正是「build tools 做成可管道化」的主线，本来就不需要 PTY）；有 SDK / RPC 的走 ①；剩下真正粘人的交互式工具才落 ③。<strong>所以 workbench 里绝大多数工具走 ② 就够了，A 是救生圈不是船。</strong> ③ 把 web 变成「哑终端」——通用，但看不懂结构、做不了富交互；① 才让 web「理解」消息。</p>
+</div>
+
+<h3>哪些工具「必须」用 PTY（③）</h3>
+<p>只有当工具<strong>需要真终端语义</strong>、且没有 ①②③ 之外可替代的路径时才必须——只要满足下面任意一条就走 ③：</p>
+<ul>
+  <li><strong>全屏 TUI：</strong>vim、htop、less、fzf——输出是「一屏画面」，没有实用的批处理模式，只能渲染终端。</li>
+  <li><strong>REPL / 交互式 shell：</strong>bash、psql、mysql、redis-cli、ipython——历史、补全、多行编辑、提示符都靠 TTY。</li>
+  <li><strong>需要 <code>/dev/tty</code> 读秘密：</strong><code>getpass</code>、<code>sudo</code> 密码、<code>ssh -t</code>——管道拿不到 <code>/dev/tty</code>，只有 PTY 行。</li>
+  <li><strong><code>isatty()</code> 才启用的行为：</strong><code>git</code> 的 pager、只在 TTY 下才开颜色 / TUI。</li>
+</ul>
+<p>但很多工具有<strong>折衷旗标</strong>，把「必须 PTY」的集合不断缩小：<code>sudo -S</code>、<code>--password-stdin</code>、<code>--from-stdin</code>、<code>git -c core.pager=cat</code>。真正躲不开 PTY 的，通常是<strong>它的核心价值就是那个交互终端本身</strong>（TUI/REPL），且作者没给非交互出口。</p>
+
+<h3>pi 的现成协议：<code>pi --mode rpc</code></h3>
+<p>它在 <code>stdin/stdout</code> 上跑一个 JSONL 协议（每行一个 JSON），这就是「多轮输入/输出转发」的协议本体：</p>
+<ul>
+  <li><strong>发给 pi（stdin）</strong>：<code>{"type":"prompt","message":"..."}</code>，还有 <code>steer</code>、<code>follow_up</code>、<code>abort</code>、<code>bash</code>、<code>new_session</code>。</li>
+  <li><strong>pi 推给你（stdout）</strong>：<code>message_update</code>（内含 <code>text_delta</code>/<code>thinking_delta</code>/<code>toolcall_delta</code> 流式增量）、<code>turn_start/end</code>、<code>agent_settled</code>、<code>tool_execution_*</code>、<code>bash_execution_update</code>。</li>
+  <li><strong>扩展 UI 子协议</strong>：工具要人确认时，pi 发 <code>extension_ui_request</code>（<code>select</code>/<code>confirm</code>/<code>input</code>/<code>editor</code>），你回 <code>extension_ui_response</code>——这就是「交互」那部分。</li>
+</ul>
+<p>若后端是 Node，可直接用 SDK 的 <code>createAgentSession()</code> + <code>session.subscribe()</code> 在进程内跑，类型安全、状态可访问，更省事（见 <code>docs/sdk.md</code>）。</p>
+
+<h3>架构就一条</h3>
+<pre>
+// server.mjs（Node，零 npm 依赖）
+import { spawn } from "node:child_process";
+import { createServer } from "node:http";
+import { readFileSync } from "node:fs";
+
+const pi = spawn("pi", ["--mode", "rpc", "--no-session"]);
+const clients = new Set();
+
+let buf = "";
+pi.stdout.on("data", (chunk) =&gt; {               // pi 的 JSONL 事件
+  buf += chunk;
+  let i;
+  while ((i = buf.indexOf("\n")) !== -1) {
+    const line = buf.slice(0, i).replace(/\r$/, "");
+    buf = buf.slice(i + 1);
+    if (!line) continue;
+    for (const res of clients) res.write(`data: ${line}\n\n`);   // 转成 SSE
+  }
+});
+
+createServer((req, res) =&gt; {
+  if (req.method === "GET" &amp;&amp; req.url === "/") {
+    res.setHeader("content-type", "text/html; charset=utf-8");
+    return res.end(readFileSync("./index.html", "utf8"));
+  }
+  if (req.method === "GET" &amp;&amp; req.url === "/events") {       // 输出通道
+    res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" });
+    clients.add(res);
+    req.on("close", () =&gt; clients.delete(res));
+    return;
+  }
+  if (req.method === "POST" &amp;&amp; req.url === "/send") {        // 输入通道
+    let body = "";
+    req.on("data", (d) =&gt; (body += d));
+    req.on("end", () =&gt; { pi.stdin.write(body.trimEnd() + "\n"); res.end("ok"); });
+    return;
+  }
+  res.statusCode = 404; res.end();
+}).listen(3000, () =&gt; console.log("http://localhost:3000"));
+</pre>
+
+<h3>最简实现：零依赖 SSE + POST</h3>
+<p>server→browser 用 SSE（<code>EventSource</code>），browser→server 用 <code>POST</code>，一个依赖都不用装。</p>
+<pre>
+&lt;!-- index.html --&gt;
+&lt;!doctype html&gt;&lt;html lang="zh"&gt;&lt;head&gt;&lt;meta charset="utf-8"&gt;&lt;title&gt;pi web&lt;/title&gt;
+&lt;style&gt;body{margin:0;font-family:ui-monospace,monospace;background:#0f1115;color:#e6e6e6;height:100vh;display:flex;flex-direction:column}#log{flex:1;overflow-y:auto;padding:16px;white-space:pre-wrap}form{display:flex;gap:8px;padding:12px;border-top:1px solid #333}textarea{flex:1;resize:none;background:#1a1c22;color:#e6e6e6;border:1px solid #333;border-radius:6px;padding:8px;font:inherit}button{background:#2a8f4f;color:#fff;border:0;border-radius:6px;padding:0 16px;cursor:pointer}&lt;/style&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;div id="log"&gt;&lt;/div&gt;&lt;form id="f"&gt;&lt;textarea id="in" rows="1" autofocus&gt;&lt;/textarea&gt;&lt;button&gt;send&lt;/button&gt;&lt;/form&gt;
+&lt;script&gt;
+const log=document.getElementById("log"),input=document.getElementById("in"),form=document.getElementById("f");
+const append=(t)=&gt;{log.textContent+=t;log.scrollTop=log.scrollHeight;};
+form.onsubmit=(e)=&gt;{e.preventDefault();const msg=input.value;if(!msg.trim())return;append("&gt;&gt;&gt; "+msg+"\n");input.value="";fetch("/send",{method:"POST",body:JSON.stringify({type:"prompt",message:msg})});};
+const es=new EventSource("/events");
+es.onmessage=(e)=&gt;{const evt=JSON.parse(e.data);if(evt.type==="message_update"){const d=evt.assistantMessageEvent;if(d.type==="text_delta")append(d.delta);}else if(evt.type==="turn_end")append("\n");else if(evt.type==="agent_settled")append("\n--- settled, awaiting input ---\n");};
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;
+</pre>
+<p>跑 <code>node server.mjs</code>，打开 <code>http://localhost:3000</code> 即可跟 pi 对话。</p>
+
+<h3>多轮 I/O 建模</h3>
+<table>
+  <thead><tr><th>你想做的</th><th>对应做法</th></tr></thead>
+  <tbody>
+    <tr><td>正常一轮对话</td><td><code>{"type":"prompt","message":"..."}</code></td></tr>
+    <tr><td>agent 还在跑时插话</td><td><code>prompt</code> 带 <code>"streamingBehavior":"steer"</code>（或直接发 <code>steer</code>）</td></tr>
+    <tr><td>agent 跑完后的补充</td><td><code>{"type":"follow_up","message":"..."}</code></td></tr>
+    <tr><td>打断当前操作</td><td><code>{"type":"abort"}</code></td></tr>
+    <tr><td>工具要人确认</td><td>收 <code>extension_ui_request</code> → 弹模态 → 回 <code>extension_ui_response</code></td></tr>
+    <tr><td>刷新页面不丢上下文</td><td>去掉 <code>--no-session</code>，或每会话一个 session 文件</td></tr>
+  </tbody>
+</table>
+
+<h3>坑与安全</h3>
+<ul>
+  <li><strong>流式时再发 <code>prompt</code> 必须带 <code>streamingBehavior</code></strong>，否则直接报错——新手最容易踩。</li>
+  <li><code>--no-session + 单进程</code> 是单用户简化版；多会话/并发请<strong>每个连接 spawn 一个 pi</strong>，或用 SDK 每会话一个 <code>AgentSession</code>。</li>
+  <li><strong>安全</strong>：把能跑 shell 的 agent 暴露到 web，等于开了可执行任意命令的口子，务必鉴权/私有部署，别裸上公网。</li>
+  <li><strong>只有核心价值是交互终端（TUI/REPL）的才走 ③</strong>；pi 这类有结构化接口的走 ①，普通 cli 走 ② 更划算。</li>
+</ul>
+
+</main>
+</div>
+
+</body>
+</html>
