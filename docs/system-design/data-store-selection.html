@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据存储选型 — 系统设计</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    mermaid.initialize({ startOnLoad: true, theme: "base", themeVariables: {
+      primaryColor: "#e8f5ec",
+      primaryTextColor: "#2d3a31",
+      primaryBorderColor: "#4caf50",
+      lineColor: "#4caf50",
+      secondaryColor: "#fff3e0",
+      tertiaryColor: "#e3f2fd",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+      fontSize: "10px"
+    }});
+  });
+</script>
+<style>
+body {
+  background: #f5faf6;
+  color: #2d3a31;
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  max-width: 960px;
+  margin: 20px auto;
+  padding: 0 24px;
+}
+h1 { font-size: 1.35em; color: #1a4f2e; border-bottom: 2px solid #c3dbcc; padding-bottom: 6px; margin: 20px 0 10px; }
+h2 { font-size: 1.2em; color: #236b3e; margin: 20px 0 8px; padding: 8px 12px; background: #e8f5ec; border-radius: 6px; border-left: 4px solid #4caf50; }
+h3 { font-size: 1.02em; color: #2d7a4a; margin: 14px 0 6px; }
+h4 { font-size: 0.95em; color: #3a8b55; margin: 10px 0 4px; }
+p { margin: 6px 0; }
+li { margin: 2px 0; }
+a { color: #1e6b3b; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.back-link {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: #2d8a4e;
+  text-decoration: none;
+  font-size: 0.9em;
+}
+.back-link:hover { text-decoration: underline; }
+code { font-size: 0.88em; background: #e8f5ec; padding: 2px 5px; border-radius: 3px; color: #1a4f2e; }
+pre {
+  font-size: 0.8em;
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 6px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+table {
+  font-size: 0.9em;
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+}
+th, td {
+  border: 1px solid #c3dbcc;
+  padding: 6px 10px;
+  text-align: left;
+}
+th {
+  background: #e8f5ec;
+  color: #1a4f2e;
+  font-weight: 600;
+}
+tr:nth-child(even) { background: #f0f9f3; }
+tr:nth-child(odd) { background: #fff; }
+.card {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+.card-title { font-weight: 600; color: #1a4f2e; margin-bottom: 4px; font-size: 1em; }
+.info-box {
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-left: 4px solid #2196f3;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.warning-box {
+  background: #fff3e0;
+  border: 1px solid #ffcc80;
+  border-left: 4px solid #ff9800;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.success-box {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-left: 4px solid #4caf50;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.toc {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 14px 20px;
+  margin: 12px 0 16px;
+}
+.toc h2 { font-size: 1em; color: #1a4f2e; margin: 0 0 8px; border: none; padding: 0; background: none; }
+.toc > ol { margin: 0; list-style: none; counter-reset: toc; }
+.toc > ol > li { counter-increment: toc; margin: 3px 0; }
+.toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+.toc a { color: #236b3e; text-decoration: none; font-size: 0.9em; }
+.toc a:hover { text-decoration: underline; color: #1a4f2e; }
+
+.toc ol.toc-sub { list-style: none; margin: 2px 0 6px 0; padding-left: 20px; counter-reset: toc-sub; }
+.toc ol.toc-sub > li { counter-increment: toc-sub; margin: 1px 0; }
+.toc ol.toc-sub > li::before { content: counter(toc) "." counter(toc-sub) " "; font-weight: 400; color: #6a8f78; }
+.toc ol.toc-sub a { font-size: 0.82em; color: #4c8a5f; }
+img { max-width: 100%; border-radius: 6px; display: block; margin: 12px auto; }
+.fig-cap { text-align: center; font-size: 0.8em; color: #6a8f78; margin: -6px 0 14px; }
+.mermaid { text-align: center; margin: 16px 0; overflow-x: auto; }
+.footer {
+  margin-top: 30px;
+  padding-top: 12px;
+  border-top: 2px solid #c3dbcc;
+  font-size: 0.85em;
+  color: #6a8f78;
+}
+.tag {
+  display: inline-block;
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.8em;
+  color: #1a4f2e;
+  margin-right: 4px;
+}
+</style>
+</head>
+<body>
+
+<a class="back-link" href="../index.html">&larr; 返回索引</a>
+
+<h1>🗃️ 数据存储选型</h1>
+<p>组件选型三篇之二：数据库怎么选。缓存见 <a href="caching-and-messaging.html">缓存与消息队列选型</a>，分析栈与数仓见 <a href="data-processing-and-olap.html">数据处理与 OLAP</a>。</p>
+
+<div class="toc">
+  <h2>📖 目录</h2>
+  <ol>
+    <li><a href="#criteria">选型的九个考虑要点</a></li>
+    <li><a href="#inside-relational">关系数据库内部选型</a></li>
+    <li><a href="#categories">几类数据存储对比</a>
+      <ol class="toc-sub">
+        <li><a href="#relational">关系数据库</a></li>
+        <li><a href="#nosql">NoSQL：非关系数据库的统称</a></li>
+        <li><a href="#newsql">NewSQL</a></li>
+        <li><a href="#multi-model">多模型数据库</a></li>
+        <li><a href="#olap">OLAP</a></li>
+        <li><a href="#predictability">性能可预测性</a></li>
+      </ol>
+    </li>
+    <li><a href="#vector">向量数据库</a>
+      <ol class="toc-sub">
+        <li><a href="#why-vector">为什么需要它</a></li>
+        <li><a href="#vector-impl">典型实现</a></li>
+        <li><a href="#vector-index">索引与取舍</a></li>
+      </ol>
+    </li>
+    <li><a href="#polyglot">多存储组合</a></li>
+    <li><a href="#decision-tree">选型决策树</a></li>
+    <li><a href="#sizing">选型清单与容量估算</a>
+      <ol class="toc-sub">
+        <li><a href="#checklist">决策清单</a></li>
+        <li><a href="#capacity">容量估算</a></li>
+      </ol>
+    </li>
+    <li><a href="#errata">勘误与过时组件</a></li>
+    <li><a href="#conclusion">结论</a></li>
+  </ol>
+</div>
+
+<!-- ============ 1 ============ -->
+<h2 id="criteria">1. 选型的九个考虑要点</h2>
+
+<table>
+  <tr><th>#</th><th>要点</th><th>说明</th></tr>
+  <tr>
+    <td>1</td>
+    <td><strong>access pattern（读 + 写）</strong></td>
+    <td>通常起决定作用：应用的功能性访问方式是刚性的，反向决定 DB。读形态见下表；写形态看<strong>更新粒度</strong>（整行覆盖 → B+Tree，追加式 → LSM / 时序库）；读写比：读多写少 → 缓存，写多读少 → LSM；<strong>热点与数据倾斜</strong>直接决定分片键。不能只定性，还要给 QPS / 热点 / 读写比的量级</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>数据量大吗？需要水平扩展吗？</td>
+    <td>单机放不下（含索引、含预留增长）才谈分片。先回答「单机能不能扛」</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>schema 固定吗，经常改变吗？</td>
+    <td>结构化固定字段 → 关系库；非结构化、每篇不同的字段 → 文档库</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>性能要求</td>
+    <td>明确 tp50 / tp99 目标，而不是「要快」</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>支持的 API</td>
+    <td>insert / update、upsert、批量写、事务写、聚合过滤。聚合需求强 → 列存</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>存储数据大小</td>
+    <td>大对象以 <strong>4 KB 为界</strong>（一个磁盘页大小），超过则单条记录跨页；大对象 + range query 还要算服务端转换的内存压力</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td>一致性要求</td>
+    <td>是否需要「读到自己写的最新值」？操作是否需要全局有序？之一为是 → 强一致性要求</td>
+  </tr>
+  <tr>
+    <td>8</td>
+    <td>Durability</td>
+    <td>写成功是否代表一定不丢？单副本 / 多副本 / 异步复制的差别就在这里</td>
+  </tr>
+  <tr>
+    <td>9</td>
+    <td>graph store</td>
+    <td>实体间关系特别复杂时用。社交不只是「朋友关系」，还有「在同一家公司工作过的人」这类多跳查询——关系模型要为每种新查询建新表</td>
+  </tr>
+</table>
+
+<h3>读形态 → 存储类型</h3>
+<table>
+  <tr><th>读形态</th><th>示例</th><th>倾向</th></tr>
+  <tr><td>主键 / 任意键值查询</td><td><code>SELECT * FROM t WHERE id = ?</code></td><td>KV 库（DynamoDB、Redis）</td></tr>
+  <tr><td>range query</td><td>按时间区间扫日志</td><td>有序存储：B+Tree 索引、DynamoDB sort key、Kafka 分区日志</td></tr>
+  <tr><td>spatial query</td><td>10 km 内的商店</td><td>空间索引（Elasticsearch、PostGIS）</td></tr>
+  <tr><td>full scan / 分页遍历</td><td>全量对账、报表导出</td><td>列存 + 分区（ClickHouse）；亿级全扫交给离线批处理</td></tr>
+  <tr><td>full text search</td><td>商品标题搜词</td><td>Elasticsearch</td></tr>
+  <tr><td>向量相似度</td><td>以图搜图、召回候选</td><td>向量库（见 <a href="#vector">第 4 节</a>）</td></tr>
+  <tr><td>多跳关系</td><td>好友的好友、资金链路</td><td>图数据库（Neo4j）</td></tr>
+</table>
+
+<div class="info-box">
+  <strong>三层模型：</strong>access pattern 决定存储家族 → 事务 / 一致性 / durability 是硬约束、有否决权（一个否决项就能盖过家族选择，比如银行账本点写点读也不得不选关系库）→ 规模（数据量 / QPS）决定部署形态与引擎参数。三者不是线性重要性排序。
+</div>
+
+<div class="warning-box">
+  <strong>反向决策的边界：</strong>access pattern 会随产品演化（加报表、加搜索、加新查询），反向决策容易过拟合当下。关系库（schema + SQL + 索引）吸收未知查询的能力强于 KV / 文档库，NoSQL 一旦 access pattern 变了迁移成本更高。所以反向决策当下，但用「未来 query 会不会变」做压力测试；另有团队熟悉度、生态等软约束。
+</div>
+
+<!-- ============ 2 ============ -->
+<h2 id="inside-relational">2. 关系数据库内部选型</h2>
+
+<ol>
+  <li><strong>能否单机支持？</strong>先回答这个。单机 + 只读副本 + 缓存能覆盖绝大多数业务。</li>
+  <li><strong>是否需要 NewSQL？</strong>例如 TiDB、Spanner、CockroachDB。<strong>自己分表并不是好方案</strong>——分片键、跨片查询、在线扩容、分布式事务都要自己实现，应该优先交给 NewSQL 或成熟的数据库中间件。</li>
+  <li><strong>是否有成熟的分片中间件？</strong>ShardingSphere、Vitess 等；代价是引入一层代理与额外的运维复杂度。</li>
+</ol>
+
+<div class="info-box">
+  <strong>判断顺序：</strong>单机（主库 + 只读副本）→ 读写分离 + 缓存 → NewSQL → 中间件分片。「自研分表」排在这条链的最后，且通常意味着前四步都没做完。
+</div>
+
+<!-- ============ 3 ============ -->
+<h2 id="categories">3. 几类数据存储对比</h2>
+
+<h3 id="relational">3.1 关系数据库</h3>
+<p><strong>代表</strong>：MySQL、PostgreSQL、Oracle</p>
+<table>
+  <tr><th>优点</th><th>缺点</th></tr>
+  <tr>
+    <td>有 schema，能很好地表达表中不同实体之间的关系</td>
+    <td>复杂 join 场景下读写性能相对较差</td>
+  </tr>
+  <tr>
+    <td>SQL 能快速实现复杂查询（join、聚合、窗口函数）</td>
+    <td>横向扩展不易——但已有 NewSQL（TiDB 等）补上这一块</td>
+  </tr>
+  <tr><td>支持事务（ACID）</td><td>—</td></tr>
+  <tr><td>对 many-to-many 的建模支持好</td><td>—</td></tr>
+</table>
+
+<h3 id="nosql">3.2 NoSQL：非关系数据库的统称</h3>
+<p><strong>共同优点</strong>：一般支持 automatic sharding，读写性能高得多。<br>
+<strong>共同缺点</strong>：支持的查询模式简单；复杂查询往往要自己实现；不支持或弱支持 schema。</p>
+
+<table>
+  <tr><th>类别</th><th>代表</th><th>定位与取舍</th></tr>
+  <tr>
+    <td><strong>KV</strong></td>
+    <td>Redis、Memcached、DynamoDB</td>
+    <td>Redis 的 value 还支持 List / Set / Hash / Sorted Set 等复杂结构，不再只是 KV</td>
+  </tr>
+  <tr>
+    <td><strong>文档</strong></td>
+    <td>MongoDB</td>
+    <td>适合「有 schema，但每篇文档结构不同」的数据（如文档协作类应用）。注意 schema-less 不等于没有数据形状约束——约束被搬到了应用层</td>
+  </tr>
+  <tr>
+    <td><strong>图</strong></td>
+    <td>Neo4j</td>
+    <td>社交等复杂图模型；多跳关系查询是它的主场</td>
+  </tr>
+  <tr>
+    <td><strong>宽列 / 列族</strong></td>
+    <td>HBase、Cassandra</td>
+    <td>Bigtable 模型：rowkey 实时查询，条件 scan 与聚合满足分析需求。写密集型，读取性能一般；性能不如 Redis / Memcached，但在海量数据 + 持久化存储上强得多。分片与 MapReduce 分析比 MongoDB 简单。<strong>注意与 Hive 无关</strong>——Hive 是在 Hadoop 上提供数据仓库功能的另一套东西</td>
+  </tr>
+  <tr>
+    <td><strong>分布式搜索</strong></td>
+    <td>Elasticsearch</td>
+    <td>强大高效的字段搜索 / 过滤，支持大数据量；ES 也可以当作 data store 使用</td>
+  </tr>
+</table>
+
+<img src="images/lsm-vs-btree.png" alt="B+Tree 与 LSM-Tree 的写入路径对比">
+<div class="fig-cap">宽列库与写密集场景通常基于 LSM-Tree：追加写换吞吐，代价是读放大与写放大</div>
+
+<p><strong>B+Tree vs LSM：三种放大的取舍</strong>（RUM 猜想——读放大、写放大、空间放大三者不可兼得）：</p>
+
+<p><strong>三个放大的定义</strong>（把「逻辑操作」折算成「物理代价」）：</p>
+<ul>
+  <li><strong>读放大</strong>：1 次逻辑读，实际要读多少物理块 / 文件（I/O 次数或字节）。B+Tree 点查只碰 2~3 层页；LSM 要查 memtable + 多层 SSTable，Bloom filter 只能减少、不能消除候选文件。</li>
+  <li><strong>写放大</strong>：应用写 1 字节，介质实际写多少字节（含 WAL、整页重写、compaction）。B+Tree 小改重写整页（16 KB 页改 100 字节 ≈ 160x）；LSM 追加写便宜，但 compaction 把同一数据反复重写多层。</li>
+  <li><strong>空间放大</strong>：物理占用 / 逻辑有效数据。B+Tree 受页填充率（~50–70%）限制；LSM 在 compaction 前保留多版本 + tombstone，compaction 跟不上时空间放大更高。</li>
+</ul>
+<p>三者由 compaction 策略互相兑换：leveled compaction 层更有序 → 读放大降、写放大升；tiered compaction 少合并 → 写放大降、空间 / 读放大升。</p>
+<table>
+  <tr><th></th><th>B+Tree</th><th>LSM-Tree</th></tr>
+  <tr><td>读放大</td><td>低（O(log N)，2~3 层）</td><td>高（多层 SSTable，靠 Bloom filter 缓解）</td></tr>
+  <tr><td>写放大</td><td>高（原地更新重写整页）</td><td>低~中（追加写，代价转给 compaction）</td></tr>
+  <tr><td>空间放大</td><td>中（页填充率 50–70%）</td><td>中~高（多版本 + tombstone 等压缩）</td></tr>
+  <tr><td>定位</td><td>读优化</td><td>写优化</td></tr>
+</table>
+<p><strong>机制差异</strong>：B+Tree 是<strong>原地更新</strong>（改一条 100 字节记录要重写整页）；LSM 是<strong>追加写 + 后台 compaction</strong>，没有真正的 update，只有「写新版本 + 打 tombstone」。</p>
+<p><strong>业界采用</strong>：</p>
+<ul>
+  <li><strong>选 LSM（写多 / 追加 / 规模大）</strong>：Facebook LevelDB → RocksDB → MyRocks（把 LSM 装进 MySQL，报告相对 InnoDB 约 2 倍压缩、写放大显著下降）；Google LevelDB / Bigtable；Cassandra、HBase、InfluxDB 的 TSM；TiKV（关系库 TiDB 的存储层却是 LSM）；DynamoDB（点查便宜、scan 贵正源于此）。</li>
+  <li><strong>选 B+Tree（读多 / 事务 / 二级索引多）</strong>：MySQL InnoDB、PostgreSQL、SQLite、Oracle、SQL Server。</li>
+</ul>
+<p><strong>除读写比外的决策维度</strong>：</p>
+<ol>
+  <li><strong>二级索引数量</strong>——B+Tree 的护城河（见下）。</li>
+  <li><strong>更新形态</strong>：原地小改 → B+Tree；append / upsert → LSM。</li>
+  <li><strong>尾延迟</strong>：LSM compaction 造成写停顿与读尖峰，延迟敏感系统是硬伤。</li>
+  <li><strong>SSD 寿命</strong>：写放大直接折算成擦写次数。</li>
+  <li><strong>压缩率</strong>：SSTable 整块压缩通常优于页压缩。</li>
+  <li><strong>工作集是否进内存</strong>：全进 RAM 则读放大差异被抹平，写放大成为唯一区分项，LSM 占优。</li>
+</ol>
+<div class="warning-box">
+  <strong>二级索引数量为什么是分水岭：</strong>索引不是免费的，多一个索引 = 多一份写成本 + 存储。<br>
+  <strong>B+Tree</strong>：二级索引是一棵指向主键的独立 B+Tree，多一个索引 = 多一次原地页写（InnoDB 用 change buffer 缓冲成顺序写），读仍是 O(log N)，所以能容忍 5、10、20 个索引。<br>
+  <strong>LSM</strong>：每个二级索引都是<strong>一整套独立的 LSM 树</strong>（自己的 memtable + SSTable + compaction），每次写进 N+1 棵树、写放大倍增，读还要付读放大。所以 Cassandra 弱化二级索引，靠<strong>反范式 / 物化视图</strong>（数据复制多份，一次写、单 key 读）替代——本质是「用写换索引」。
+</div>
+
+<h3 id="newsql">3.3 NewSQL</h3>
+<p>把 NoSQL 的性能与可扩展性带回关系数据库：保留 SQL 与事务，用分布式共识协议（Raft / Paxos）做分片与副本。代表：TiDB、Google Spanner、CockroachDB。</p>
+
+<h3 id="multi-model">3.4 多模型数据库</h3>
+<p>结合多种模型于一体。原文作者的观点是：<strong>还不如 dual write 到不同类型的数据库</strong>。</p>
+<div class="warning-box">
+  <strong>补充：</strong>dual write 自身有一致性问题——两次写之间崩溃就会出现双写不一致，生产上通常需要 Outbox 表或 CDC 管道来保证最终一致。多模型库的价值在于<strong>共享同一个事务边界</strong>，代价是每个模型都不如专用库强。这条取舍必须显式做，而不是默认 dual write 更简单。
+</div>
+
+<h3 id="olap">3.5 OLAP</h3>
+<p>很多也是列式存储，但与传统认知不同，现代产品普遍支持 ad-hoc query。</p>
+<ul>
+  <li><strong>ClickHouse</strong>：列存 + 向量化执行 + MergeTree，单表聚合极快。</li>
+  <li><strong>HybridDB</strong>（现已演进为 <strong>AnalyticDB</strong>，见 <a href="#errata">第 8 节</a>）：
+    <ul>
+      <li>任意维度智能组合索引，使用方无需单独自建索引</li>
+      <li>百亿大表查询毫秒级响应</li>
+      <li>兼容 MySQL BI 生态，完备 SQL 支持</li>
+      <li>原文评价：当时已知的「任意维度组合过滤 + 百亿级数据量 + 毫秒级响应」的唯一选择</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="predictability">3.6 性能可预测性</h3>
+<p><strong>为什么重要</strong>：平均值会撒谎——系统是被「尾部」打垮的，不是被「平均」。9 个请求 1ms + 1 个请求 1s，平均 ≈100ms 看着没问题，但那个 1s 的往往是下单 / 支付。尾延迟还会被链路放大：N 层服务每层 p99 独立，整条链路「至少一层踩尾」的概率是 $1-0.99^N$（N=10 ≈ 9.6%，N=100 ≈ 63%，见《The Tail at Scale》）。可预测性失效还会让 Little 定律里的 W 不可控，连接池被打爆、超时重试、级联雪崩。</p>
+
+<div class="warning-box">
+  <strong>雪崩例子：</strong>下单接口常态 p99=5ms、连接池 100；某天 LSM major compaction（或 InnoDB checkpoint）使单查飙到 2s → 连接被慢查询占满 → 排队 → 1s 超时 → 重试翻倍 → 连接池打满 → 服务雪崩。事后监控：<strong>平均延迟几乎没涨，p999 从 20ms 飙到 2s</strong>。
+</div>
+
+<p><strong>什么情况下会发生可预测性问题</strong>：</p>
+<ol>
+  <li><strong>后台任务与前台争抢</strong>：LSM compaction、InnoDB checkpoint / 脏页刷盘、PostgreSQL autovacuum、备份 / 快照 / 索引重建——最常见的抖动源。</li>
+  <li><strong>运行时停顿</strong>：JVM 系（Cassandra / HBase / ES / Kafka）的 Full GC；热点行锁竞争；长事务 / 大查询占住 buffer pool 与 IO。</li>
+  <li><strong>数据分布问题</strong>：热点 key（排行榜 / 大 V / 热门商品）、分片键选错导致少数分片过载。</li>
+  <li><strong>容量逼近边界</strong>：工作集 &gt; RAM（随机读打盘）、连接数 / CPU / 磁盘接近饱和（排队延迟指数上升）、云盘 IOPS 限流 / noisy neighbor。</li>
+  <li><strong>流量突变</strong>：缓存击穿 / 雪崩、冷启动（工作集未预热）、秒杀 / 热点事件突发流量。</li>
+  <li><strong>扩缩容与迁移</strong>：分片 rebalance / 在线扩容时的数据搬迁影响在线流量。</li>
+</ol>
+
+<p><strong>选型启发</strong>：</p>
+<ol>
+  <li>把「尾延迟可预测性（p99/p999 + 方差）」列为与吞吐、一致性同级的硬指标。</li>
+  <li>延迟敏感路径选可预测引擎：在线 OLTP → B+Tree（无后台 compaction 大抖动）；必须用 LSM 时主动治理抖动（错峰 / 限流 compaction、监控 write stall、预留余量）。</li>
+  <li>平均性能 ≠ 可预测性：B+Tree 平均写吞吐低但方差小，LSM 平均高但尾部抖——前者定吞吐上限，后者定 SLA。</li>
+  <li>工作集进内存是治抖的通用手段：热数据全在 RAM，延迟曲线自然平滑。</li>
+  <li>留余量 + 用尾部设阈值：别在接近 100% 利用率跑；超时 / 熔断 / 告警阈值基于 p99/p999 而非平均。</li>
+  <li>监控盯分布不盯均值：看 p50/p99/p999 与延迟直方图。</li>
+</ol>
+
+<p><strong>RDS vs KV 的可预测性</strong>：同为磁盘持久化时，LSM 型 KV（RocksDB / Cassandra / DynamoDB）比 B+Tree 型 RDS 更严重——compaction（+ JVM GC）是 RDS 没有的、周期性、难以消除的硬抖动源；RDS 的抖动主要来自事务锁竞争，属于应用可规避的软问题。若 KV 指 Redis（内存），结论反过来：Redis 延迟最可预测，问题形态变成单线程阻塞。</p>
+
+<!-- ============ 4 ============ -->
+<h2 id="vector">4. 向量数据库</h2>
+
+<p>用于搜索某个向量的 k-nearest neighbors（k 近邻），即向量的 similarity 检索。</p>
+
+<h3 id="why-vector">为什么需要它</h3>
+<p>机器学习中大量问题会把对象表示为低维向量——word embedding、图片 embedding、用户 / 物品 embedding。推荐系统等场景需要「找出与这个向量最相似的其他向量」，而传统数据库不支持这类查询：B+Tree 索引对高维距离函数无能为力，只能退化为全表扫描。</p>
+
+<h3 id="vector-impl">典型实现</h3>
+<table>
+  <tr><th>方案</th><th>特点</th></tr>
+  <tr><td><strong>pgvector</strong></td><td>PostgreSQL 扩展：事务与向量检索同库，运维成本最低，适合数据量与检索规模中等的场景</td></tr>
+  <tr><td><strong>Milvus / Qdrant / Weaviate</strong></td><td>专用向量库：规模更大、索引与分片能力更强，代价是多一套系统</td></tr>
+  <tr><td><strong>FAISS</strong></td><td>库而非服务：适合离线批量检索，不提供持久化与在线服务能力</td></tr>
+</table>
+
+<h3 id="vector-index">索引与取舍</h3>
+<ul>
+  <li><strong>HNSW</strong>（图索引）：召回率高、查询快，内存占用大、构建慢。</li>
+  <li><strong>IVF-PQ</strong>（倒排 + 乘积量化）：省内存，需接受精度损失。</li>
+  <li>检索系统必须同时看四个指标：<strong>召回率、延迟、内存、更新代价</strong>。四者不可兼得，必须按业务定优先级。</li>
+</ul>
+
+<!-- ============ 5 ============ -->
+<h2 id="polyglot">5. 多存储组合</h2>
+
+<p>原文最重要的结论：<strong>应用设计中可以同时使用多个存储系统</strong>，按各自擅长的查询模式分工。</p>
+
+<table>
+  <tr><th>组合</th><th>分工</th></tr>
+  <tr><td>DynamoDB + Elasticsearch</td><td>DDB 做点查，ES 做多条件检索</td></tr>
+  <tr><td>MySQL + Elasticsearch</td><td>同样的旁路索引模式</td></tr>
+  <tr><td>关系库 + Redis</td><td>热数据缓存（见 <a href="caching-and-messaging.html#read-write-patterns">缓存读写模式</a>）</td></tr>
+  <tr><td>对象存储 + 数据仓库</td><td>冷数据离线分析（见 <a href="data-processing-and-olap.html">数据处理与 OLAP</a>）</td></tr>
+</table>
+
+<div class="warning-box">
+  <strong>代价：</strong>多一份数据就多一份一致性责任——同步延迟、补偿任务、双写失败的处理。旁路索引的一致性方案（Outbox / CDC）见 <a href="microservices-read-query.html">微服务 Read Query 处理</a> 与 <a href="geo-replication.html">Geo Replication</a>。
+</div>
+
+<!-- ============ 6 ============ -->
+<h2 id="decision-tree">6. 选型决策树</h2>
+
+<div class="mermaid">
+flowchart TD
+  A[先看 access pattern<br/>读 + 写] --> B{主查询形态是?}
+  B -->|主键点查 / KV<br/>无复杂条件| KV[(KV 存储<br/>DynamoDB · Redis)]
+  B -->|固定 schema<br/>事务 + 多表关联| C{单机能扛?}
+  B -->|文档形态<br/>每篇结构不同| DOC[(文档库<br/>MongoDB)]
+  B -->|大范围扫 + 聚合| OLAP[(列存 OLAP<br/>ClickHouse · AnalyticDB)]
+  B -->|全文检索 / 空间查询| SEARCH[(搜索库<br/>Elasticsearch)]
+  B -->|多跳关系| GRAPH[(图库<br/>Neo4j)]
+  B -->|向量相似度| VEC[(向量库<br/>pgvector · Milvus)]
+  C -->|能| RDB[(单机关系库<br/>MySQL · PostgreSQL)]
+  C -->|不能，需要跨行事务| NEWSQL[(NewSQL<br/>TiDB · Spanner)]
+  C -->|不能，追加式 / 写入极密集| WIDE[(宽列 / LSM<br/>HBase · Cassandra)]
+  classDef root fill:#e3f2fd,stroke:#2196f3
+  classDef decision fill:#e8f5ec,stroke:#4caf50,font-weight:bold
+  classDef store fill:#d4edda,stroke:#2d7a4a
+  classDef special fill:#fff3e0,stroke:#e8a838
+  class A root
+  class B,C decision
+  class KV,DOC,GRAPH,SEARCH,VEC,RDB,NEWSQL store
+  class WIDE,OLAP special
+</div>
+<p class="fig-cap">先按 access pattern（读 + 写）分流：读形态选家族，更新粒度与写密集选引擎；再在关系库分支上判断单机 / 分布式</p>
+
+<!-- ============ 7 ============ -->
+<h2 id="sizing">7. 选型清单与容量估算</h2>
+
+<h3 id="checklist">决策清单</h3>
+<ol>
+  <li>access pattern 的读形态是什么？（主键 / 范围 / 全文 / 空间 / 向量 / 聚合）</li>
+  <li>单机能否承载？（数据量 + 索引 + 预留增长 vs 单机可用存储）</li>
+  <li>需要跨行事务吗？需要 → 关系库或 NewSQL。</li>
+  <li>需要多强的读一致性？（读己之写 / 全局有序）</li>
+  <li>写入是点写 / 批量 / 追加？写密集或追加式 → LSM 系。</li>
+  <li>能否接受第二份数据副本？能 → 旁路索引组合。</li>
+</ol>
+
+<h3 id="capacity">容量估算</h3>
+<p>估算的前提是先把 access pattern 量化——QPS、热点 key、读写比数值；形态对了但量级没给，公式无法代入。</p>
+<p>存储总量（含索引开销与副本）：</p>
+$$D = N \times S \times (1 + r_{idx}) \times r_{replica}$$
+<p>$r_{idx}$ 为索引膨胀系数（通常 0.2–0.5），索引密集的表可达 1 以上。</p>
+
+<p>并发连接需求由 Little 定律给出：</p>
+$$L = \lambda \times W$$
+<p>即 <strong>并发数 = QPS × 平均响应时间</strong>。例如 $2000\ \text{QPS} \times 20\ \text{ms} = 40$ 个并发连接在途——这是连接池大小的下界，同时连接池必须小于数据库的最大连接数。</p>
+
+<div class="info-box">
+  <strong>单机可行性的真正判据是「工作集能否放进内存」：</strong>若热数据 $D_{hot} < \text{RAM}$，B+Tree 大部分命中内存页，磁盘只承担顺序写；若 $D_{hot} > \text{RAM}$，随机读会直接打到磁盘，tp99 显著劣化。
+</div>
+
+<!-- ============ 8 ============ -->
+<h2 id="errata">8. 勘误与过时组件</h2>
+
+<table>
+  <tr><th>原文说法</th><th>问题</th><th>现在的说法</th></tr>
+  <tr>
+    <td>「HBase 作为文档型 NoSQL」</td>
+    <td>HBase 不是文档型，是宽列 / 列族（wide-column）存储</td>
+    <td>宽列存储：rowkey 排序 + 列族；文档型是 MongoDB 那一类</td>
+  </tr>
+  <tr>
+    <td>「动态添加列，要存储列的多个版本，可能很多列为空」</td>
+    <td>表述含糊，易误解为大量空值占空间</td>
+    <td>列族 + 多版本是 Bigtable 模型；单元格稀疏存储，<strong>缺失的列不占空间</strong></td>
+  </tr>
+  <tr>
+    <td>「ES 的数据是准实时更新」</td>
+    <td>描述不准：ES 不是「更新慢」，而是「写入后可见有延迟」</td>
+    <td>默认 <code>refresh_interval=1s</code> 后才可被搜索；需要立刻可见可用 <code>?refresh=wait_for</code></td>
+  </tr>
+  <tr>
+    <td>「HybridDB」</td>
+    <td>产品已演进</td>
+    <td>AnalyticDB（MySQL 版 / PostgreSQL 版）</td>
+  </tr>
+  <tr>
+    <td>「多模型数据库还不如 dual write」</td>
+    <td>结论片面</td>
+    <td>dual write 有一致性问题（需 Outbox / CDC）；多模型库的价值是共享事务边界</td>
+  </tr>
+  <tr>
+    <td>「自己分表这种方法并不好」</td>
+    <td>结论仍成立，但生态已变化</td>
+    <td>优先 NewSQL（TiDB / Spanner）；或成熟中间件 ShardingSphere / Vitess</td>
+  </tr>
+  <tr>
+    <td>「leveldb 写性能很强」</td>
+    <td>作为库已基本被取代</td>
+    <td>演进为 RocksDB，被 TiKV、MyRocks、CockroachDB 等广泛使用</td>
+  </tr>
+</table>
+
+<!-- ============ 结论 ============ -->
+<h2 id="conclusion">结论</h2>
+
+<ul>
+  <li><strong>access pattern 先于产品</strong>：先写清楚读（主键查、范围扫、全文检索、空间查询、向量相似度）+ 写（点写 / 批量 / 追加 / 更新粒度）+ 读写比与热点，再谈用哪个库；但 access pattern 会演化，别过拟合当下。</li>
+  <li><strong>先问「单机能不能扛」</strong>，再谈分片；能单机 + 只读副本就不要自研分表。</li>
+  <li><strong>一致性、durability、读写比</strong>是三个必须显式回答的问题，它们直接决定引擎类型（B+Tree vs LSM）与副本策略。</li>
+  <li><strong>不要只选一种存储</strong>：多存储组合是常态，代价是多一份一致性责任，必须有同步与补偿方案。</li>
+  <li>估算用两个公式：容量 $D = N \times S \times (1 + r_{idx}) \times r_{replica}$，并发 $L = \lambda W$。</li>
+</ul>
+
+<div class="footer">
+  <p><strong>数据存储选型</strong> — 整理自内部笔记《业务系统 - 组件选型》，并依据 TiDB / AnalyticDB / pgvector / RocksDB 现行资料勘误。</p>
+  <p>延伸阅读：<a href="caching-and-messaging.html">缓存与消息队列选型</a> · <a href="data-processing-and-olap.html">数据处理与 OLAP</a> · <a href="microservices-read-query.html">微服务 Read Query 处理</a> · <a href="geo-replication.html">Geo Replication</a> · <a href="DB-switch.html">DB 切换</a></p>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: "$$", right: "$$", display: true},
+        {left: "$", right: "$", display: false}
+      ]
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>缓存与消息队列选型 — 系统设计</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+body {
+  background: #f5faf6;
+  color: #2d3a31;
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  max-width: 960px;
+  margin: 20px auto;
+  padding: 0 24px;
+}
+h1 { font-size: 1.35em; color: #1a4f2e; border-bottom: 2px solid #c3dbcc; padding-bottom: 6px; margin: 20px 0 10px; }
+h2 { font-size: 1.2em; color: #236b3e; margin: 20px 0 8px; padding: 8px 12px; background: #e8f5ec; border-radius: 6px; border-left: 4px solid #4caf50; }
+h3 { font-size: 1.02em; color: #2d7a4a; margin: 14px 0 6px; }
+h4 { font-size: 0.95em; color: #3a8b55; margin: 10px 0 4px; }
+p { margin: 6px 0; }
+li { margin: 2px 0; }
+a { color: #1e6b3b; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.back-link {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: #2d8a4e;
+  text-decoration: none;
+  font-size: 0.9em;
+}
+.back-link:hover { text-decoration: underline; }
+code { font-size: 0.88em; background: #e8f5ec; padding: 2px 5px; border-radius: 3px; color: #1a4f2e; }
+pre {
+  font-size: 0.8em;
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 6px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+table {
+  font-size: 0.9em;
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+}
+th, td {
+  border: 1px solid #c3dbcc;
+  padding: 6px 10px;
+  text-align: left;
+}
+th {
+  background: #e8f5ec;
+  color: #1a4f2e;
+  font-weight: 600;
+}
+tr:nth-child(even) { background: #f0f9f3; }
+tr:nth-child(odd) { background: #fff; }
+.card {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+.card-title { font-weight: 600; color: #1a4f2e; margin-bottom: 4px; font-size: 1em; }
+.info-box {
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-left: 4px solid #2196f3;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.warning-box {
+  background: #fff3e0;
+  border: 1px solid #ffcc80;
+  border-left: 4px solid #ff9800;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.success-box {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-left: 4px solid #4caf50;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.toc {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 14px 20px;
+  margin: 12px 0 16px;
+}
+.toc h2 { font-size: 1em; color: #1a4f2e; margin: 0 0 8px; border: none; padding: 0; background: none; }
+.toc > ol { margin: 0; list-style: none; counter-reset: toc; }
+.toc > ol > li { counter-increment: toc; margin: 3px 0; }
+.toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+.toc a { color: #236b3e; text-decoration: none; font-size: 0.9em; }
+.toc a:hover { text-decoration: underline; color: #1a4f2e; }
+img { max-width: 100%; border-radius: 6px; display: block; margin: 12px auto; }
+.fig-cap { text-align: center; font-size: 0.8em; color: #6a8f78; margin: -6px 0 14px; }
+.footer {
+  margin-top: 30px;
+  padding-top: 12px;
+  border-top: 2px solid #c3dbcc;
+  font-size: 0.85em;
+  color: #6a8f78;
+}
+.tag {
+  display: inline-block;
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.8em;
+  color: #1a4f2e;
+  margin-right: 4px;
+}
+</style>
+</head>
+<body>
+
+<a class="back-link" href="../index.html">&larr; 返回索引</a>
+
+<h1>🗄️ 缓存与消息队列选型</h1>
+<p>组件选型三篇之一：缓存放在哪、用什么、缓存什么、怎么读写；消息队列怎么选、保证什么、如何估算容量。<br>
+存储选型见 <a href="data-store-selection.html">数据存储选型</a>，分析栈见 <a href="data-processing-and-olap.html">数据处理与 OLAP</a>。</p>
+
+<div class="toc">
+  <h2>📖 目录</h2>
+  <ol>
+    <li><a href="#where">缓存放在哪里</a></li>
+    <li><a href="#what-tool">用什么做缓存</a></li>
+    <li><a href="#what-data">缓存什么</a></li>
+    <li><a href="#local-vs-distributed">本地缓存 vs 分布式缓存</a></li>
+    <li><a href="#read-write-patterns">缓存读写模式</a></li>
+    <li><a href="#redis-vs-memcached">Redis vs Memcached</a></li>
+    <li><a href="#mq-criteria">消息队列选型标准</a></li>
+    <li><a href="#delivery">投递语义</a></li>
+    <li><a href="#sizing">选型清单与容量估算</a></li>
+    <li><a href="#errata">勘误与过时组件</a></li>
+    <li><a href="#conclusion">结论</a></li>
+  </ol>
+</div>
+
+<!-- ============ 1 ============ -->
+<h2 id="where">1. 缓存放在哪里</h2>
+
+<p>缓存不是「加一层 Redis」，而是沿着请求链路逐层布置的四道闸门，外加作为事实来源的数据库。以电商商品详情页为例：图片与静态资源落在浏览器与 CDN，类目树落在应用本地内存，商品详情与库存落在 Redis，数据库始终是事实来源。</p>
+
+<img src="images/cache-layers.png" alt="缓存的四个层次 + 事实来源">
+<div class="fig-cap">读路径自上而下逐层查找，命中即返回</div>
+
+<table>
+  <tr>
+    <th>位置</th>
+    <th>典型实现</th>
+    <th>典型延迟</th>
+    <th>失效范围 / 一致性代价</th>
+  </tr>
+  <tr>
+    <td><strong>① 浏览器</strong></td>
+    <td><code>Cache-Control</code>、<code>ETag</code>、Service Worker</td>
+    <td>&lt; 1 ms（本地）</td>
+    <td>只影响该用户；版本发布后旧页面可能滞留（用文件名 hash 或 <code>no-cache</code> 规避）</td>
+  </tr>
+  <tr>
+    <td><strong>② CDN 边缘</strong></td>
+    <td>各家 CDN / 自建边缘节点</td>
+    <td>10–50 ms</td>
+    <td>影响整个区域用户；缓存过期瞬间的回源风暴需要靠 request collapsing 兜住</td>
+  </tr>
+  <tr>
+    <td><strong>③ 应用本地</strong></td>
+    <td>Caffeine（原文写的 Guava Cache，见 <a href="#errata">勘误</a>）</td>
+    <td>&lt; 1 ms</td>
+    <td>每个实例一份；更新需要广播失效，或依赖极短 TTL</td>
+  </tr>
+  <tr>
+    <td><strong>④ 分布式</strong></td>
+    <td>Redis / Memcached</td>
+    <td>0.5–2 ms</td>
+    <td>全局共享视图；一旦故障，影响面覆盖所有实例</td>
+  </tr>
+  <tr>
+    <td><strong>⑤ 数据库</strong></td>
+    <td>—</td>
+    <td>5–50 ms+</td>
+    <td>事实来源，不承担缓存语义</td>
+  </tr>
+</table>
+
+<div class="info-box">
+  <strong>取舍规律：</strong>越靠近用户 → 延迟越低、命中成本越低，但一致性越弱、能覆盖的失效范围越小；越靠近数据库 → 一致性越强、失效越彻底，但延迟高、故障影响面大。
+</div>
+
+<!-- ============ 2 ============ -->
+<h2 id="what-tool">2. 用什么做缓存</h2>
+
+<ul>
+  <li><strong>浏览器</strong>：HTTP 缓存语义，<code>Cache-Control: max-age</code> 决定强制缓存，<code>ETag</code> / <code>Last-Modified</code> 决定协商缓存。</li>
+  <li><strong>CDN</strong>：边缘节点缓存静态资源；关键在回源策略、刷新接口与「同一资源变体」（Vary）的处理。</li>
+  <li><strong>应用本地</strong>：Caffeine（推荐）/ Guava Cache。单机堆内存，必须回答「多实例之间怎么失效」。</li>
+  <li><strong>分布式</strong>：Redis（复杂数据结构 + 持久化）/ Memcached（纯 KV，多线程模型）。</li>
+</ul>
+
+<!-- ============ 3 ============ -->
+<h2 id="what-data">3. 缓存什么</h2>
+
+<ul>
+  <li><strong>分开全量与增量</strong>：全量数据（如类目树、配置）一次写入、长期有效；增量数据（如库存、价格）按更新频率决定 TTL。</li>
+  <li><strong>按查询粒度设计 key</strong>：key 太粗（<code>product:all</code>）命中率虚高但复用率低、更新代价大；key 太细（<code>product:{id}:field:{f}</code>）命中率低、内存放大。</li>
+  <li><strong>区分冷热</strong>：只缓存访问频次足够高的数据。缓存冷数据的唯一效果，是把内存换成一层更慢的间接访问。</li>
+</ul>
+
+<!-- ============ 4 ============ -->
+<h2 id="local-vs-distributed">4. 本地缓存 vs 分布式缓存</h2>
+
+<table>
+  <tr>
+    <th>维度</th>
+    <th>应用本地（Caffeine）</th>
+    <th>分布式（Redis / Memcached）</th>
+  </tr>
+  <tr><td>延迟</td><td>纳秒 ~ 微秒级</td><td>0.5–2 ms（一次网络往返）</td></tr>
+  <tr><td>容量</td><td>受单机堆内存限制</td><td>可独立扩缩，容量与业务实例解耦</td></tr>
+  <tr><td>一致性</td><td>每实例一份，更新需广播</td><td>全局单视图，删一次即全生效</td></tr>
+  <tr><td>失效</td><td>只能 TTL 兜底，或订阅发布广播删除</td><td>统一删除</td></tr>
+  <tr><td>故障影响</td><td>仅该实例（可能读穿到 DB）</td><td>影响所有实例</td></tr>
+</table>
+
+<p><strong>多级缓存</strong>（本地 + 分布式 + DB）是常见组合：本地挡住最热的数据，分布式挡住中等热度的数据。代价是本地层的一致性——必须显式回答「能接受多大窗口的脏读」，要么用足够短的 TTL，要么用发布订阅广播失效。</p>
+
+<!-- ============ 5 ============ -->
+<h2 id="read-write-patterns">5. 缓存读写模式</h2>
+
+<img src="images/cache-read-paths.png" alt="Cache-Aside 与 Read-Through 的读路径">
+<div class="fig-cap">Cache-Aside 由应用负责回源与写回；Read-Through 把回源封在缓存层内</div>
+
+<table>
+  <tr><th>模式</th><th>写侧行为</th><th>一致性</th><th>适用</th></tr>
+  <tr>
+    <td><strong>Cache-Aside</strong>（旁路缓存）</td>
+    <td>应用写 DB 后<strong>删除</strong>缓存</td>
+    <td>有短暂窗口，需 TTL 兜底</td>
+    <td>最通用，业务完全可控</td>
+  </tr>
+  <tr>
+    <td><strong>Read-Through</strong></td>
+    <td>读时由缓存层负责回源（应用不感知）</td>
+    <td>同 Cache-Aside</td>
+    <td>应用逻辑简单，回源策略集中在缓存层</td>
+  </tr>
+  <tr>
+    <td><strong>Write-Through</strong></td>
+    <td>应用写缓存，缓存同步写 DB</td>
+    <td>强（两者都成功才算成功）</td>
+    <td>写后立刻要读到</td>
+  </tr>
+  <tr>
+    <td><strong>Write-Behind</strong></td>
+    <td>应用只写缓存，缓存异步刷 DB</td>
+    <td>弱，缓存在刷盘前崩溃会丢数据</td>
+    <td>写吞吐优先，能容忍丢失</td>
+  </tr>
+</table>
+
+<h3>Cache-Aside 的读写实现</h3>
+<pre># 读：先查缓存，miss 回源并写回
+def get_product(pid):
+    v = cache.get(f"product:{pid}")
+    if v is None:
+        v = db.query("SELECT * FROM product WHERE id = %s", [pid])
+        cache.set(f"product:{pid}", v, ttl=300)   # TTL 兜底
+    return v
+
+# 写：先写 DB，再删除缓存（不是更新缓存）
+def update_product(pid, data):
+    db.execute("UPDATE product SET ... WHERE id = %s", [pid])
+    cache.delete(f"product:{pid}")                # delete 而非 set</pre>
+
+<div class="warning-box">
+  <strong>为什么是删除而不是更新？</strong>并发「先读旧值 → 后写新值」时，更新缓存会让旧值覆盖新值并长期驻留；删除缓存最坏只是下一次读 miss，由 TTL 与下一次回源自我修复。
+</div>
+
+<!-- ============ 6 ============ -->
+<h2 id="redis-vs-memcached">6. Redis vs Memcached</h2>
+
+<p>原文列出 5 点区别，其中两点表述有误，这里就地修正（完整清单见 <a href="#errata">第 10 节</a>）。</p>
+
+<table>
+  <tr><th>维度</th><th>Redis</th><th>Memcached</th></tr>
+  <tr><td>value 类型</td><td>String / List / Set / Hash / Sorted Set / Stream / Bitmap / HyperLogLog</td><td>仅 string / blob</td></tr>
+  <tr><td>持久化</td><td>RDB 快照 + AOF 日志</td><td>无，重启即全丢</td></tr>
+  <tr><td>数据位置</td><td>全部在内存（<strong>勘误</strong>：原文的「value 可能不在内存」指 Redis 2.4 前的 VM 机制，已废弃）</td><td>全部在内存</td></tr>
+  <tr><td>过期与淘汰</td><td>支持 TTL 过期；淘汰策略可配（<code>allkeys-lru</code> / <code>volatile-lru</code> / <code>allkeys-lfu</code> 等）</td><td>支持 TTL 过期；slab 内 LRU 淘汰</td></tr>
+  <tr><td>超过单机内存</td><td>靠 Redis Cluster 分片；磁盘只用于持久化</td><td>客户端一致性哈希分片</td></tr>
+  <tr><td>线程模型</td><td>主线程单线程处理命令（6.0 起 I/O 多线程）</td><td>多线程</td></tr>
+  <tr><td>分布式方案</td><td>Redis Cluster（原生分片）/ Sentinel（高可用）/ 代理层分片</td><td>客户端侧分片</td></tr>
+</table>
+
+<div class="warning-box">
+  <strong>勘误 ①</strong>「memcache 的 key 是会过期的，类似 LRU 淘汰」——TTL 过期 Redis 与 Memcached <strong>都支持</strong>，LRU 淘汰两者也都有。Memcached 真正的差异是无持久化、无复杂数据结构、多线程模型。<br>
+  <strong>勘误 ②</strong>「redis 的 value 不一定在内存中，所以可以存放大于机器内存的数据」——该说法建立在 Redis 2.4 之前的 VM（虚拟内存）机制上，2.4 起已废弃。今天 Redis 的可用内存就是数据量上限，超出后靠淘汰策略而非换页。
+</div>
+
+<!-- ============ 7 ============ -->
+<h2 id="mq-criteria">7. 消息队列选型标准</h2>
+
+<p>消息队列一般用于异步通信：削峰、解耦、异步化。原文列出 9 条考察点，逐条展开如下。</p>
+
+<table>
+  <tr><th>#</th><th>考察点</th><th>说明</th></tr>
+  <tr><td>1</td><td>语言支持</td><td>尽量选客户端语言覆盖广的（Kafka / RabbitMQ / Pulsar 均有主流语言客户端），否则要为一种语言自研客户端</td></tr>
+  <tr><td>2</td><td>协议标准</td><td>AMQP / STOMP / MQTT 等标准协议，还是私有协议；标准协议意味着更低的迁移成本与更丰富的现成工具</td></tr>
+  <tr><td>3</td><td>是否保序</td><td>多数 MQ 只保证<strong>单分区 / 单队列内</strong>有序。<strong>注意应用层重试依然会引入乱序</strong>：重试的消息会排到队尾</td></tr>
+  <tr><td>4</td><td>投递保证</td><td>at-most-once / at-least-once / exactly-once，见 <a href="#delivery">第 8 节</a></td></tr>
+  <tr><td>5</td><td>是否持久化</td><td>能否落盘、落盘后吞吐退化多少</td></tr>
+  <tr><td>6</td><td>消费者重连后续读</td><td>与第 4 条相关但<strong>不等价</strong>：取决于 ack 时机与 offset 提交策略</td></tr>
+  <tr><td>7</td><td>可扩展性</td><td>增加分区 / 节点能否线性扩容</td></tr>
+  <tr><td>8</td><td>延迟</td><td>端到端延迟量级（Kafka 批量化后 ms 级；传统 AMQP 更低延迟但吞吐低）</td></tr>
+  <tr><td>9</td><td>竞争消费者</td><td>Competing Consumers：多个消费者并行消费同一队列。这其实是<strong>特性</strong>而非选型维度，但它决定消费者组能否水平扩展</td></tr>
+</table>
+
+<div class="info-box">
+  <strong>关于第 6 条「感觉是 4 的同一个问题」：</strong>投递语义描述的是「生产者到 broker」的保证，而消费者重启后能否续读取决于「消费者到 broker」的位点管理——手动提交 offset 的消费者从上次提交点续读（at-least-once）；自动提交或读取即 ack 则会丢（at-most-once）；已处理但未提交 offset 时重启会重复消费。
+</div>
+
+<!-- ============ 8 ============ -->
+<h2 id="delivery">8. 投递语义</h2>
+
+<table>
+  <tr><th>语义</th><th>行为</th><th>代价</th><th>典型实现</th></tr>
+  <tr>
+    <td>At-most-once</td>
+    <td>投递一次，失败即丢</td>
+    <td>无重复，可能丢消息</td>
+    <td>读取即 ack、自动提交 offset</td>
+  </tr>
+  <tr>
+    <td>At-least-once</td>
+    <td>失败重试，直到被确认</td>
+    <td>不丢，但可能重复</td>
+    <td>处理成功后再 ack / 手动提交 offset</td>
+  </tr>
+  <tr>
+    <td>Exactly-once</td>
+    <td>端到端不丢不重</td>
+    <td>分布式下没有直接机制，只能构造效果</td>
+    <td>上游 at-least-once + 下游幂等去重</td>
+  </tr>
+</table>
+
+<div class="success-box">
+  <strong>核心：</strong>上游负责「不丢」，下游负责「不重」，两者合起来才是 Exactly-Once 的<strong>效果</strong>。因此消息队列的选型结论会直接决定业务侧需要多少幂等代码。推导与实现细节见 <a href="idempotency.md">微服务中的幂等性</a>；配套的重试与退避策略见 <a href="traffic-management.html#retry">流量治理 — 重试</a>。
+</div>
+
+<!-- ============ 9 ============ -->
+<h2 id="sizing">9. 选型清单与容量估算</h2>
+
+<h3>缓存决策清单</h3>
+<ol>
+  <li>是否需要<strong>跨实例一致</strong>？否 → 应用本地（Caffeine）；是 → 分布式（Redis）。</li>
+  <li>能接受<strong>多大窗口的脏读</strong>？决定 TTL 长度与失效方式（删除 / 广播）。</li>
+  <li>数据<strong>能否容忍丢失</strong>？能 → 缓存可承担部分存储职责；不能 → 数据库必须是事实来源，缓存只做加速层。</li>
+  <li>是否需要<strong>复杂结构</strong>（排行榜、集合运算、去重计数）？是 → Redis 的 Sorted Set / Set / HyperLogLog。</li>
+</ol>
+
+<h3>缓存内存估算</h3>
+<p>缓存 $N$ 个条目、每条约 $S$ 字节，再加上 Redis 自身开销（字典、对象头、jemalloc 碎片，通常在 30%–50%）：</p>
+$$M \approx N \times S \times (1 + o), \quad o \in [0.3,\ 0.5]$$
+
+<p>已知 QPS $Q$ 与命中率 $h$，落到数据库的读放大为：</p>
+$$\text{DB QPS} = Q \times (1 - h)$$
+
+<p>所以「命中率从 95% 提到 99%」不是锦上添花：当 $Q = 100{,}000$ 时，数据库压力从 $5{,}000$ QPS 降到 $1{,}000$ QPS。</p>
+
+<h3>队列容量估算</h3>
+<p>分区数取「吞吐需求」与「并行度需求」的较大者：</p>
+$$P = \max\left(\left\lceil \frac{T_{target}}{T_{partition}} \right\rceil,\ C_{consumers}\right)$$
+
+<p>磁盘占用 = 写入速率 × 保留时长 × 副本数：</p>
+$$D = R \times T_{retention} \times r$$
+
+<p>例：写入 $50\ \text{MB/s}$、保留 7 天、3 副本 → $50 \times 86400 \times 7 \times 3 \approx 90.7\ \text{TB}$。</p>
+
+<h3>按场景选型</h3>
+<table>
+  <tr><th>场景特征</th><th>倾向</th></tr>
+  <tr><td>需要极高吞吐 + 分区内有序 + 可重放（日志、埋点、CDC）</td><td>Kafka 类分区日志</td></tr>
+  <tr><td>复杂路由（topic / routing key / 延迟队列）、低延迟</td><td>RabbitMQ 类 AMQP broker</td></tr>
+  <tr><td>多租户 + 存算分离 + 队列与流处理统一</td><td>Pulsar 类分层存储架构</td></tr>
+  <tr><td>只想托管、按量付费、不在意极致吞吐</td><td>云托管队列（SQS 类）</td></tr>
+</table>
+
+<!-- ============ 10 ============ -->
+<h2 id="errata">10. 勘误与过时组件</h2>
+
+<table>
+  <tr><th>原文说法</th><th>问题</th><th>现在的说法</th></tr>
+  <tr>
+    <td>「redis 的 value 不一定在内存中，此时会比较慢」</td>
+    <td>描述的是 Redis 2.4 之前的 VM（虚拟内存）机制</td>
+    <td>2.4 起废弃，数据（key 与 value）全部在内存</td>
+  </tr>
+  <tr>
+    <td>「memcache 的 key 是会过期的，类似 LRU 淘汰」</td>
+    <td>把「过期」与「淘汰」混为一谈，且 Redis 同样支持两者</td>
+    <td>两者都支持 TTL 与 LRU；Memcached 的差异是无持久化、无复杂结构、多线程</td>
+  </tr>
+  <tr>
+    <td>「redis 会利用磁盘存放一些 value，所以可以存放大于机器内存的数据」</td>
+    <td>建立在已废弃的 VM 机制上</td>
+    <td>突破单机内存靠 Redis Cluster 分片；磁盘只用于持久化</td>
+  </tr>
+  <tr>
+    <td>「服务器本地缓存：Guava」</td>
+    <td>Guava Cache 已停止演进</td>
+    <td>Caffeine（Guava 作者重写，W-TinyLFU 淘汰算法，命中率更高）</td>
+  </tr>
+  <tr>
+    <td>消费者重连能否续读「感觉是 4 的同一个问题」</td>
+    <td>与投递语义相关，但不等价</td>
+    <td>取决于 ack 时机与 offset 提交策略</td>
+  </tr>
+</table>
+
+<!-- ============ 结论 ============ -->
+<h2 id="conclusion">结论</h2>
+
+<ul>
+  <li>缓存的第一个决定不是「用不用 Redis」，而是<strong>放在哪一层</strong>：越靠前延迟越低，越靠后一致性越强。</li>
+  <li>本地缓存与分布式缓存不是二选一；多级缓存必须显式回答「能接受多大窗口的脏读」。</li>
+  <li>Redis 与 Memcached 的分界已经很清楚：要数据结构、持久化、分布式分片 → Redis；只要最简单的 KV 且看重多线程内存效率 → Memcached。</li>
+  <li>消息队列的选型核心是<strong>投递语义 + 分区语义</strong>：保证什么、允许重复多少、单分区内是否有序——这三条决定了业务侧需要写多少幂等代码。</li>
+  <li>估算先于选型：缓存按「条目数 × 单条大小 × 1.4」估内存，队列按「吞吐需求 vs 单分区吞吐」定分区数。</li>
+</ul>
+
+<div class="footer">
+  <p><strong>缓存与消息队列选型</strong> — 整理自内部笔记《业务系统 - 组件选型》，并依据 Redis / Memcached / Caffeine 现行文档勘误。</p>
+  <p>延伸阅读：<a href="data-store-selection.html">数据存储选型</a> · <a href="idempotency.md">幂等性</a> · <a href="traffic-management.html">流量治理</a> · <a href="microservices-read-query.html">微服务 Read Query 处理</a></p>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: "$$", right: "$$", display: true},
+        {left: "$", right: "$", display: false}
+      ]
+    });
+  });
+</script>
+
+</body>
+</html>

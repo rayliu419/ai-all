@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据处理与 OLAP — 系统设计</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    mermaid.initialize({ startOnLoad: true, theme: "base", themeVariables: {
+      primaryColor: "#e8f5ec",
+      primaryTextColor: "#2d3a31",
+      primaryBorderColor: "#4caf50",
+      lineColor: "#4caf50",
+      secondaryColor: "#fff3e0",
+      tertiaryColor: "#e3f2fd",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+      fontSize: "10px"
+    }});
+  });
+</script>
+<style>
+body {
+  background: #f5faf6;
+  color: #2d3a31;
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  max-width: 960px;
+  margin: 20px auto;
+  padding: 0 24px;
+}
+h1 { font-size: 1.35em; color: #1a4f2e; border-bottom: 2px solid #c3dbcc; padding-bottom: 6px; margin: 20px 0 10px; }
+h2 { font-size: 1.2em; color: #236b3e; margin: 20px 0 8px; padding: 8px 12px; background: #e8f5ec; border-radius: 6px; border-left: 4px solid #4caf50; }
+h3 { font-size: 1.02em; color: #2d7a4a; margin: 14px 0 6px; }
+h4 { font-size: 0.95em; color: #3a8b55; margin: 10px 0 4px; }
+p { margin: 6px 0; }
+li { margin: 2px 0; }
+a { color: #1e6b3b; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.back-link {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: #2d8a4e;
+  text-decoration: none;
+  font-size: 0.9em;
+}
+.back-link:hover { text-decoration: underline; }
+code { font-size: 0.88em; background: #e8f5ec; padding: 2px 5px; border-radius: 3px; color: #1a4f2e; }
+pre {
+  font-size: 0.8em;
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 6px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+table {
+  font-size: 0.9em;
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+}
+th, td {
+  border: 1px solid #c3dbcc;
+  padding: 6px 10px;
+  text-align: left;
+}
+th {
+  background: #e8f5ec;
+  color: #1a4f2e;
+  font-weight: 600;
+}
+tr:nth-child(even) { background: #f0f9f3; }
+tr:nth-child(odd) { background: #fff; }
+.card {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+.card-title { font-weight: 600; color: #1a4f2e; margin-bottom: 4px; font-size: 1em; }
+.info-box {
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-left: 4px solid #2196f3;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.warning-box {
+  background: #fff3e0;
+  border: 1px solid #ffcc80;
+  border-left: 4px solid #ff9800;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.success-box {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-left: 4px solid #4caf50;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.toc {
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 8px;
+  padding: 14px 20px;
+  margin: 12px 0 16px;
+}
+.toc h2 { font-size: 1em; color: #1a4f2e; margin: 0 0 8px; border: none; padding: 0; background: none; }
+.toc > ol { margin: 0; list-style: none; counter-reset: toc; }
+.toc > ol > li { counter-increment: toc; margin: 3px 0; }
+.toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+.toc a { color: #236b3e; text-decoration: none; font-size: 0.9em; }
+.toc a:hover { text-decoration: underline; color: #1a4f2e; }
+img { max-width: 100%; border-radius: 6px; display: block; margin: 12px auto; }
+.fig-cap { text-align: center; font-size: 0.8em; color: #6a8f78; margin: -6px 0 14px; }
+.mermaid { text-align: center; margin: 16px 0; overflow-x: auto; }
+.footer {
+  margin-top: 30px;
+  padding-top: 12px;
+  border-top: 2px solid #c3dbcc;
+  font-size: 0.85em;
+  color: #6a8f78;
+}
+.tag {
+  display: inline-block;
+  background: #e8f5ec;
+  border: 1px solid #c3dbcc;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.8em;
+  color: #1a4f2e;
+  margin-right: 4px;
+}
+</style>
+</head>
+<body>
+
+<a class="back-link" href="../index.html">&larr; 返回索引</a>
+
+<h1>📊 数据处理与 OLAP</h1>
+<p>组件选型三篇之三：数据怎么处理（批 / 流）、分析型存储怎么选（列存 / 数仓 / ETL）。缓存见 <a href="caching-and-messaging.html">缓存与消息队列选型</a>，存储选型见 <a href="data-store-selection.html">数据存储选型</a>。</p>
+
+<div class="toc">
+  <h2>📖 目录</h2>
+  <ol>
+    <li><a href="#batch-vs-stream">批处理 vs 流处理</a></li>
+    <li><a href="#engine-types">存储引擎的两个类型：OLTP 与 OLAP</a></li>
+    <li><a href="#warehouse">分析处理的解决方案：数据仓库</a></li>
+    <li><a href="#etl">ETL 与数据仓库</a></li>
+    <li><a href="#sizing">选型清单与容量估算</a></li>
+    <li><a href="#errata">勘误与过时组件</a></li>
+    <li><a href="#conclusion">结论</a></li>
+  </ol>
+</div>
+
+<!-- ============ 1 ============ -->
+<h2 id="batch-vs-stream">1. 批处理 vs 流处理</h2>
+
+<p>这里的「流处理」指实时处理。</p>
+
+<table>
+  <tr><th></th><th>批处理（Batch）</th><th>流处理（Stream）</th></tr>
+  <tr><td><strong>触发方式</strong></td><td>定时调度（日切 / 小时级）</td><td>事件到达即触发</td></tr>
+  <tr><td><strong>延迟</strong></td><td>分钟 ~ 小时 ~ 天级</td><td>秒级 ~ 亚秒级</td></tr>
+  <tr><td><strong>输入</strong></td><td>有界数据集（文件、S3 前缀、表快照）</td><td>无界事件流</td></tr>
+  <tr><td><strong>正确性</strong></td><td>可重跑、易对账</td><td>需水位线 / 窗口语义处理乱序</td></tr>
+  <tr><td><strong>典型实现</strong></td><td>Hadoop、Spark、（内部）Cradle（批量调度平台）</td><td>Flink、Kinesis + Lambda、（内部）Datapath（流式数据处理平台）</td></tr>
+  <tr><td><strong>其他例子</strong></td><td>DataPipe Line（内部数据管道平台）</td><td>DDB Stream（表级变更流）</td></tr>
+</table>
+
+<img src="images/batch-vs-stream.png" alt="批处理与流处理的可见延迟对比">
+<div class="fig-cap">同一份事件流：批处理延迟 = 窗口长度；流处理延迟 = 事件在内存中的滞留时间</div>
+
+<div class="success-box">
+  <strong>核心结论：</strong>要用<strong>不同的 data store + 不同的处理方式</strong>（batch / stream）解决不同规模、不同实时性的问题。
+  <ul>
+    <li>DynamoDB 不适合做 scan query，尤其是亿级数据量——这是设计约束，不是性能调优问题。</li>
+    <li>但同样亿级的数据，离线的 S3 + Spark 处理起来就很简单。</li>
+  </ul>
+  所以同一个业务里「在线点查走 DDB + 离线全量分析走 S3/Spark」是完全正常的组合，缺的只是把它们接起来的那条管道。
+</div>
+
+<h3>Lambda 架构 vs Kappa 架构</h3>
+
+<div class="mermaid">
+flowchart TB
+  subgraph LAMBDA["Lambda 架构：批 + 流双路"]
+    direction TB
+    E1[事件流] --> B1[批处理层<br/>全量重算 · 保证正确]
+    E1 --> S1[速度层<br/>增量处理 · 保证时效]
+    B1 --> V1[(服务层<br/>合并两路视图)]
+    S1 --> V1
+  end
+  subgraph KAPPA["Kappa 架构：单流路"]
+    direction TB
+    E2[事件流 / 可重放日志] --> P2[单条流处理路径]
+    P2 --> V2[(结果存储)]
+  end
+  classDef batch fill:#e3f2fd,stroke:#2196f3
+  classDef speed fill:#fff3e0,stroke:#ff9800
+  classDef sink fill:#d4edda,stroke:#2d7a4a,font-weight:bold
+  class B1 batch
+  class S1 speed
+  class V1,P2,V2 sink
+</div>
+
+<p>原文提到「Kinesis + Lambda，Lambda 这种触发的方式可以构成一个流式处理」——这里要区分两个同名的 Lambda：</p>
+<ul>
+  <li><strong>AWS Lambda</strong>：一个函数计算服务，事件触发即可当流处理的执行单元。</li>
+  <li><strong>Lambda 架构</strong>（Nathan Marz）：批处理层 + 速度层 + 服务层，批层保证正确性、速度层保证实时性，代价是两套代码要维护同一份逻辑。</li>
+  <li><strong>Kappa 架构</strong>：只保留流处理一条路径，需要重算历史时重放日志；代价是重放成本与对日志保留时长的要求。</li>
+</ul>
+
+<!-- ============ 2 ============ -->
+<h2 id="engine-types">2. 存储引擎的两个类型：OLTP 与 OLAP</h2>
+
+<h3>事务处理（OLTP）</h3>
+<p>平时的业务处理——更新数据库等，系统中的主要请求类型。访问模式通常是<strong>返回一个或多个记录的所有字段并更新某些列</strong>，或插入几行新记录。大多数与用户交互的应用都是这种模式。</p>
+
+<h3>分析处理（OLAP）</h3>
+<p>业务上很少用到，主要用于支撑业务决策，请求量少。访问模式是<strong>读取巨量记录的某些字段，然后做聚合运算</strong>（count / sum / average）。</p>
+
+<img src="images/oltp-vs-olap.png" alt="OLTP 与 OLAP 的负载特征对比">
+<div class="fig-cap">等级为定性示意：OLTP 是「多并发 • 少行 • 全列 • ms 级」，OLAP 是「少并发 • 海量行 • 少列 • 秒级」</div>
+
+<h3>共同点</h3>
+<div class="info-box">
+  两者都使用 SQL 接口。这也是很多选型错误的来源：<strong>SQL 一样，但底层数据组织方式必须不同</strong>——把分析查询放到业务库上跑，会在引擎层被惩罚。
+</div>
+
+<!-- ============ 3 ============ -->
+<h2 id="warehouse">3. 分析处理的解决方案：数据仓库</h2>
+
+<h3>为什么需要专门的 data warehousing</h3>
+<ol>
+  <li>通常的 OLTP 直接与用户业务相互影响，而分析处理要读取海量记录；直接跑在 OLTP 上会影响线上性能。因此用专门的 data warehouse 承担分析处理——通常通过 <strong>ETL</strong> 把关系数据库的数据导入数仓，所以数仓是<strong>只读数据的副本</strong>。</li>
+  <li>由于业务库与数仓的数据访问方式不同，可以采用不同的底层优化技术。例如索引结构在数据仓库中不常见，而<strong>基于列的存储</strong>可以极大提升分析处理的效率。</li>
+</ol>
+
+<h3>基于列的存储（列式存储）</h3>
+<ol>
+  <li>在分析处理的应用中，很少出现 <code>SELECT *</code> 这样的需求。</li>
+  <li>传统基于行的数据库，一行的不同属性放在相邻位置，相邻的行也放在磁盘上一起。</li>
+  <li>由于数仓的访问特性（读取大量记录但只读某些列），行式存放不再合适：按行存储必须先读入所有这些行的所有列（占据大量内存）然后再过滤。列式存储把<strong>所有记录的某一列放在一起</strong>，省掉了这个过程。Amazon Redshift 在使用列式存储时性能提升很多，就是这个原因。</li>
+  <li>除此之外，同一列的数据类型一致、排列紧密，<strong>很容易做压缩</strong>（字典编码、RLE、delta 编码等）。</li>
+  <li>注意：列存储必须保证<strong>每一列的行序一致</strong>，否则无法还原一条完整记录。</li>
+  <li>列存储也可以让某些列按序存放，但依然要保证各列对应同一行序——这样才能更好地支持压缩与 range query。</li>
+  <li>基于 B+Tree 实现的列存储对写很不友好：在中间插入一行意味着重写整个列数据文件；基于 <strong>LSM</strong> 的实现没有这个问题（对比见 <a href="data-store-selection.html#categories">数据存储选型 — 宽列 / 列族</a>）。</li>
+</ol>
+
+<img src="images/row-vs-column-store.png" alt="行存与列存的读取 I/O 对比">
+<div class="fig-cap">查询 AVG(c3)：行存要读全部 4 页，列存只需读 1 页（假设每行 / 每列各占一页）</div>
+
+<h3>Materialized aggregates</h3>
+<p>某些聚合结果会被多个 query 复用。为了提升性能，可以把这些聚合结果物化——本质上就是写到磁盘上。</p>
+
+<div class="warning-box">
+  <strong>原文观点：</strong>OLTP 上一般不实现这个，因为一旦发生写，materialized view 需要重新计算，对 OLTP 的数据量来说性能不行。<br>
+  <strong>补充：</strong>该结论在「全量重算」的前提下成立。现在的<strong>增量物化视图</strong>已把代价降下来——ClickHouse 的 materialized view 在写入时增量更新，PostgreSQL 也有 <code>pg_ivm</code> 这类扩展。因此「需要聚合视图」不再是 OLAP 专属的结论，关键仍是<strong>写入频率与查询频率的比值</strong>。
+</div>
+
+<h3>Data cube</h3>
+<p>Data cube 是一种特殊的 materialized view：按照某个维度做聚合（如「按天 × 按地区 × 按品类」的销量）。维度组合数随维度数指数增长：</p>
+$$N_{cuboids} = 2^{n}$$
+<p>因此实践上只物化被查询最多的那几组维度。</p>
+
+<!-- ============ 4 ============ -->
+<h2 id="etl">4. ETL 与数据仓库</h2>
+
+<p><strong>ETL</strong> 是 Extract-Transform-Load 的缩写，描述将数据从来源端经过<strong>抽取（extract）→ 转换（transform）→ 加载（load）</strong>到目的端的过程。ETL 一词较常用在数据仓库，但其对象并不限于数据仓库。</p>
+<p>这个工具做的更多是：把不同数据源的数据经过抽取 / 转换 / 加载，统一到满足同一数据格式的目的端。例如数据仓库需要把不同数据源汇集到一起，用于某种查询。</p>
+
+<div class="mermaid">
+flowchart LR
+  S1[(业务库<br/>MySQL / DDB)] --> E[Extract]
+  S2[(日志 / 埋点<br/>S3 / Kafka)] --> E
+  S3[(第三方 API)] --> E
+  E --> T[Transform<br/>清洗 · 关联 · 聚合]
+  T --> L[Load]
+  L --> DW[(数据仓库<br/>Redshift / Hive / ClickHouse)]
+  DW --> BI[BI / 报表 / 自助分析]
+  DW --> ML[特征工程 / 训练数据]
+  classDef extract fill:#e3f2fd,stroke:#2196f3
+  classDef transform fill:#fff3e0,stroke:#ff9800
+  classDef warehouse fill:#d4edda,stroke:#2d7a4a,font-weight:bold
+  class E,L extract
+  class T transform
+  class DW warehouse
+</div>
+
+<h3>数据库与数据仓库的区别</h3>
+<p>前者是业务性数据库（读写都优化），后者是分析性数据库（数据仓库）。</p>
+
+<div class="info-box">
+  <strong>数据仓库也是一种结构体系，它不仅仅是具体的技术。</strong>以 MySQL 这个数据库和 Apache Hive 这个数据仓库为例：Hive 事实上是一个很宏大的「体系结构」——它可以把元数据保存在 MySQL、Oracle 或 Derby 这些具体的数据库「技术」里；它在查询时把 SQL 转化成 MapReduce job（后来是 Tez / Spark 引擎），这里又用到了计算模型这种「技术」。
+</div>
+
+<p>实际上数据仓库也是很大的一块技术，包括 column-based database 等，因为其用途主要是分析任务，与业务性数据库不同。</p>
+
+<table>
+  <tr><th></th><th>流行产品</th><th>定位</th></tr>
+  <tr><td><strong>数据库</strong></td><td>MySQL、Oracle、SQL Server</td><td>业务库，读写都优化</td></tr>
+  <tr><td><strong>数据仓库</strong></td><td>AWS Redshift、Greenplum、Hive</td><td>分析库，批量读取 + 聚合</td></tr>
+</table>
+
+<!-- ============ 5 ============ -->
+<h2 id="sizing">5. 选型清单与容量估算</h2>
+
+<h3>批 vs 流决策清单</h3>
+<ol>
+  <li><strong>延迟要求是多少？</strong>分钟级以下 → 流；小时 / 天级 → 批。</li>
+  <li><strong>是否需要重算历史？</strong>需要且日志可重放 → 流（Kappa）；需要频繁全量重算 → 批。</li>
+  <li><strong>逻辑复杂度</strong>：复杂的多表关联、迭代计算 → 批更省事；简单的过滤、聚合、告警 → 流。</li>
+  <li><strong>数据源是否天然是流？</strong>埋点、CDC、传感器 → 流优先；表快照、文件 → 批优先。</li>
+  <li><strong>能否接受两套代码？</strong>能 → Lambda 架构；不能 → Kappa 或纯批。</li>
+</ol>
+
+<h3>容量与成本估算</h3>
+<p>每日增量数据量（$r$ 为平均事件速率 /s，$s$ 为单事件字节数）：</p>
+$$D_{day} = r \times 86400 \times s$$
+
+<p>流处理的容量必须按峰值而非均值设计：</p>
+$$r_{peak} = r_{avg} \times k, \quad k \approx 3\text{–}10$$
+
+<p>列式存储的扫描成本正比于<strong>读取的列占比</strong>，这正是它快的原因：</p>
+$$C_{scan} \propto D_{total} \times \frac{c_{used}}{c_{total}}$$
+
+<p>例：100 列的表只读 5 列，扫描量降到 5%。行存做不到这一点——它必须把整行读进来。</p>
+
+<p>存储成本 = 日增量 × 保留天数 × 单价；冷热分层（热数据在列存、冷数据在对象存储）能显著压低长期成本：</p>
+$$C_{storage} = D_{day} \times N_{days} \times p$$
+
+<!-- ============ 6 ============ -->
+<h2 id="errata">6. 勘误与过时组件</h2>
+
+<table>
+  <tr><th>原文说法</th><th>问题</th><th>现在的说法</th></tr>
+  <tr>
+    <td>Cradle、DataPipe Line、Datapath、CSG</td>
+    <td>内部组件名，外部读者无法理解</td>
+    <td>保留原名 + 类型注释（批量调度平台 / 数据管道平台 / 流式数据处理平台）</td>
+  </tr>
+  <tr>
+    <td>「基于列的数据库」</td>
+    <td>措辞混淆了存储模型与产品</td>
+    <td>列式存储（column-oriented storage）；产品如 ClickHouse、Redshift、AnalyticDB</td>
+  </tr>
+  <tr>
+    <td>「Lambda 这种触发的方式可以构成一个流式处理」</td>
+    <td>Lambda 有歧义：AWS Lambda（函数服务）vs Lambda 架构</td>
+    <td>「函数触发的处理」用 AWS Lambda；「批 + 流双路」用 Lambda 架构（对应 Kappa 是单流路）</td>
+  </tr>
+  <tr>
+    <td>「OLTP 上一般不实现 materialized view，因为要重新计算」</td>
+    <td>前提是全量重算</td>
+    <td>增量物化视图（ClickHouse MV、PG <code>pg_ivm</code>）已可用；判据仍是写入 / 查询频率比</td>
+  </tr>
+  <tr>
+    <td>「Hive 事实上就是一个很宏大的体系结构」</td>
+    <td>表述抽象</td>
+    <td>成立：Hive = 元数据存储（可复用 MySQL）+ SQL → 计算引擎翻译层，本身不是单一技术</td>
+  </tr>
+  <tr>
+    <td>「跟 hive 没有关系」（用于区分 HBase）</td>
+    <td>结论正确但容易被忽略</td>
+    <td>HBase 是宽列存储（Bigtable 系），Hive 是 Hadoop 上的数据仓库层；两者常共用 HDFS 但定位不同</td>
+  </tr>
+</table>
+
+<!-- ============ 结论 ============ -->
+<h2 id="conclusion">结论</h2>
+
+<ul>
+  <li><strong>批与流不是替代关系</strong>：同一份数据，在线点查、实时告警、离线全量分析本来就该用不同存储与不同处理方式。</li>
+  <li><strong>列式存储是分析性能的根本原因</strong>：只读需要的列 + 同列同类型便于压缩，带来的是数量级差异，而不是调优收益。</li>
+  <li><strong>行列存的选择取决于访问模式</strong>：点查多 → 行存（B+Tree）；扫描聚合多 → 列存（列式 + 分区裁剪）。</li>
+  <li><strong>物化聚合的代价来自写</strong>：全量重算不适合 OLTP，增量物化视图把门槛降下来了，但仍要看写入频率。</li>
+  <li><strong>数仓是体系而非产品</strong>：Hive 这类「数仓」由元数据存储、计算引擎、存储格式多层技术拼装而成。</li>
+</ul>
+
+<div class="footer">
+  <p><strong>数据处理与 OLAP</strong> — 整理自内部笔记《业务系统 - 组件选型》，并补充 Lambda / Kappa 架构与增量物化视图的现状。</p>
+  <p>延伸阅读：<a href="caching-and-messaging.html">缓存与消息队列选型</a> · <a href="data-store-selection.html">数据存储选型</a> · <a href="microservices-read-query.html">微服务 Read Query 处理</a> · <a href="production-readiness-review.html">Production Readiness Review</a></p>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: "$$", right: "$$", display: true},
+        {left: "$", right: "$", display: false}
+      ]
+    });
+  });
+</script>
+
+</body>
+</html>
