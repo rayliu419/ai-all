@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>在 Repo 里记录上下文</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  /* layout */
+  .page-layout {
+    margin: 0 auto;
+    padding: 28px 20px;
+  }
+  .content { min-width: 0; }
+
+  /* typography */
+  h1 { font-size: 1.35em; margin: 0 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+  h2 { font-size: 1.2em; margin: 16px 0 8px; color: #1f4a2e; }
+  h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+  p { margin: 6px 0; }
+  ul, ol { padding-left: 20px; margin: 4px 0; }
+  li { margin: 2px 0; }
+
+  /* cards */
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card.warm {
+    background: #fdf6ec;
+    border-color: #e6d5b8;
+  }
+
+  /* toc */
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
+  .toc > ol { margin: 8px 0 0 22px; list-style: none; counter-reset: toc; padding: 0; }
+  .toc > ol > li { counter-increment: toc; margin: 4px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4a2e; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.92em; }
+  .toc a:hover { text-decoration: underline; color: #1a4a2e; }
+
+
+
+  strong { color: #1a4a2a; }
+  em { color: #3d6a4f; }
+  code {
+    font-size: 0.88em;
+    background: #e2efe5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4a2a;
+  }
+  pre {
+    font-size: 0.8em;
+    background: #e2efe5;
+    border: 1px solid #c3dbcc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+  hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+  a { color: #1f4a2e; text-decoration: none; }
+  a:hover { text-decoration: underline; color: #2a8f4f; }
+  blockquote {
+    border-left: 3px solid #2d8f5a;
+    background: #e8f5ec;
+    padding: 6px 12px;
+    margin: 8px 0;
+    border-radius: 0 4px 4px 0;
+    color: #1a4a2e;
+    font-size: 0.95em;
+  }
+  .highlight {
+    background: #e8f5ec;
+    border-left: 4px solid #2a8f4f;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #1a4a2a;
+  }
+  .highlight.accent {
+    border-left-color: #d97706;
+    background: #fef7e6;
+    color: #7c5200;
+  }
+
+  /* narrow screen: collapse sidebar */
+  @media (max-width: 800px) {
+    .page-layout { padding: 16px 12px; }
+    ul, ol { padding-left: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-layout">
+
+<main class="content">
+<h1>在 Repo 里记录上下文</h1>
+
+<div class="toc">
+  <div class="toc-title">目录</div>
+  <ol>
+    <li><a href="#core">核心主张</a></li>
+    <li><a href="#general">General 层：AGENTS.md + CONTEXT.md</a></li>
+    <li><a href="#task">Per-task 层：tasks/&lt;slug&gt;/</a></li>
+    <li><a href="#recall">Recall Skill：自动触发回忆</a></li>
+    <li><a href="#files">文件职责</a></li>
+    <li><a href="#update">读写协议</a></li>
+    <li><a href="#skill">与 Skill 的关系</a></li>
+    <li><a href="#refs">参考来源</a></li>
+  </ol>
+</div>
+
+<div class="card" style="text-align:center; border:2px solid #d97706;">
+  <p><strong>context 是有限的注意力预算。</strong><br>与其每个 session 都重新解释背景，不如在 repo 里建立"可预测的读/写上下文约定"。</p>
+</div>
+
+<hr>
+
+<!-- ============ CORE ============ -->
+<h2 id="core">核心主张</h2>
+
+<div class="card warm">
+  <p>LLM 的上下文窗口不是免费的——token 越多，注意力越稀薄（context rot）。所以只放<strong>从代码里看不出来的知识</strong>，其余让 AI 按需去读。</p>
+</div>
+
+<ul>
+  <li>约定分两层：<strong>general</strong>（repo 级，全局共享）+ <strong>per-task</strong>（复杂任务级，专属背景）。</li>
+  <li>读：可预测的位置，AI 知道去哪找、先读哪个。</li>
+  <li>写：明确的触发条件 + 清单，AI 知道何时记、记到哪、怎么记。</li>
+</ul>
+
+<p>目录全貌：</p>
+<pre>
+repo/
+├── AGENTS.md            # 协议：怎么读 / 怎么更新 / 指向哪
+├── CONTEXT.md           # 背景：项目 / 结构 / 约定 / 决策 / 坑
+├── tasks/
+│   └── &lt;slug&gt;/          # 复杂任务专属目录
+│       ├── index.md     # 入口 + 索引（有哪些资料 / 脚本 / 何时跑）
+│       ├── background.md# 原始需求 + 决策 log
+│       ├── status.md    # 当前状态 + 下一步 + 剩余
+│       └── scripts/     # 确定性脚本（可选）
+└── ...                  # 你的正常代码
+</pre>
+
+<hr>
+
+<!-- ============ GENERAL ============ -->
+<h2 id="general">General 层：AGENTS.md + CONTEXT.md</h2>
+
+<h3>AGENTS.md —— 协议</h3>
+<div class="card">
+  <p>只放<strong>协议</strong>：怎么读、怎么更新、指向哪。保持精简（&lt;200 行），塞多了反而降低遵守度。</p>
+</div>
+
+<h3>CONTEXT.md —— 背景</h3>
+<div class="card">
+  <p>只放<strong>背景</strong>，分 5 节：① 这是什么项目 ② 目录结构 ③ 关键约定/技术栈 ④ 重要决策(带日期) ⑤ 坑/注意事项。</p>
+</div>
+
+<div class="highlight">
+  <p>关键：CONTEXT.md <strong>不自动加载</strong>。AGENTS.md 里写一句"项目背景见 CONTEXT.md，需要时读"。这就是 Anthropic 说的 just-in-time 加载——避免每个 session 都吞整份背景。</p>
+</div>
+
+<p>参考 Claude Code 的内存机制：<code>MEMORY.md</code> 索引在启动时加载（有 200 行/25KB 上限），详情放 topic 文件按需读。索引瘦、详情懒加载，是这个模式的核心。</p>
+
+<hr>
+
+<!-- ============ TASK ============ -->
+<h2 id="task">Per-task 层：tasks/&lt;slug&gt;/</h2>
+
+<div class="card warm">
+  <p><strong>判定阈值</strong>：跨多 session、有多轮讨论、或实现周期 &gt;1 天的任务才建目录。简单任务不建，别为一条命令建个目录。</p>
+</div>
+
+<p>核心洞察：一个复杂任务会产生三类<strong>更新节奏不同</strong>的信息，所以拆成三个文件，而不是塞进一个 <code>knowledge.md</code>：</p>
+
+<ul>
+  <li><strong>需求</strong>（会演化）</li>
+  <li><strong>决策/结论</strong>（append-only，累积）</li>
+  <li><strong>进度/状态</strong>（频繁刷新）</li>
+</ul>
+
+<h3>background.md 示例</h3>
+<pre>
+## 原始需求
+- 在 repo 里以好的方式记录上下文，general + per-task 两层。
+
+## 决策 log（append-only，不重写历史）
+### 2026-09-20
+- 决定：general 层 = AGENTS.md(协议) + CONTEXT.md(背景，按需加载)。
+- 决定：per-task 目录用 tasks/&lt;slug&gt;/，3 文件 + scripts/。
+- 决定：更新协议 = 显式 + 触发词 + 每 ~5 轮清单，防噪只追加。
+</pre>
+
+<hr>
+
+<!-- ============ RECALL ============ -->
+<h2 id="recall">Recall Skill：自动触发回忆</h2>
+
+<div class="card warm">
+  <p>项目级 memory 本身<strong>没有自动触发能力</strong>，但 skill 有。所以用一个 <code>recall-memory</code> skill，把触发词 + active task 列表写进 <code>description</code>，body 写"怎么读"。</p>
+</div>
+
+<p>skill 结构（<code>.claude/skills/recall-memory/SKILL.md</code>）：</p>
+<pre>
+---
+name: recall-memory
+description: 回忆本 repo 的项目级 memory...（触发词 + 触发场景写这里）
+---
+
+## Active tasks（触发词 → 目录）
+- context-recording — 在 repo 里记录上下文的约定
+
+## 怎么读
+1. 先读 CONTEXT.md
+2. 匹配 task 后读 tasks/&lt;slug&gt;/index.md → background.md → status.md
+</pre>
+
+<div class="highlight">
+  <p>单一来源：触发词/task 映射只写在 skill 的 description，AGENTS.md 只留协议 + 指向 skill。改触发词只改一处。</p>
+</div>
+
+<ul>
+  <li>维护：tasks 少（&lt;5）时手动更新 description；多了再用脚本扫描 <code>tasks/</code> 重生成。</li>
+  <li>分工：skill = 自动触发路径（增强），AGENTS.md 读取协议 = 兜底。</li>
+</ul>
+
+<hr>
+
+<!-- ============ FILES ============ -->
+<h2 id="files">文件职责</h2>
+
+<div class="card" style="overflow-x:auto; padding:0;">
+<table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+  <thead>
+    <tr style="background:#d4e8db;">
+      <th style="padding:8px 10px; text-align:left; border-bottom:2px solid #2a8f4f;">文件</th>
+      <th style="padding:8px 10px; text-align:left; border-bottom:2px solid #2a8f4f;">职责</th>
+      <th style="padding:8px 10px; text-align:left; border-bottom:2px solid #2a8f4f;">更新节奏</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><code>index.md</code></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">入口 + 索引（资料/脚本清单）</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">文件增删时</td></tr>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><code>background.md</code></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">原始需求 + 决策 log</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">决策产生时 append</td></tr>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><code>status.md</code></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">当前状态 + 下一步 + 剩余</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">里程碑变化时</td></tr>
+    <tr><td style="padding:6px 10px;"><code>scripts/</code></td><td style="padding:6px 10px;">确定性脚本（如重生成图、跑 benchmark）</td><td style="padding:6px 10px;">任务确定后</td></tr>
+  </tbody>
+</table>
+</div>
+
+<hr>
+
+<!-- ============ UPDATE ============ -->
+<h2 id="update">读写协议</h2>
+
+<p>协议写进 AGENTS.md，触发词/路由写进 <code>recall-memory</code> skill 的 description。作为<strong>行为指导</strong>（跨 Claude Code / Codex / pi 多工具，不绑定某工具的 hook）。</p>
+
+<h3>触发（任一）</h3>
+<ul>
+  <li><strong>显式</strong>：用户说"更新 task 上下文 / 记录一下 / 记到 background"。</li>
+  <li><strong>触发词</strong>：见 <code>recall-memory</code> skill 的 description（例：结论是 / 决定 / 记一下 / 更新背景 / 记住 / 继续 / 回忆）。</li>
+  <li><strong>自动</strong>：每 ~5 轮对话，或 session 结束前、<code>/compact</code> 前。</li>
+</ul>
+
+<p><strong>读</strong>：命中触发词或开新 session 时，触发 <code>recall-memory</code> skill 回忆（读 <code>index.md</code> 定位 task → <code>background.md</code>）；未触发时手动读。</p>
+
+<h3>执行 3 条清单</h3>
+<ol>
+  <li>有新<strong>决策/结论/事实</strong>？→ append 到 <code>background.md</code>（带日期，精炼，不整段抄对话）。</li>
+  <li><code>status.md</code> 还反映当前状态吗？</li>
+  <li><code>index.md</code> 是否缺新文件/新脚本？</li>
+</ol>
+
+<div class="highlight accent">
+  <p>防噪规则：只记结论不记流水账；已有条目<strong>只追加、不重写</strong>。重写历史会丢掉"为什么当初这么定"的上下文。</p>
+</div>
+
+<hr>
+
+<!-- ============ SKILL ============ -->
+<h2 id="skill">与 Skill 的关系</h2>
+
+<div class="card">
+  <p><strong>借结构，不合并。</strong>task 目录本质是<strong>项目级 / repo 级 memory</strong>，不是 skill。</p>
+</div>
+<p>skill 是 <strong>general</strong> 的：全局、可复用，靠描述/名字自动触发。项目级 memory 是 <strong>scoped</strong> 的：基于某个项目的背景 + 以前讨论过的结论。触发词既能触发 skill，也能触发 memory 的<strong>读</strong>（回忆以前结论）和<strong>写</strong>（更新决策 log）。</p>
+
+<table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+  <thead>
+    <tr style="background:#d4e8db;">
+      <th style="padding:8px 10px; text-align:left; border-bottom:2px solid #2a8f4f;">维度</th>
+      <th style="padding:8px 10px; text-align:left; border-bottom:2px solid #2a8f4f;">Task 目录</th>
+      <th style="padding:8px 10px; text-align:left; border-bottom:2px solid #2a8f4f;">Skill</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><strong>核心</strong></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">项目级 memory（背景 + 结论）</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">可复用的确定性 SOP</td></tr>
+    <tr><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;"><strong>生命周期</strong></td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">一次性，任务完成归档</td><td style="padding:6px 10px; border-bottom:1px solid #c3dbcc;">长期，跨项目复用</td></tr>
+    <tr><td style="padding:6px 10px;"><strong>触发</strong></td><td style="padding:6px 10px;">触发词/清单（读 + 写）</td><td style="padding:6px 10px;">按名自动触发（SKILL.md 描述）</td></tr>
+  </tbody>
+</table>
+
+<p style="margin-top:8px;">升级规则：某个脚本被多个 task / 项目复用 → 提升为正式 skill，不要积累重复逻辑。skill 目录本身也可以看作"跨项目稳定的 context"。</p>
+
+<hr>
+
+<!-- ============ REFS ============ -->
+<h2 id="refs">参考来源</h2>
+
+<ul>
+  <li>AGENTS.md 开放标准：<a href="https://agents.md/">https://agents.md/</a></li>
+  <li>Claude Code memory（MEMORY.md 索引 + 按需 topic 文件）：<a href="https://code.claude.com/docs/en/memory">https://code.claude.com/docs/en/memory</a></li>
+  <li>Anthropic context engineering（注意力预算 / just-in-time / structured note-taking）：<a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents</a></li>
+  <li>GitHub Spec Kit（specs/&lt;slug&gt;/ 每 feature 一目录）：<a href="https://github.com/github/spec-kit">https://github.com/github/spec-kit</a></li>
+</ul>
+
+</main>
+</div>
+
+</body>
+</html>
