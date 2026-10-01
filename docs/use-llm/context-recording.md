@@ -24,22 +24,22 @@
 - 与 skill 的关系：借结构不合并。
   - skill 是 general 的：全局、可复用，靠描述/名字自动触发。
   - task 目录是项目级/repo 级 memory：基于该项目的背景 + 以前讨论过的结论。
-  - 触发词既能触发 skill，也能触发 memory 的读（回忆以前结论）和写（更新决策 log）。
+  - 分工：skill 靠 description 触发（怎么做）；memory 读靠"提示 + LLM 判断"，写靠显式触发词 + 固定时点。
   - 脚本被多个 task 复用 → 提升为 skill。
 
-## recall skill（自动触发回忆）
-- 项目级 memory 没有自动触发能力，skill 有。
-- 用一个 `recall-memory` skill 承载触发词 + active task 列表（写进 description），body 写"怎么读"。
-- 触发词/task 映射只写在 description（单一来源），AGENTS.md 只留协议 + 指向 skill。
-- 维护：tasks 少时手动更新 description；多了再用脚本扫描 `tasks/` 重生成。
-- 分工：skill = 自动触发路径（增强），AGENTS.md 读取协议 = 兜底。
+## recall：提示 + LLM 决策搜索
+- 项目级 memory 的读不靠 skill 的 description 触发（匹配不了"有没有相关历史"这种模糊触发）。
+- 做法：系统提示词给一句提示，让 LLM 自己决定何时去本地搜（例："tasks/ 记录了我们讨论过的问题，有时可以搜索一下背景，尤其 session 刚开始"）。
+- 检索：扫 index.md（一行一主题，便宜）→ 命中读 background.md（按需）。
+- 维护：index.md 一行一 task；tasks 少时手动维护，多了用脚本扫描 `tasks/` 重生成。
+- 分工：skill = 程序性知识（怎么做，靠 description 触发）；memory = 背景/结论（提示 + 判断读，手动写）。
 
 ## 读写协议（写进 AGENTS.md）
 - 触发（任一）
   1. 用户显式要求（"更新 task 上下文 / 记录一下"）。
-  2. 触发词：见 recall-memory skill 的 description（例：结论是 / 决定 / 记一下 / 更新背景 / 记住 / 继续 / 回忆）。
+  2. 触发词（写）：结论是 / 决定 / 记一下 / 更新背景 / 记住。
   3. 每 ~5 轮对话，或 session 结束前、/compact 前。
-- 读：命中触发词或开新 session 时，触发 `recall-memory` skill 回忆（读 `index.md` 定位 task → `background.md`）；未触发时手动读。
+- 读：系统提示词提示 + LLM 自行决定本地搜（扫 `index.md` 定位 task → `background.md`）；用户显式"继续 / 回忆 X"时也读。
 - 执行 3 条清单
   1. 有新决策/结论/事实？→ append 到 background.md（带日期，精炼，不整段抄对话）。
   2. status.md 还反映当前状态？

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>使用 LLM 的 Best Practice</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  /* layout */
+  .page-layout {
+    margin: 0 auto;
+    padding: 28px 20px;
+    max-width: 880px;
+  }
+  .content { min-width: 0; }
+
+  /* typography */
+  h1 { font-size: 1.35em; margin: 0 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+  h2 { font-size: 1.2em; margin: 16px 0 8px; color: #1f4a2e; }
+  h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+  p { margin: 6px 0; }
+  ul, ol { padding-left: 20px; margin: 4px 0; }
+  li { margin: 2px 0; }
+
+  /* cards */
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card.warm {
+    background: #fdf6ec;
+    border-color: #e6d5b8;
+  }
+
+  /* toc */
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .toc-title { font-weight: 600; color: #1a3a24; font-size: 1em; margin-bottom: 6px; }
+  .toc > ol { margin: 8px 0 0 22px; list-style: none; counter-reset: toc; padding: 0; }
+  .toc > ol > li { counter-increment: toc; margin: 4px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4a2e; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.92em; }
+  .toc a:hover { text-decoration: underline; color: #1a4a2e; }
+
+  strong { color: #1a4a2a; }
+  em { color: #3d6a4f; }
+  code {
+    font-size: 0.88em;
+    background: #e2efe5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4a2a;
+  }
+  pre {
+    font-size: 0.8em;
+    background: #e2efe5;
+    border: 1px solid #c3dbcc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+  hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+  a { color: #1f4a2e; text-decoration: none; }
+  a:hover { text-decoration: underline; color: #2a8f4f; }
+  blockquote {
+    border-left: 3px solid #2d8f5a;
+    background: #e8f5ec;
+    padding: 6px 12px;
+    margin: 8px 0;
+    border-radius: 0 4px 4px 0;
+    color: #1a4a2e;
+    font-size: 0.95em;
+  }
+  .highlight {
+    background: #e8f5ec;
+    border-left: 4px solid #2a8f4f;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #1a4a2a;
+  }
+  .highlight.accent {
+    border-left-color: #d97706;
+    background: #fef7e6;
+    color: #7c5200;
+  }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9em; }
+  th, td { padding: 6px 10px; text-align: left; border-bottom: 1px solid #c3dbcc; vertical-align: top; }
+
+  /* narrow screen: collapse sidebar */
+  @media (max-width: 800px) {
+    .page-layout { padding: 16px 12px; }
+    ul, ol { padding-left: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-layout">
+
+<main class="content">
+<h1>使用 LLM 的 Best Practice</h1>
+
+<div class="toc">
+  <div class="toc-title">目录</div>
+  <ol>
+    <li><a href="#core">核心主张</a></li>
+    <li><a href="#memory">Memory：提示 + 决策搜索</a></li>
+    <li><a href="#domain">Domain 工具与知识库</a></li>
+    <li><a href="#script">脚本自动化降 cost</a></li>
+    <li><a href="#onboard">新领域三步：打通 → 说明 → 积累</a></li>
+    <li><a href="#routing">按任务强度路由模型</a></li>
+    <li><a href="#refs">参考来源</a></li>
+  </ol>
+</div>
+
+<div class="card" style="text-align:center; border:2px solid #d97706;">
+  <p><strong>把一次性经验沉淀为可复用资产（skill / 脚本 / 知识库）。</strong><br>真正的难点不在"能不能用 LLM"，而在"怎么让经验跨 session 复用、怎么控制成本"。</p>
+</div>
+
+<hr>
+
+<!-- ============ CORE ============ -->
+<h2 id="core">核心主张</h2>
+
+<div class="card warm">
+  <p>上下文是<strong>有限注意力预算</strong>：token 越多，模型精确回忆越差（<strong>context rot</strong>）。所以主线是<strong>渐进式披露</strong>——只放当前需要的高信号 token，其余按需加载。</p>
+</div>
+
+<p>渐进式披露的三层加载（skill 是这套机制的标准载体）：</p>
+<pre>
+L1 元数据   → 常驻上下文（每个 skill 约 ~100 token，可装几十个）
+L2 指令     → 触发时才读（SKILL.md 正文）
+L3 资源/脚本 → 需要时才读/执行（脚本代码不进上下文，只有输出消耗 token）
+</pre>
+
+<p>三种资产，用三种不同的机制承载：</p>
+<table>
+  <thead>
+    <tr style="background:#d4e8db;">
+      <th style="border-bottom:2px solid #2a8f4f;">资产</th>
+      <th style="border-bottom:2px solid #2a8f4f;">内容</th>
+      <th style="border-bottom:2px solid #2a8f4f;">触发 / 加载机制</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>程序性知识</strong></td><td>怎么做（流程、SOP）</td><td>skill 的 description 匹配任务模式</td></tr>
+    <tr><td><strong>情景记忆</strong></td><td>之前讨论 / 决定了什么</td><td>系统提示词提示 + LLM 决策搜索</td></tr>
+    <tr><td><strong>领域知识</strong></td><td>label 含义、schema、SOP</td><td>装进 skill 的 reference，按需读</td></tr>
+  </tbody>
+</table>
+
+<div class="highlight accent">
+  <p>两个真难点——memory 的触发、积累的触发——都不靠自动规则：前者靠"提示 + LLM 判断"，后者靠"手动"。</p>
+</div>
+
+<hr>
+
+<!-- ============ MEMORY ============ -->
+<h2 id="memory">Memory：提示 + LLM 决策搜索</h2>
+
+<div class="card warm">
+  <p>memory 真正的难点是<strong>何时触发什么</strong>：你不知道历史里有没有相关内容，直到去查。所以它<strong>不适合做成 skill</strong>——skill 的 <code>description</code> 匹配的是"任务模式"（如"查 log"），匹配不了"有没有相关历史"这种模糊触发。</p>
+</div>
+
+<p>方案：在系统提示词里给<strong>一句提示</strong>，让 LLM 自己决定何时去本地搜：</p>
+
+<div class="card">
+  <p><code>tasks-for-ai/ 记录了我们讨论过的问题，有时可以去搜索一下有没有背景，尤其是 session 刚开始时。</code></p>
+</div>
+
+<p>探索决策流程：</p>
+<pre>
+开始一个任务
+      │
+      ▼
+  系统提示词里有句提示：
+  "tasks-for-ai/ 记录过讨论过的问题，有时可搜背景"
+      │
+      ▼
+  LLM 自行判断：需要搜历史吗？
+   ├─ 否 ────────────────────▶ 直接动手
+   └─ 是
+        │
+        ▼
+  本地 grep 关键词
+   ├─ 无命中 ────────────────▶ 直接动手
+   └─ 命中
+        │
+        ▼
+  读 background.md / decision log
+        │
+        ▼
+  带着结论继续
+</pre>
+
+<ul>
+  <li>本质是<strong>本地 keyword 搜索（grep）</strong>：便宜，命中才读详情。</li>
+  <li>时机建议：session 刚开始优先 + 过几步再探索一下，<strong>是否搜由 LLM 决策</strong>。</li>
+  <li>索引一行一个主题（便宜扫）；命中才读 <code>background.md</code> / decision log（按需）→ 这就是渐进式披露用在 memory 上：<strong>index（便宜）→ note（按需）</strong>。</li>
+  <li>兜底：用户显式说"继续 X / 回忆 X"也是可靠触发。</li>
+</ul>
+
+<hr>
+
+<!-- ============ DOMAIN ============ -->
+<h2 id="domain">Domain 工具与知识库</h2>
+
+<p>目标：查问题 / 做任务不用反复说背景。核心在<strong>逐步积累</strong>。</p>
+
+<div class="highlight accent">
+  <p>自动积累很难触发准确——因为"值不值得记"是判断（可复用结论 vs 一次性流水账），模型没信号时判不准。所以<strong>手动为主</strong>，把"写"这一步做到零摩擦。</p>
+</div>
+
+<ul>
+  <li><strong>触发信号</strong>：用户显式（"记录 / 沉淀 / 记住"）+ 固定时点（每 ~5 轮、<code>/compact</code> 前、session 结束前）。</li>
+  <li><strong>写路径预先定好</strong>，手动成本低：append 到 decision log，或加到 domain skill 的 reference。</li>
+  <li>引用只保持<strong>一层深</strong>（SKILL.md 直接链 reference，避免嵌套导致模型 <code>head</code> 半读）；按 domain 拆文件避免加载无关上下文。</li>
+</ul>
+
+<h3>例子：couwatch skill（checkout 服务）</h3>
+<p>它封装了查 log / metrics 的一揽子知识：log 用什么 label 过滤、metrics 用什么 label 查什么内容、不同故障的 SOP。</p>
+
+<pre>
+couwatch/
+├── SKILL.md                # 工作流 + 导航：如何排查 checkout 故障
+├── reference/
+│   ├── logs.md             # log 查询：哪些 label 过滤、各 label 含义
+│   ├── metrics.md          # metrics 查询：哪些 label 查什么指标
+│   └── sop/
+│       ├── payment-timeout.md   # 支付超时 SOP
+│       ├── high-latency.md      # 高延迟 SOP
+│       └── ...
+└── scripts/
+    └── query_logs.sh       # 确定性脚本（LLM 调用，只有输出进上下文）
+</pre>
+
+<p><code>reference/</code> 里的 label → 含义映射（示意，真实内容按服务实际标签填）：</p>
+<table>
+  <thead>
+    <tr style="background:#d4e8db;">
+      <th style="border-bottom:2px solid #2a8f4f;">类型</th>
+      <th style="border-bottom:2px solid #2a8f4f;">label</th>
+      <th style="border-bottom:2px solid #2a8f4f;">含义</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>log</td><td><code>service=checkout</code></td><td>过滤 checkout 服务的日志</td></tr>
+    <tr><td>log</td><td><code>level=error</code></td><td>只看 error 级日志</td></tr>
+    <tr><td>metrics</td><td><code>endpoint=/pay</code></td><td>支付接口的指标</td></tr>
+    <tr><td>metrics</td><td><code>status=5xx</code></td><td>服务端错误相关指标</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- ============ SCRIPT ============ -->
+<h2 id="script">脚本自动化降 cost</h2>
+
+<p>原理：确定性操作用脚本，LLM 只调用 + 看输出，不重新生成代码。</p>
+
+<div class="card">
+  <p><strong>让 LLM 现场写代码</strong>：代码 + 输出都进上下文（贵，且易错）。<br>
+  <strong>调用现成脚本</strong>：只有 stdout 进上下文（省，且确定）。</p>
+</div>
+
+<ul>
+  <li>落地：手工重复 &gt;1 次的操作 → 写成确定性脚本；脚本被多 task 复用 → 提升为 skill。</li>
+  <li>约定：单文件、stdlib、CLI 长选项、TTY / 管道友好（<code>| head</code> 不报错、非 TTY 只输出可读列表）。</li>
+</ul>
+
+<hr>
+
+<!-- ============ ONBOARD ============ -->
+<h2 id="onboard">新领域三步：打通 → 说明 → 积累</h2>
+
+<h3 id="connect">4.1 打通（connect）</h3>
+<p>用 MCP 把数据源 / tool 接进来；MCP = AI 的"USB-C 口"。三个 primitive：</p>
+<table>
+  <thead>
+    <tr style="background:#d4e8db;">
+      <th style="border-bottom:2px solid #2a8f4f;">primitive</th>
+      <th style="border-bottom:2px solid #2a8f4f;">作用</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><code>tools</code></td><td>执行动作（查库、调 API）</td></tr>
+    <tr><td><code>resources</code></td><td>提供上下文数据（schema、文档）</td></tr>
+    <tr><td><code>prompts</code></td><td>交互模板（few-shot 示例）</td></tr>
+  </tbody>
+</table>
+<p>落地：本地优先 stdio server，远程用 streamable HTTP；接完只算"连得上"。</p>
+
+<h3 id="explain">4.2 说明（explain）</h3>
+<p>打通只解决连通，还要告诉 AI"怎么用、何时用哪个"——即 <strong>ACI（agent-computer interface）</strong>。像写 docstring 一样写 tool：</p>
+
+<table>
+  <thead>
+    <tr style="background:#d4e8db;">
+      <th style="border-bottom:2px solid #2a8f4f; width:14%;"></th>
+      <th style="border-bottom:2px solid #2a8f4f;">坏（模糊）</th>
+      <th style="border-bottom:2px solid #2a8f4f;">好（清晰）</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>描述</strong></td><td>"获取数据"</td><td>"按 label 查 metrics；当需要看 checkout 的 QPS / 延迟 / 错误率时用"</td></tr>
+    <tr><td><strong>参数</strong></td><td><code>data</code></td><td><code>metric</code>（指标名）、<code>labels</code>（过滤）、<code>time_range</code>（时间窗）</td></tr>
+    <tr><td><strong>边界</strong></td><td>没写</td><td>"查日志用 <code>query_logs</code>，别用这个"</td></tr>
+  </tbody>
+</table>
+
+<div class="highlight">
+  <p>衡量标准：如果<strong>人都无法判断该用哪个 tool</strong>，AI 更做不到 → 精简工具集、消除歧义。</p>
+</div>
+
+<h3 id="accumulate">4.3 积累（accumulate）</h3>
+<ul>
+  <li>逐步积累 skill / 知识库 + example 经验；触发以<strong>手动为主</strong>（见 <a href="#domain">Domain 工具与知识库</a>）。</li>
+  <li>用少数 canonical example（few-shot）而非穷举规则；edge case 用 "old patterns" 折叠，不塞主路径。</li>
+  <li>反馈闭环：<code>validator → 改 → 再验</code>，写进 skill 的 workflow。</li>
+</ul>
+
+<hr>
+
+<!-- ============ ROUTING ============ -->
+<h2 id="routing">按任务强度路由模型</h2>
+
+<p>模型已分化：贵的模型慢且贵，不适合 incident 或要求响应快的需求。所以<strong>人为判断任务强度，综合使用</strong>（而非一个模型打天下）：</p>
+
+<table>
+  <thead>
+    <tr style="background:#d4e8db;">
+      <th style="border-bottom:2px solid #2a8f4f;">任务强度</th>
+      <th style="border-bottom:2px solid #2a8f4f;">用什么模型</th>
+      <th style="border-bottom:2px solid #2a8f4f;">典型场景</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>复杂分析 / 设计</strong></td><td>gpt6 / opus5.5 max 等（极贵、慢）</td><td>架构设计、复杂问题分析</td></tr>
+    <tr><td><strong>执行</strong></td><td>flash 类（快、便宜）</td><td>直接写代码、incident 快速响应</td></tr>
+  </tbody>
+</table>
+
+<p>一个任务可以<strong>组合</strong>：强模型出方案 / 设计 → flash 执行。</p>
+
+<hr>
+
+<!-- ============ REFS ============ -->
+<h2 id="refs">参考来源</h2>
+
+<ul>
+  <li>Effective context engineering：<a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents</a></li>
+  <li>Building effective agents（附录 ACI / routing）：<a href="https://www.anthropic.com/engineering/building-effective-agents">https://www.anthropic.com/engineering/building-effective-agents</a></li>
+  <li>Claude Code memory：<a href="https://code.claude.com/docs/en/memory">https://code.claude.com/docs/en/memory</a></li>
+  <li>Agent Skills overview：<a href="https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview">https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview</a></li>
+  <li>Skill authoring best practices：<a href="https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices">https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices</a></li>
+  <li>MCP intro：<a href="https://modelcontextprotocol.io/docs/getting-started/intro">https://modelcontextprotocol.io/docs/getting-started/intro</a></li>
+  <li>MCP architecture：<a href="https://modelcontextprotocol.io/docs/learn/architecture">https://modelcontextprotocol.io/docs/learn/architecture</a></li>
+</ul>
+
+</main>
+</div>
+
+</body>
+</html>
