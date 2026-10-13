@@ -18,3 +18,20 @@
 - State-Machine Extraction
   - "Identify where state is preserved in this repository. Draft a Mermaid.js state-transition diagram showing how an object changes state throughout its lifecycle."
 
+# skills 
+
+## find-skills
+- help to find useful skills. 
+
+## superpower 
+- brainstorm sub-skill help to do design. 
+- good skill to force to consider design flaws.
+
+## domain skill
+- like couwatch
+
+## grill-me 
+- help to clarify things. 
+
+## handoff 
+- handover to next session. 
