@@ -131,6 +131,7 @@
     <li><a href="#script">脚本自动化降 cost</a></li>
     <li><a href="#onboard">进入新领域三步：打通 → 说明 → 积累</a></li>
     <li><a href="#routing">按任务强度路由模型</a></li>
+    <li><a href="#hardrule">Hard rule：用代码而不是 prompt 约束</a></li>
   </ol>
 </div>
 
@@ -300,6 +301,46 @@ couwatch/
     <tr><td><strong>执行</strong></td><td>flash 类（快、便宜）</td><td>直接写代码、incident 快速响应</td></tr>
   </tbody>
 </table>
+
+<hr>
+
+<!-- ============ HARD RULE ============ -->
+<h2 id="hardrule">Hard rule：用代码而不是 prompt 约束</h2>
+
+<div class="highlight accent">
+  <p>能被确定性判定的约束，就不该写在 prompt 里 —— 写成代码。</p>
+</div>
+
+<ul>
+  <li><strong>软约束（prompt）</strong>：靠模型每次自觉遵守，会漂移、会被上下文稀释。</li>
+  <li><strong>硬约束（代码）</strong>：执行路径唯一、可验证、可回归。</li>
+</ul>
+
+<p>对照表：</p>
+<table>
+  <thead>
+    <tr>
+      <th style="width:42%;">写在 prompt 里的“约束”</th>
+      <th>应该落到代码</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>“提交信息要符合 conventional commits”</td><td><code>commit-msg</code> hook / commitlint</td></tr>
+    <tr><td>“命名和风格要统一”</td><td>lint rule（不写进 AGENTS.md）</td></tr>
+    <tr><td>“不要改 public API 签名”</td><td>测试 + CI 直接卡住</td></tr>
+    <tr><td>“每次改完记得跑测试”</td><td>stop hook / 脚本自动跑</td></tr>
+    <tr><td>“输出必须是合法 JSON”</td><td>function / tool schema + validator</td></tr>
+  </tbody>
+</table>
+
+<div class="card">
+  <p><strong>分工</strong>：prompt 管<strong>意图、取舍、上下文</strong>；代码管<strong>必须成立的事实</strong>。</p>
+</div>
+
+<ul>
+  <li><strong>收益</strong>：省 token、减少来回纠正、约束不随上下文增长而衰减。</li>
+  <li><strong>例外</strong>：不可判定的（风格偏好、权衡取舍）只能留在 prompt / skill，别硬编码。</li>
+</ul>
 
 </main>
 </div>

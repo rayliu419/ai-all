@@ -60,3 +60,16 @@
 - grok4.7 brainstorm，opus55 + gpt6 评审。
 - 强模型出方案/设计， flash 执行。
 - enrich: {模型路由决策表}
+
+## hard rule用代码而不是prompt约束
+- 软约束（prompt）靠模型每次自觉，会漂移、被上下文稀释；硬约束（代码）执行路径唯一、可验证、可回归。
+- 判据：**能被确定性判定的约束，就不该写在 prompt 里**。能写成 lint / CI / hook / 测试 / schema 的，都写成代码。
+- 例子：
+  - "提交信息必须符合 conventional commits" → commit-msg hook / commitlint。
+  - "命名和风格要统一" → lint rule，不写进 AGENTS.md。
+  - "不要改 public API 签名" → 测试 + CI 卡住。
+  - "每次改完要跑测试" → stop hook / 脚本自动跑，不靠模型记得。
+  - "输出必须是合法 JSON" → function/tool schema + validator。
+- 分工：prompt 管**意图、取舍、上下文**；代码管**必须成立的事实**。
+- 收益：省 token、减少来回纠正、约束不随上下文增长而衰减。
+- 例外：不可判定的（风格偏好、权衡取舍）只能留在 prompt / skill，别硬编码。

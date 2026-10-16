@@ -24,11 +24,18 @@
 - help to find useful skills. 
 
 ## superpower 
-- brainstorm sub-skill help to do design. 
-- good skill to force to consider design flaws.
+- using-superpowers, entry of this skill set.
+- brainstorm sub-skill help to do design, requirement clarification.
+  - good skill to force to consider design flaws.
+- writing-plans
+  - detailed writing plan.
+- executing-plans
+- verification-before-completion
 
 ## domain skill
-- like couwatch
+- like cou-watch.
+- how to use logs and metrics to debug different issues. 
+- record upstreams, configs. 
 
 ## grill-me 
 - help to clarify things. 
