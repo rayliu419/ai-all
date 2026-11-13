@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibe Coding：用 AI 造系统的六步骨架</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  /* layout */
+  .page-layout {
+    margin: 0 auto;
+    padding: 28px 20px;
+    max-width: 880px;
+  }
+  .content { min-width: 0; }
+
+  /* typography */
+  h1 { font-size: 1.35em; margin: 0 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+  h2 { font-size: 1.2em; margin: 20px 0 8px; color: #1f4a2e; }
+  h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+  p { margin: 6px 0; }
+  ul, ol { padding-left: 20px; margin: 4px 0; }
+  li { margin: 2px 0; }
+
+  /* toc (numbered, per-doc convention) */
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 12px 0 16px;
+  }
+  .toc h2 { font-size: 1em; color: #1a4f2e; margin: 0 0 8px; border: none; padding: 0; background: none; }
+  .toc > ol { margin: 0; list-style: none; counter-reset: toc; }
+  .toc > ol > li { counter-increment: toc; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.9em; }
+  .toc a:hover { text-decoration: underline; color: #1a4f2e; }
+
+  /* cards */
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card.accent {
+    background: #fef7e6;
+    border-color: #e6d5b8;
+  }
+
+  strong { color: #1a4a2a; }
+  em { color: #3d6a4f; }
+  code {
+    font-size: 0.88em;
+    background: #e2efe5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4a2a;
+  }
+  pre {
+    font-size: 0.76em;
+    line-height: 1.5;
+    background: #e2efe5;
+    border: 1px solid #c3dbcc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+  pre.wire {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.72em;
+    line-height: 1.35;
+    background: #fbfdfb;
+    color: #35493c;
+  }
+  hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+  a { color: #1f4a2e; text-decoration: none; }
+  a:hover { text-decoration: underline; color: #2a8f4f; }
+  blockquote {
+    border-left: 3px solid #2d8f5a;
+    background: #e8f5ec;
+    padding: 6px 12px;
+    margin: 8px 0;
+    border-radius: 0 4px 4px 0;
+    color: #1a4a2e;
+    font-size: 0.95em;
+  }
+  .highlight {
+    background: #e8f5ec;
+    border-left: 4px solid #2a8f4f;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #1a4a2a;
+  }
+  .highlight.accent {
+    border-left-color: #d97706;
+    background: #fef7e6;
+    color: #7c5200;
+  }
+
+  /* figures */
+  figure { margin: 14px 0 6px; }
+  figure img { width: 100%; height: auto; display: block; border: 1px solid #dfeee4; border-radius: 8px; background: #ffffff; }
+  figcaption { color: #5a7a6a; font-size: 0.82em; text-align: center; margin-top: 6px; }
+
+  /* table */
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 0.9em; }
+  th, td { border: 1px solid #c3dbcc; padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: #e8f5ec; color: #1a3a24; }
+  td { color: #2d3a31; }
+
+  .tag {
+    display: inline-block;
+    background: #dcefe0;
+    color: #1f4a2e;
+    border: 1px solid #b6d6c0;
+    border-radius: 12px;
+    padding: 1px 9px;
+    font-size: 0.78em;
+    margin-right: 5px;
+  }
+
+  @media (max-width: 800px) {
+    .page-layout { padding: 16px 12px; }
+    ul, ol { padding-left: 16px; }
+  }
+</style>
+</head>
+
+<body>
+<div class="page-layout">
+<main class="content">
+<a class="back-link" href="../index.html" style="display:inline-block;margin:0 0 12px;color:#2d8a4e;text-decoration:none;font-size:0.9em;">&larr; 返回索引</a>
+<h1>Vibe Coding：用 AI 造系统的六步骨架</h1>
+<p class="tag">vibe coding</p><p class="tag">system design</p><p class="tag">workflow</p>
+
+<div class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#claim">主张：先定形状，再填内容</a></li>
+    <li><a href="#six">六步骨架</a></li>
+    <li><a href="#howto">每一步怎么做</a></li>
+    <li><a href="#why">为什么这六步有效</a></li>
+    <li><a href="#anti">反模式</a></li>
+    <li><a href="#rel">与其他笔记的关系</a></li>
+  </ol>
+</div>
+
+<hr>
+
+<h2 id="claim">主张：先定形状，再填内容</h2>
+
+<blockquote>vibe coding 快，不是因为 AI 会写代码，而是因为<strong>改「形状」的成本几乎为零</strong>——改完形状，写码仍然是慢的。</blockquote>
+
+<p>所以正确的用法是：<strong>在写实现之前，用 AI 把六个形状快速迭代到稳定</strong>；形状落盘之后，再让 AI 按形状填内容。反过来，一旦开始写实现，形状就变贵了——每改一次都要返工代码、迁移数据、重命名一堆东西。</p>
+
+<div class="highlight">这六步的价值不在「问了 AI 六个问题」，而在于<strong>产出了六个可评审、可 diff 的中间产物</strong>。</div>
+
+<hr>
+
+<h2 id="six">六步骨架</h2>
+
+<figure>
+  <img src="assets/vibe-coding.svg" alt="六步骨架：mockup、DB 设计、流程图、命名、目录结构、系统层次">
+  <figcaption>图：从 mockup 到分层，改动成本单调递增——所以越靠前越该多迭代。</figcaption>
+</figure>
+
+<table>
+  <thead><tr><th>步</th><th>产出物</th><th>固定住什么</th><th>为什么贵</th></tr></thead>
+  <tbody>
+    <tr><td>① mockup</td><td><code>mockup.html</code></td><td>界面、信息密度、交互路径</td><td>界面一改，数据与接口跟着改</td></tr>
+    <tr><td>② DB 设计</td><td><code>schema.sql</code> + 关键查询</td><td>实体、关系、时间维度</td><td>最难改，历史数据要迁移</td></tr>
+    <tr><td>③ 流程图</td><td><code>flow.mmd</code></td><td>时序、状态、失败分支</td><td>流程漏一步，实现漏一片</td></tr>
+    <tr><td>④ 命名</td><td><code>glossary.md</code></td><td>领域词汇（名词 + 动词）</td><td>命名漂移会传染整个代码库</td></tr>
+    <tr><td>⑤ 目录结构</td><td><code>tree</code></td><td>模块边界</td><td>边界错了，后面全靠 import 打补丁</td></tr>
+    <tr><td>⑥ 系统层次</td><td><code>layers.md</code></td><td>依赖方向</td><td>层次乱了，改一处动全身</td></tr>
+  </tbody>
+</table>
+
+<p>顺序的依据：<strong>从「人一眼能判断对错」到「只能靠推演判断」</strong>。mockup 谁都看得出不对；分层对不对，往往要写完才知道。所以越靠前越值得反复改。</p>
+
+<hr>
+
+<h2 id="howto">每一步怎么做</h2>
+
+<h3>① 让 AI 出 mockup</h3>
+<ul>
+  <li>要一个<strong>能点的 HTML</strong>，不是 Figma 稿、也不是文字描述。三屏以内，只画主流程。</li>
+  <li>提示要点：说明这是哪个系统的哪个页面、有哪些区域、每张卡片上有什么信息、每张卡挂哪些按钮。</li>
+  <li>验收：<strong>不用解释就能看懂主流程</strong>；不看代码就知道点哪里会发生什么。</li>
+</ul>
+<p>这一步最容易被跳过，代价也最大：界面定不下来，后面的表结构和接口全在猜。</p>
+
+<h3>② 让 AI 做 DB 设计</h3>
+<ul>
+  <li><strong>先给「要回答的问题」，不要先给表</strong>。让 AI 从问题反推实体与关系。</li>
+  <li>要求：每个界面元素都能追到来源；<strong>状态变化单独建模</strong>（时间维度），不要用字段覆盖历史。</li>
+  <li>要它同时给出 3–5 条关键查询，能跑通「这个页面怎么拼出来」。</li>
+  <li>验收：随便挑一个界面上的字段，能说出它来自哪张表哪条记录。</li>
+</ul>
+
+<h3>③ 让 AI 出流程图</h3>
+<ul>
+  <li>要 mermaid，一屏看完；<strong>必须画失败分支</strong>和「人需要确认」的节点。</li>
+  <li>验收：每个「人会犹豫怎么办」的地方，图上都有分支。</li>
+</ul>
+
+<h3>④ 让 AI 做好函数命名</h3>
+<ul>
+  <li>先定 <strong>10 个核心名词 + 5 个核心动词</strong>写进 glossary，<strong>禁止同义词</strong>（`ticket` 和 `issue` 只能留一个）。</li>
+  <li>函数名 = 动词 + 名词：<code>refreshPermissions</code>、<code>scanJiraDaily</code>；避免 <code>handleXxx</code>、<code>processXxx</code>、<code>doXxx</code>。</li>
+  <li>验收：代码里出现第二个同义词，说明词汇表没定好。</li>
+</ul>
+
+<h3>⑤ 定好开始的目录结构</h3>
+<ul>
+  <li>按「<strong>变化的原因</strong>」分（feature-first），不按技术层分（不是 <code>controllers/ services/ utils/</code>）。</li>
+  <li>一个插件 / 一个功能一个目录，目录自带它的数据源、后台任务、UI。</li>
+  <li>验收：<strong>改一个功能只动一个目录</strong>。</li>
+</ul>
+
+<h3>⑥ 定好系统的层次</h3>
+<ul>
+  <li>写死依赖方向（如 UI → domain → data，禁止反向），并写进 <code>AGENTS.md</code>。</li>
+  <li>验收：能用一句话说出每层职责；AI 能自己判断「这段代码该放哪」。</li>
+</ul>
+
+<hr>
+
+<h2 id="why">为什么这六步有效</h2>
+
+<table>
+  <thead><tr><th>机制</th><th>效果</th></tr></thead>
+  <tbody>
+    <tr><td><strong>顺序</strong></td><td>从具体到抽象、从便宜到昂贵，返工永远发生在最便宜的那一层</td></tr>
+    <tr><td><strong>落盘</strong></td><td>每一步都有文件，AI 每次都能 conform；新 session 不会重来（呼应 context-recording）</td></tr>
+    <tr><td><strong>可评审</strong></td><td>形状比实现好 review；错在形状阶段改，成本是写码完成后的百分之一</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2 id="anti">反模式</h2>
+<table>
+  <thead><tr><th>反模式</th><th>后果</th></tr></thead>
+  <tbody>
+    <tr><td>先写实现，再补 mockup</td><td>形状被实现绑架，界面变成「代码能做成什么样」</td></tr>
+    <tr><td>让 AI 一次出整套设计</td><td>六步混在一起，无法逐个 review，错也不知道错在哪一步</td></tr>
+    <tr><td>形状只活在对话里</td><td>下个 session 就丢，等于没定过</td></tr>
+    <tr><td>命名与目录交给 AI 自由发挥</td><td>词汇与边界持续漂移，越写越像「另一个项目」</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2 id="rel">与其他笔记的关系</h2>
+<table>
+  <thead><tr><th>笔记</th><th>管什么</th></tr></thead>
+  <tbody>
+    <tr><td><a href="harness.html">Harness Engineering</a></td><td>让概率模型稳定输出（模板、skill、context、memory）</td></tr>
+    <tr><td><a href="best-practices.html">使用 LLM 的 Best Practice</a></td><td>日常技巧（skill 化、脚本降本、领域知识库）</td></tr>
+    <tr><td><a href="one-workbench.html">OneWorkbench</a></td><td>这套手法的实践出处：插件 manifest、run 记录、分层都是先定形状再填内容</td></tr>
+    <tr><td><a href="context-recording.html">在 Repo 里记录上下文</a></td><td>让这六个产物在跨 session 时活下来</td></tr>
+  </tbody>
+</table>
+
+<div class="highlight accent">一句话收束：<strong>vibe coding 的对手不是「AI 写得不够好」，而是「形状没定就动手」。先把六个形状钉死，再让 AI 高速填充。</strong></div>
+
+</main>
+</div>
+</body>
+</html>
