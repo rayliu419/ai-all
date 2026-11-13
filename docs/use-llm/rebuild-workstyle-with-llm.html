@@ -146,11 +146,7 @@
   <ol>
     <li><a href="#why">为什么 LLM 会改变工作方式</a></li>
     <li><a href="#build-tools">Build Tools：用 AI 造可管子的能力</a></li>
-    <li><a href="#build-workbench">Build Workbench：all-in-one 聚合与编排</a></li>
-    <li><a href="#architecture">Workbench 分层架构</a></li>
-    <li><a href="#design">交互与设计考量</a></li>
-    <li><a href="#roadmap">落地路径：从哪开始</a></li>
-    <li><a href="#interactive-bridge">附录：交互式工具打通</a></li>
+    <li><a href="#next">Build Workbench → OneWorkbench（独立章节）</a></li>
   </ol>
 </div>
 
@@ -207,276 +203,26 @@
 
 <hr>
 
-<!-- ============ 3. build-workbench ============ -->
-<h2 id="build-workbench">Build Workbench：all-in-one 聚合与编排</h2>
+<!-- ============ 3. next ============ -->
+<h2 id="next">Build Workbench → OneWorkbench</h2>
 
-<p>核心主张：<strong>把常用操作集成到一个网页，做成 all-in-one。</strong>它不做具体的事，而是做<strong>入口 + 编排</strong>。</p>
+<p>「把常用操作聚合到一个入口」这一半，已经单独拆成一章：它不再是抽象的愿景，而是一个具体的桌面 App 设计——Electron 外壳 + pi 内核 + MCP 打通公司平台，公司差异全部收进一个可替换的 profile 目录。</p>
 
-<p>为什么用 web 聚合：</p>
-<ul>
-  <li><strong>统一入口：</strong>发布、override、查询……都从一个地方触达，不用记一堆命令。</li>
-  <li><strong>可视化与低门槛：</strong>把 cli 的输入参数、返回结果变成表单和视图，人人可用。</li>
-  <li><strong>可编排：</strong>web 端可以串联多个 cli 工具，组成一个「操作流」。</li>
-</ul>
-
-<div class="card accent">
-  <h4>dsh 类比 → 插件模式</h4>
-  <p>类似 <code>dsh</code> 那样把高频操作集中在一个工具里；更进一步，把它<strong>拆成插件模式</strong>——每个能力登记成可插拔的 <code>cli tool</code>，随用随加。workbench 只负责调度，具体能力由插件提供。</p>
+<div class="card">
+  <h4>为什么拆出去</h4>
+  <ul>
+    <li><strong>层级不同：</strong>本篇讲「为什么要重造工作方式」（vision + build tools），workbench 讲「具体怎么实现」（架构、协议、profile、落地路线）。</li>
+    <li><strong>节奏不同：</strong>愿景稳定，实现细节会随技术验证反复变，混在一起会互相拖累。</li>
+    <li><strong>读者不同：</strong>前者是一篇观点，后者是一份可执行的工程设计。</li>
+  </ul>
 </div>
 
-<p><strong>workbench 与 tools 的关系：</strong>workbench 是编排者，tools 是被编排的原子；<em>tools 也能脱离 workbench 手动运行</em>。这样既保留「命令行原教旨」的灵活，又提供「一站式网页」的方便。</p>
-
-<hr>
-
-<!-- ============ 4. architecture ============ -->
-<h2 id="architecture">Workbench 分层架构</h2>
-
-<div class="diagram">
-<svg viewBox="0 0 840 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Workbench 分层架构图">
-  <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L8,3 L0,6 Z" fill="#2a8f4f"/>
-    </marker>
-    <marker id="arrowDash" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L8,3 L0,6 Z" fill="#8bbaa0"/>
-    </marker>
-  </defs>
-
-  <style>
-    .layerTitle { font-weight: 700; fill: #1f4a2e; font-size: 15px; }
-    .layerSub { fill: #2d3a31; font-size: 12px; }
-    .box { fill: #e8f5ec; stroke: #a9c9b5; stroke-width: 1.4; }
-    .boxTop { fill: #dcefe0; stroke: #a9c9b5; stroke-width: 1.4; }
-    .chip { fill: #ffffff; stroke: #b6d6c0; stroke-width: 1; rx: 6; }
-    .chipText { fill: #1f4a2e; font-size: 11px; }
-    .link { stroke: #2a8f4f; stroke-width: 1.8; fill: none; }
-    .linkDash { stroke: #8bbaa0; stroke-width: 1.6; fill: none; stroke-dasharray: 5 4; }
-    .linkLabel { fill: #5a7a6a; font-size: 10.5px; }
-  </style>
-
-  <!-- Web front -->
-  <rect class="boxTop" x="90" y="20" width="520" height="58" rx="9"/>
-  <text class="layerTitle" x="112" y="45">Web 前端 · Workbench 入口</text>
-  <text class="layerSub" x="112" y="64">统一入口 · 操作可视化 · 一键触达</text>
-
-  <!-- connector -->
-  <line class="link" x1="350" y1="78" x2="350" y2="116" marker-end="url(#arrow)"/>
-
-  <!-- Orchestrator -->
-  <rect class="box" x="90" y="116" width="520" height="58" rx="9"/>
-  <text class="layerTitle" x="112" y="141">编排 / 交互层 · Orchestrator</text>
-  <text class="layerSub" x="112" y="160">调度 · 参数校验 · 错误信息 surface</text>
-
-  <line class="link" x1="350" y1="174" x2="350" y2="212" marker-end="url(#arrow)"/>
-
-  <!-- CLI registry -->
-  <rect class="box" x="90" y="212" width="520" height="86" rx="9"/>
-  <text class="layerTitle" x="112" y="237">可插拔 Tool 注册表 · CLI 能力</text>
-  <text class="layerSub" x="112" y="256">Unix 管道式 · 原子化 · 可组合</text>
-  <g>
-    <rect class="chip" x="112" y="270" width="78" height="20"/>
-    <text class="chipText" x="128" y="284">publish</text>
-    <rect class="chip" x="198" y="270" width="82" height="20"/>
-    <text class="chipText" x="216" y="284">override</text>
-    <rect class="chip" x="288" y="270" width="66" height="20"/>
-    <text class="chipText" x="303" y="284">query</text>
-    <rect class="chip" x="362" y="270" width="66" height="20"/>
-    <text class="chipText" x="377" y="284">graph</text>
-    <rect class="chip" x="436" y="270" width="54" height="20"/>
-    <text class="chipText" x="448" y="284">…</text>
-  </g>
-
-  <!-- connectors to bottom -->
-  <path class="link" d="M350,298 L350,338 L214,338 L214,372" marker-end="url(#arrow)"/>
-  <path class="link" d="M350,298 L350,338 L486,338 L486,372" marker-end="url(#arrow)"/>
-  <text class="linkLabel" x="351" y="322">调用 / 管道</text>
-
-  <!-- Java backend -->
-  <rect class="boxTop" x="90" y="372" width="248" height="60" rx="9"/>
-  <text class="layerTitle" x="112" y="398">Java 后端</text>
-  <text class="layerSub" x="112" y="418">HTTP / API</text>
-
-  <!-- External -->
-  <rect class="boxTop" x="362" y="372" width="248" height="60" rx="9"/>
-  <text class="layerTitle" x="384" y="398">外部服务 / 系统</text>
-  <text class="layerSub" x="384" y="418">数据源 · 服务</text>
-
-  <!-- manual run -->
-  <path class="linkDash" d="M610,258 L650,272" marker-end="url(#arrowDash)"/>
-  <rect class="box" x="650" y="248" width="162" height="56" rx="9"/>
-  <text class="layerTitle" x="670" y="273" style="font-size:13px;">手动运行</text>
-  <text class="layerSub" x="670" y="292" style="font-size:11px;">终端 · 脱离 Workbench</text>
-</svg>
-</div>
-<div class="diagram-caption">图：Workbench 分层架构，从上到下是前端、编排、可插拔 CLI 注册表，再下探到后端 / 外部系统；CLI 层也保留独立手动运行的通道。</div>
-
-<p><strong>解读：</strong>「前端」只做入口与展示；「编排层」是真正的中枢，负责参数校验、任务调度、把底层工具的返回变成可读反馈；「CLI 注册表」是能力层，即插即用；底层接 Java 后端与外部系统。图中右侧的虚线表示 <em>CLI 也能脱离 workbench 在终端单独跑</em>——这是刻意的冗余，保证工具永远可自助、可调试。</p>
-
-<hr>
-
-<!-- ============ 5. design ============ -->
-<h2 id="design">交互与设计考量</h2>
-
-<h3>怎么跟不同工具交互</h3>
-<p>工具形态不同，交互契约也得统一：<code>Java 后端</code>走 HTTP / API，<code>cli</code> 走进程 / 管道。编排层需要一层<strong>适配</strong>，把各种调用变成统一的 <em>「输入参数 → 执行 → 输出/错误」</em>契约，否则调度逻辑会和具体工具耦合。</p>
-
-<h3>错误反馈是生命线</h3>
-<p>呼应 loop engineering：workbench 要能自我纠错，前提是工具把错误<strong>说得够细</strong>——校验失败原因、堆栈、边界情况，而不是一句「出错」。否则 AI / 用户都无从调整，闭环转不起来。</p>
-
-<h3>上下文与确定性</h3>
-<ul>
-  <li>能用确定性算法 / 固定逻辑的，别靠概率；显式指定能降低幻觉。</li>
-  <li>workbench 只注入「工具看不到的知识」，别重复塞模型能从环境里自己拿到的上下文——context 是稀缺资源。</li>
-</ul>
-
-<h3>workbench 与 tools 的角色分工</h3>
-<table>
-  <thead>
-    <tr><th>维度</th><th>Build Tools（CLI）</th><th>Build Workbench（Web）</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>定位</td><td>原子能力，一件事只做一件事</td><td>入口 + 编排，不做具体事</td></tr>
-    <tr><td>运行方式</td><td>终端 / 管道，独立可跑</td><td>网页，聚合可视</td></tr>
-    <tr><td>可复用性</td><td>可组合成管道，可被再次编排</td><td>按需接入能力插件</td></tr>
-    <tr><td>关键价值</td><td>确定性的执行保障</td><td>低门槛、一站式的使用体验</td></tr>
-  </tbody>
-</table>
-
-<hr>
-
-<!-- ============ 6. roadmap ============ -->
-<h2 id="roadmap">落地路径：从哪开始</h2>
-
-<ol>
-  <li><strong>先做最高频、最重复的 cli：</strong>发布、override、查询——那些「两周内会重复做>2 次」的操作，优先工具化。</li>
-  <li><strong>搭一个最小 web 入口：</strong>先把这几个 cli 串成一个页面，验证「入口 + 编排」手感。</li>
-  <li><strong>引入插件注册表 + 编排层 + 适配层：</strong>把工具登记成可插拔能力，统一调用契约。</li>
-  <li><strong>沉淀工具生成模板 / SOP：</strong>让 AI 造工具这件事本身稳定下来，形成可复制的流水线。</li>
-</ol>
-
-<div class="highlight">一句话收束：<strong>让 LLM 把「做工具」变便宜，本质上是在把工作方式从「靠人执行」重造为「靠能力沉淀」。</strong></div>
-
-
-<!-- ============ 附录：交互式工具打通 ============ -->
-<h2 id="interactive-bridge">附录：交互式工具打通</h2>
-
-<p>workbench 要编排的不只是「跑完即返回」的一次性 cli，还有<strong>交互式工具</strong>（需要多轮输入/输出来回）。打通它们的关键不是「该不该用终端仿真」，而是<strong>这个工具能不能被"结构化地驱动"</strong>。按这个能力，把工具分成三档：</p>
-
-<h3>三条路线：先分清工具能被怎么驱动</h3>
-<table>
-  <thead><tr><th>路线</th><th>怎么驱动</th><th>例子</th><th>要不要 PTY</th></tr></thead>
-  <tbody>
-    <tr><td><strong>① SDK / RPC / JSON 模式</strong></td><td>工具暴露结构化程序化接口，web 渲染成聊天 / 卡片</td><td><code>pi --mode rpc</code>、pi SDK、<code>git status --porcelain</code></td><td>否</td></tr>
-    <tr><td><strong>② 批处理 / 管道</strong></td><td>参数驱动、输出可解析、跑完即退出；web 拿 stdout 解析</td><td><code>ls</code>、<code>grep</code>、<code>jq</code>、<code>curl</code>、<code>awk</code></td><td>否（普通 spawn + pipe）</td></tr>
-    <tr><td><strong>③ PTY + 终端仿真</strong></td><td>后端 PTY 起进程，浏览器 <code>xterm.js</code> 仿真终端，双向转发字节</td><td>vim、htop、fzf、psql、REPL</td><td>是</td></tr>
-  </tbody>
-</table>
-
-<div class="card accent">
-  <h4>适配层怎么选</h4>
-  <p>这不是「A 还是 B」二选一，而是<strong>适配层按每个工具动态选路</strong>：能批处理 / 管道化的 cli 走 ②（这正是「build tools 做成可管道化」的主线，本来就不需要 PTY）；有 SDK / RPC 的走 ①；剩下真正粘人的交互式工具才落 ③。<strong>所以 workbench 里绝大多数工具走 ② 就够了，A 是救生圈不是船。</strong> ③ 把 web 变成「哑终端」——通用，但看不懂结构、做不了富交互；① 才让 web「理解」消息。</p>
+<div class="highlight">
+  继续读：<a href="one-workbench.html"><strong>OneWorkbench：桌面 Workbench 的实现</strong></a>
+  —— 三层复用模型、内核选型、进程模型、RPC 协议契约、company profile、落地路径。
 </div>
 
-<h3>哪些工具「必须」用 PTY（③）</h3>
-<p>只有当工具<strong>需要真终端语义</strong>、且没有 ①②③ 之外可替代的路径时才必须——只要满足下面任意一条就走 ③：</p>
-<ul>
-  <li><strong>全屏 TUI：</strong>vim、htop、less、fzf——输出是「一屏画面」，没有实用的批处理模式，只能渲染终端。</li>
-  <li><strong>REPL / 交互式 shell：</strong>bash、psql、mysql、redis-cli、ipython——历史、补全、多行编辑、提示符都靠 TTY。</li>
-  <li><strong>需要 <code>/dev/tty</code> 读秘密：</strong><code>getpass</code>、<code>sudo</code> 密码、<code>ssh -t</code>——管道拿不到 <code>/dev/tty</code>，只有 PTY 行。</li>
-  <li><strong><code>isatty()</code> 才启用的行为：</strong><code>git</code> 的 pager、只在 TTY 下才开颜色 / TUI。</li>
-</ul>
-<p>但很多工具有<strong>折衷旗标</strong>，把「必须 PTY」的集合不断缩小：<code>sudo -S</code>、<code>--password-stdin</code>、<code>--from-stdin</code>、<code>git -c core.pager=cat</code>。真正躲不开 PTY 的，通常是<strong>它的核心价值就是那个交互终端本身</strong>（TUI/REPL），且作者没给非交互出口。</p>
-
-<h3>pi 的现成协议：<code>pi --mode rpc</code></h3>
-<p>它在 <code>stdin/stdout</code> 上跑一个 JSONL 协议（每行一个 JSON），这就是「多轮输入/输出转发」的协议本体：</p>
-<ul>
-  <li><strong>发给 pi（stdin）</strong>：<code>{"type":"prompt","message":"..."}</code>，还有 <code>steer</code>、<code>follow_up</code>、<code>abort</code>、<code>bash</code>、<code>new_session</code>。</li>
-  <li><strong>pi 推给你（stdout）</strong>：<code>message_update</code>（内含 <code>text_delta</code>/<code>thinking_delta</code>/<code>toolcall_delta</code> 流式增量）、<code>turn_start/end</code>、<code>agent_settled</code>、<code>tool_execution_*</code>、<code>bash_execution_update</code>。</li>
-  <li><strong>扩展 UI 子协议</strong>：工具要人确认时，pi 发 <code>extension_ui_request</code>（<code>select</code>/<code>confirm</code>/<code>input</code>/<code>editor</code>），你回 <code>extension_ui_response</code>——这就是「交互」那部分。</li>
-</ul>
-<p>若后端是 Node，可直接用 SDK 的 <code>createAgentSession()</code> + <code>session.subscribe()</code> 在进程内跑，类型安全、状态可访问，更省事（见 <code>docs/sdk.md</code>）。</p>
-
-<h3>架构就一条</h3>
-<pre>
-// server.mjs（Node，零 npm 依赖）
-import { spawn } from "node:child_process";
-import { createServer } from "node:http";
-import { readFileSync } from "node:fs";
-
-const pi = spawn("pi", ["--mode", "rpc", "--no-session"]);
-const clients = new Set();
-
-let buf = "";
-pi.stdout.on("data", (chunk) =&gt; {               // pi 的 JSONL 事件
-  buf += chunk;
-  let i;
-  while ((i = buf.indexOf("\n")) !== -1) {
-    const line = buf.slice(0, i).replace(/\r$/, "");
-    buf = buf.slice(i + 1);
-    if (!line) continue;
-    for (const res of clients) res.write(`data: ${line}\n\n`);   // 转成 SSE
-  }
-});
-
-createServer((req, res) =&gt; {
-  if (req.method === "GET" &amp;&amp; req.url === "/") {
-    res.setHeader("content-type", "text/html; charset=utf-8");
-    return res.end(readFileSync("./index.html", "utf8"));
-  }
-  if (req.method === "GET" &amp;&amp; req.url === "/events") {       // 输出通道
-    res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" });
-    clients.add(res);
-    req.on("close", () =&gt; clients.delete(res));
-    return;
-  }
-  if (req.method === "POST" &amp;&amp; req.url === "/send") {        // 输入通道
-    let body = "";
-    req.on("data", (d) =&gt; (body += d));
-    req.on("end", () =&gt; { pi.stdin.write(body.trimEnd() + "\n"); res.end("ok"); });
-    return;
-  }
-  res.statusCode = 404; res.end();
-}).listen(3000, () =&gt; console.log("http://localhost:3000"));
-</pre>
-
-<h3>最简实现：零依赖 SSE + POST</h3>
-<p>server→browser 用 SSE（<code>EventSource</code>），browser→server 用 <code>POST</code>，一个依赖都不用装。</p>
-<pre>
-&lt;!-- index.html --&gt;
-&lt;!doctype html&gt;&lt;html lang="zh"&gt;&lt;head&gt;&lt;meta charset="utf-8"&gt;&lt;title&gt;pi web&lt;/title&gt;
-&lt;style&gt;body{margin:0;font-family:ui-monospace,monospace;background:#0f1115;color:#e6e6e6;height:100vh;display:flex;flex-direction:column}#log{flex:1;overflow-y:auto;padding:16px;white-space:pre-wrap}form{display:flex;gap:8px;padding:12px;border-top:1px solid #333}textarea{flex:1;resize:none;background:#1a1c22;color:#e6e6e6;border:1px solid #333;border-radius:6px;padding:8px;font:inherit}button{background:#2a8f4f;color:#fff;border:0;border-radius:6px;padding:0 16px;cursor:pointer}&lt;/style&gt;&lt;/head&gt;
-&lt;body&gt;
-&lt;div id="log"&gt;&lt;/div&gt;&lt;form id="f"&gt;&lt;textarea id="in" rows="1" autofocus&gt;&lt;/textarea&gt;&lt;button&gt;send&lt;/button&gt;&lt;/form&gt;
-&lt;script&gt;
-const log=document.getElementById("log"),input=document.getElementById("in"),form=document.getElementById("f");
-const append=(t)=&gt;{log.textContent+=t;log.scrollTop=log.scrollHeight;};
-form.onsubmit=(e)=&gt;{e.preventDefault();const msg=input.value;if(!msg.trim())return;append("&gt;&gt;&gt; "+msg+"\n");input.value="";fetch("/send",{method:"POST",body:JSON.stringify({type:"prompt",message:msg})});};
-const es=new EventSource("/events");
-es.onmessage=(e)=&gt;{const evt=JSON.parse(e.data);if(evt.type==="message_update"){const d=evt.assistantMessageEvent;if(d.type==="text_delta")append(d.delta);}else if(evt.type==="turn_end")append("\n");else if(evt.type==="agent_settled")append("\n--- settled, awaiting input ---\n");};
-&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;
-</pre>
-<p>跑 <code>node server.mjs</code>，打开 <code>http://localhost:3000</code> 即可跟 pi 对话。</p>
-
-<h3>多轮 I/O 建模</h3>
-<table>
-  <thead><tr><th>你想做的</th><th>对应做法</th></tr></thead>
-  <tbody>
-    <tr><td>正常一轮对话</td><td><code>{"type":"prompt","message":"..."}</code></td></tr>
-    <tr><td>agent 还在跑时插话</td><td><code>prompt</code> 带 <code>"streamingBehavior":"steer"</code>（或直接发 <code>steer</code>）</td></tr>
-    <tr><td>agent 跑完后的补充</td><td><code>{"type":"follow_up","message":"..."}</code></td></tr>
-    <tr><td>打断当前操作</td><td><code>{"type":"abort"}</code></td></tr>
-    <tr><td>工具要人确认</td><td>收 <code>extension_ui_request</code> → 弹模态 → 回 <code>extension_ui_response</code></td></tr>
-    <tr><td>刷新页面不丢上下文</td><td>去掉 <code>--no-session</code>，或每会话一个 session 文件</td></tr>
-  </tbody>
-</table>
-
-<h3>坑与安全</h3>
-<ul>
-  <li><strong>流式时再发 <code>prompt</code> 必须带 <code>streamingBehavior</code></strong>，否则直接报错——新手最容易踩。</li>
-  <li><code>--no-session + 单进程</code> 是单用户简化版；多会话/并发请<strong>每个连接 spawn 一个 pi</strong>，或用 SDK 每会话一个 <code>AgentSession</code>。</li>
-  <li><strong>安全</strong>：把能跑 shell 的 agent 暴露到 web，等于开了可执行任意命令的口子，务必鉴权/私有部署，别裸上公网。</li>
-  <li><strong>只有核心价值是交互终端（TUI/REPL）的才走 ③</strong>；pi 这类有结构化接口的走 ①，普通 cli 走 ② 更划算。</li>
-</ul>
+<p>一句话概括两者的关系：<strong>本篇负责「让 LLM 把造工具变便宜」，OneWorkbench 负责「把造出来的能力聚合成一个日常入口」。</strong></p>
 
 </main>
 </div>

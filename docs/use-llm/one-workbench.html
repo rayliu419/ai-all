@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OneWorkbench：桌面总入口 + 一键 AI</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f5faf6;
+    color: #2d3a31;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  /* layout */
+  .page-layout {
+    margin: 0 auto;
+    padding: 28px 20px;
+    max-width: 880px;
+  }
+  .content { min-width: 0; }
+
+  /* typography */
+  h1 { font-size: 1.35em; margin: 0 0 10px; color: #1a3a24; border-bottom: 2px solid #c3dbcc; padding-bottom: 5px; }
+  h2 { font-size: 1.2em; margin: 20px 0 8px; color: #1f4a2e; }
+  h3 { font-size: 1.02em; margin: 12px 0 6px; color: #245a36; }
+  h4 { font-size: 0.95em; margin: 10px 0 5px; color: #2a6a3e; }
+  p { margin: 6px 0; }
+  ul, ol { padding-left: 20px; margin: 4px 0; }
+  li { margin: 2px 0; }
+
+  /* toc (numbered, per-doc convention) */
+  .toc {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 12px 0 16px;
+  }
+  .toc h2 { font-size: 1em; color: #1a4f2e; margin: 0 0 8px; border: none; padding: 0; background: none; }
+  .toc > ol { margin: 0; list-style: none; counter-reset: toc; }
+  .toc > ol > li { counter-increment: toc; margin: 3px 0; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 600; color: #1a4f2e; }
+  .toc a { color: #236b3e; text-decoration: none; font-size: 0.9em; }
+  .toc a:hover { text-decoration: underline; color: #1a4f2e; }
+
+  /* cards */
+  .card {
+    background: #e8f5ec;
+    border: 1px solid #c3dbcc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .card.accent {
+    background: #fef7e6;
+    border-color: #e6d5b8;
+  }
+
+  strong { color: #1a4a2a; }
+  em { color: #3d6a4f; }
+  code {
+    font-size: 0.88em;
+    background: #e2efe5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #1a4a2a;
+  }
+  pre {
+    font-size: 0.76em;
+    line-height: 1.5;
+    background: #e2efe5;
+    border: 1px solid #c3dbcc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+  pre.wire {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.72em;
+    line-height: 1.35;
+    background: #fbfdfb;
+    color: #35493c;
+  }
+  hr { border: none; border-top: 1px solid #c3dbcc; margin: 18px 0; }
+  a { color: #1f4a2e; text-decoration: none; }
+  a:hover { text-decoration: underline; color: #2a8f4f; }
+  blockquote {
+    border-left: 3px solid #2d8f5a;
+    background: #e8f5ec;
+    padding: 6px 12px;
+    margin: 8px 0;
+    border-radius: 0 4px 4px 0;
+    color: #1a4a2e;
+    font-size: 0.95em;
+  }
+  .highlight {
+    background: #e8f5ec;
+    border-left: 4px solid #2a8f4f;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #1a4a2a;
+  }
+  .highlight.accent {
+    border-left-color: #d97706;
+    background: #fef7e6;
+    color: #7c5200;
+  }
+
+  /* figures */
+  figure { margin: 14px 0 6px; }
+  figure img { width: 100%; height: auto; display: block; border: 1px solid #dfeee4; border-radius: 8px; background: #ffffff; }
+  figcaption { color: #5a7a6a; font-size: 0.82em; text-align: center; margin-top: 6px; }
+
+  /* table */
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 0.9em; }
+  th, td { border: 1px solid #c3dbcc; padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: #e8f5ec; color: #1a3a24; }
+  td { color: #2d3a31; }
+
+  .tag {
+    display: inline-block;
+    background: #dcefe0;
+    color: #1f4a2e;
+    border: 1px solid #b6d6c0;
+    border-radius: 12px;
+    padding: 1px 9px;
+    font-size: 0.78em;
+    margin-right: 5px;
+  }
+
+  @media (max-width: 800px) {
+    .page-layout { padding: 16px 12px; }
+    ul, ol { padding-left: 16px; }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="page-layout">
+
+<main class="content">
+<a class="back-link" href="../index.html" style="display:inline-block;margin:0 0 12px;color:#2d8a4e;text-decoration:none;font-size:0.9em;">&larr; 返回索引</a>
+<h1>OneWorkbench：桌面总入口 + 一键 AI</h1>
+<p class="tag">1-click AI</p><p class="tag">desktop shell</p><p class="tag">agent backend</p>
+
+<div class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#core">核心：一键 AI</a></li>
+    <li><a href="#interaction">交互设计：一键 = 跳进对话</a></li>
+    <li><a href="#chain">执行链：意图 → skill → 记录</a></li>
+    <li><a href="#shell">UI：桌面总入口</a></li>
+    <li><a href="#plugin">插件：让一键有地方可挂</a></li>
+    <li><a href="#ticket">票：把 8 个系统拼成一条流水线</a></li>
+    <li><a href="#stack">技术选型：TS、Electron、SDK / ACP</a></li>
+    <li><a href="#reuse">换一家公司</a></li>
+    <li><a href="#roadmap">落地与未决</a></li>
+  </ol>
+</div>
+
+<hr>
+
+<!-- ============ 1. core ============ -->
+<h2 id="core">核心：一键 AI</h2>
+
+<blockquote>日常最贵的一步不是「想出怎么做」，而是<strong>把上下文凑齐</strong>：翻票号、翻 CI 日志、翻部署记录、翻监控曲线，然后才轮到问 AI。一键 AI 就是把这一步删掉。</blockquote>
+
+<p>原型（CouWork）里每张卡片上都有一组按钮：<code>看看怎么修</code>、<code>为什么没部署</code>、<code>准备发布</code>。点下去，人不需要贴任何东西——票号、失败的用例、最近的部署、时间窗内的变更，全都被打包好一起进对话。</p>
+
+<figure>
+  <img src="assets/page1.svg" alt="一键 AI 的数据流：卡片 → 意图 → 上下文包 → agent → 结果回写">
+  <figcaption>图 1：一键的全部内容——把已经存在的上下文换个出口，再给结果留一个回写口。</figcaption>
+</figure>
+
+<h3>上下文包的三层</h3>
+<table>
+  <thead><tr><th>层</th><th>放什么</th><th>谁提供</th></tr></thead>
+  <tbody>
+    <tr><td><strong>实体</strong> Identity</td><td>票号、PR、分支、环境、role、时间点</td><td>当前视图的实体（不需要额外请求）</td></tr>
+    <tr><td><strong>现场</strong> Evidence</td><td>失败用例 + 报错片段、最近部署、时间窗内变更、日志尾部、指标序列</td><td>数据源；插件已经缓存过，几乎零成本</td></tr>
+    <tr><td><strong>意图</strong> Intent</td><td>动词 + 期望输出形态（解释 / 定位 / 生成 patch / 给检查单）</td><td>意图模板，写在插件里，可版本化</td></tr>
+  </tbody>
+</table>
+
+<h3>四条规则</h3>
+<div class="card">
+  <ol>
+    <li><strong>一键不是零输入</strong>：允许在意图上补一句，但不补也必须能跑出结果。</li>
+    <li><strong>上下文由系统打包</strong>：用户永远不需要复制粘贴日志、URL、版本号。</li>
+    <li><strong>结果必须有出口</strong>：回答 / patch / 状态变更 / 新建待办，至少一个。否则它就只是个「解释器」，不解决问题。</li>
+    <li><strong>意图模板是资产</strong>：写进插件、可迭代、可对比效果。散落在代码里的 prompt 字符串一定会腐烂。</li>
+  </ol>
+</div>
+
+<div class="highlight">判断这个功能做得好不好，只需要一个指标：<strong>这一次操作，替我省掉了几次系统跳转和几次复制粘贴。</strong></div>
+
+<hr>
+
+<!-- ============ 2. interaction ============ -->
+<h2 id="interaction">交互设计：一键 = 跳进对话</h2>
+
+<p>定案很干脆：<strong>卡片上的意图按钮，点了就跳到对话页</strong>。不是弹窗、不是抽屉、不是侧栏叠加——就是换一个页面，因为对话才是活儿真正发生的地方。</p>
+
+<figure>
+  <img src="assets/page5.svg" alt="一键跳转：从面板卡片跳到对话页，引用胶囊可回跳">
+  <figcaption>图 2：左边是你正在看的面板，右边是点完之后到的对话；上下文以引用胶囊跟过去，也能点回来。</figcaption>
+</figure>
+
+<h3>一次点击发生了什么</h3>
+<ol>
+  <li>捕获视图快照：当前卡片 + 视图 id + 时间点。</li>
+  <li>组装 ContextBundle（实体 / 现场 / 新鲜度）。</li>
+  <li>选目标会话：新会话（默认）或并入当前会话。</li>
+  <li>首条消息 = 意图模板 + bundle，<strong>且可编辑</strong>（想补一句就补，不补直接发）。</li>
+  <li>落一条 run 记录（下一节）。</li>
+</ol>
+
+<h3>为什么是跳转，不是就地弹窗</h3>
+<table>
+  <thead><tr><th>理由</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>对话是主场景</td><td>点完之后往往连着一串动作（看日志 → 改代码 → 跑测试），需要完整工作区</td></tr>
+    <tr><td>历史可回看</td><td>跳转产生的是真会话，能在左侧历史里找回；弹窗式问答第二天就没了</td></tr>
+    <tr><td>实现更简单</td><td>不用维护「面板 + 叠加层」两套布局和两套快捷键</td></tr>
+  </tbody>
+</table>
+
+<h3>跳转必须解决三个问题</h3>
+<table>
+  <thead><tr><th>问题</th><th>做法</th></tr></thead>
+  <tbody>
+    <tr><td>不丢上下文</td><td>对话顶部一排引用胶囊：<code>PEPS-5129</code> <code>CI</code> <code>15:43</code> <code>旧数据 ⟳</code>，点任一回到原卡片</td></tr>
+    <tr><td>不串上下文</td><td>默认新建会话；只有同票同视图时才允许「并进当前会话」</td></tr>
+    <tr><td>不打断工作流</td><td>回来时保留滚动位置与筛选；卡片状态若已变（标记已处理）则刷新</td></tr>
+  </tbody>
+</table>
+
+<h3>五个容易做错的细节</h3>
+<table>
+  <thead><tr><th>细节</th><th>做法</th><th>不这么做会怎样</th></tr></thead>
+  <tbody>
+    <tr><td>新鲜度要进 prompt</td><td>卡片写着「15:43 · 旧数据」，这个事实一起传过去</td><td>模型拿旧数据下结论，人被误导</td></tr>
+    <tr><td>要求交代依据</td><td>回答里带「我看了哪些源、哪些没拉到」</td><td>无法判断可信度，等于又回到人肉核对</td></tr>
+    <tr><td>意图要带输出形态</td><td>「给可执行的修复步骤」≠「解释一下原因」</td><td>永远得到一段泛泛的分析</td></tr>
+    <tr><td>不要只做一个按钮</td><td>一张卡挂 2–4 个意图，而不是一个「问 AI」</td><td>用户还得自己想怎么问，等于没省事</td></tr>
+    <tr><td>结果要能回写</td><td>至少「标记已处理 / 记一条待办」</td><td>对话结束，工作里的状态没变</td></tr>
+  </tbody>
+</table>
+
+<h3>三种粒度</h3>
+<ul>
+  <li><strong>单卡意图</strong>：这张卡怎么了、怎么修。最高频。</li>
+  <li><strong>行级意图</strong>：这批票里哪些今天必须动。</li>
+  <li><strong>全局意图</strong>：<code>Cmd+K</code> 唤起，基于「我现在正在看的面板」提问。</li>
+</ul>
+
+<hr>
+
+<!-- ============ 2.5 chain ============ -->
+<h2 id="chain">执行链：意图 → skill → 记录</h2>
+
+<blockquote>一键 AI 如果不留痕，就只是一次性问答。真正的做法是：<strong>每个意图绑一个 skill，跑一次就落一条记录</strong>。</blockquote>
+
+<p>我的做法是在意图上挂 <code>dev-flow</code> skill：一键之后不是让模型自由发挥，而是按 skill 规定的流程走（定位 → 复现 → 修复 → 验证），并且<strong>全程和「功能」挂钩，产生 db 记录</strong>。</p>
+
+<pre>
+卡片意图 fix-ci
+  └─ skill: dev-flow  v3            ← 规定步骤与检查项，可版本化
+       ├─ step 1  定位   gh pr checks + 日志尾部
+       ├─ step 2  复现   本分支 diff vs mock
+       ├─ step 3  修复   生成 patch
+       └─ step 4  验证   跑 CouTest
+  └─ run 记录（db）                  ← 每次一键一条
+       run_id · feature_id · intent · skill+version
+       session_id · context_hash · steps[] · output · status · cost · ts
+</pre>
+
+<p>记录不是一个日志文件，而是把「一键」变成可积累的资产：</p>
+<table>
+  <thead><tr><th>能力</th><th>具体表现</th></tr></thead>
+  <tbody>
+    <tr><td>可追溯</td><td>三个月后能查：这张票的一键都问过什么、结论是什么、谁确认的</td></tr>
+    <tr><td>可统计</td><td>哪个意图最常用、哪类问题修不好、dev-flow 常卡在第几步</td></tr>
+    <tr><td>可复用</td><td>同一 feature 的第二次一键，自动带上上次的记录，省掉重复排查</td></tr>
+  </tbody>
+</table>
+
+<div class="highlight">这一步把「一键 AI」从省时间的技巧，变成可下沉的组织资产：<strong>卡片 → 对话 → 记录</strong> 形成闭环，下次同样的卡片可以直接展示「这个 role 最近 3 次 dev-flow 的结果」。</div>
+
+<hr>
+
+<h2 id="shell">UI：桌面总入口</h2>
+
+<p>外壳的形态直接对标 DeepSeek Desktop 这类产品：<strong>常驻输入框 + 左侧会话/导航 + 中间工作面</strong>。差别在分工：<strong>面板负责「看」，对话负责「干」</strong>——两者是两个页面，靠一键互相跳转。</p>
+
+<figure>
+  <img src="assets/page4.svg" alt="总入口布局：左侧插件、中间看板、顶部常驻输入">
+  <figcaption>图 3：总入口布局。顶部一个常驻输入框，左侧插件与会话，中间看板；意图按钮长在卡片上。</figcaption>
+</figure>
+
+<table>
+  <thead><tr><th>区域</th><th>作用</th><th>为什么必须有</th></tr></thead>
+  <tbody>
+    <tr><td>顶部常驻输入框</td><td>随手问；自动带上当前面板的上下文</td><td>让人从「看」切到「问」是零成本的</td></tr>
+    <tr><td>左侧插件导航 + 会话历史</td><td>工作面切换；找回上次的对话</td><td>插件是功能边界，历史是记忆</td></tr>
+    <tr><td>中间面板</td><td>表格 / 流水线 / 时间轴</td><td>看比问高效，事实不该让模型复述</td></tr>
+    <tr><td>对话页（Copilot）</td><td>一键的落点；引用胶囊可回跳</td><td>活儿在这里连着做，历史也在这里攒</td></tr>
+  </tbody>
+</table>
+
+<div class="highlight accent">不要做成「所有操作都在对话框里」。11 张票的到期时间用表格一眼扫完，对话要来回好几轮；CI 红不红是确定事实，也不该让模型转述。<strong>agent 需要入口，不需要独占入口。</strong></div>
+
+<hr>
+
+<!-- ============ 4. plugin ============ -->
+<h2 id="plugin">插件：让一键有地方可挂</h2>
+
+<p>一键 AI 不是一个独立功能，它寄生在插件上：<strong>每个插件产出「卡片」，每张卡片带「意图」</strong>。所以插件要声明四件事：</p>
+
+<pre>
+export default definePlugin({
+  id: "dev-task",
+  title: "开发任务",
+  sidebar: { group: "开发测试", order: 10 },     // ① 侧栏入口
+  credentials: ["couest_token"],                  // ② 凭证
+  tasks: [                                        // ③ 后台任务
+    { id: "refreshViewed", every: "5m", run: refresh },
+  ],
+  cards: [ ... ],                                 // ④ 卡片 → 意图
+  intents: [
+    { id: "fix-ci",         label: "看看怎么修",   prompt: tpl("fix-ci"), skill: "dev-flow" },
+    { id: "why-not-deploy", label: "为什么没部署", prompt: tpl("perm"),     skill: "dev-flow" },
+  ],
+});
+</pre>
+
+<p>关键在 <code>intents</code>：<strong>动作与渲染是同一份数据</strong>——UI 拿来渲染按钮，agent 拿来当工具，而且每个意图顺带声明它挂哪个 <code>skill</code>（下一节讲记录）。</p>
+
+<table>
+  <thead><tr><th>插件</th><th>侧栏</th><th>后台任务</th><th>动作</th><th>凭证</th></tr></thead>
+  <tbody>
+    <tr><td>Copilot</td><td>Devin</td><td>collectTasks（15 秒）</td><td>18</td><td>—</td></tr>
+    <tr><td>我的待办</td><td>常用</td><td>jiraDailyScan（1 分钟）</td><td>5</td><td>devin-oauth</td></tr>
+    <tr><td>开发任务</td><td>开发测试</td><td>importRegistrations（30 秒）、refreshViewed（5 分钟）</td><td>4</td><td>couest_token</td></tr>
+    <tr><td>Perm 与 Charles</td><td>开发测试</td><td>refreshPerms（1 分钟）</td><td>5</td><td>couest_token</td></tr>
+    <tr><td>Change history</td><td>可靠性</td><td>syncAbc / syncDeploys（1 小时）</td><td>13</td><td>devin-oauth</td></tr>
+    <tr><td>Session 详情</td><td>调试</td><td>—</td><td>4</td><td>devin-sessions-db</td></tr>
+    <tr><td>配置中心</td><td>设置</td><td>—</td><td>3</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<h3>后台任务的三条约定（原型里写死的）</h3>
+<ul>
+  <li>App 开着才跑；上次没跑完就跳过这一次。</li>
+  <li>到点 App 没开，下次打开补跑一次。</li>
+  <li>插件关掉，它的后台任务一起停。</li>
+</ul>
+<p>这三条等于承认「这是个人工作站，不是服务器」——反而让实现简单很多。</p>
+
+<hr>
+
+<!-- ============ 5. ticket ============ -->
+<h2 id="ticket">票：把 8 个系统拼成一条流水线</h2>
+
+<figure>
+  <img src="assets/page3.svg" alt="一张票在 8 个系统里的状态被拼成一条流水线">
+  <figcaption>图 4：一张票（PEPS-5129）的 8 个阶段，颜色只表达「要不要我现在动手」。</figcaption>
+</figure>
+
+<p>每张卡固定五元信息：<strong>状态 · 一句话结论 · 数据来源 · 时间戳 · 旧数据标记</strong>，再加一组意图按钮。红色的排在最上面。</p>
+
+<table>
+  <thead><tr><th>难点</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>实体对齐</td><td>票号 → 分支名（<code>feature/PEPS-5129-…</code>）→ PR → 部署记录 → 指标 role。规则公司特有，必须可配置，不能写死在视图里。</td></tr>
+    <tr><td>阶段缺失</td><td>没提 PR 就没有 gh 数据。要能表达「还没到」，而不是「加载失败」。</td></tr>
+    <tr><td>新鲜度不一致</td><td>8 个源频率不同，一张卡 15:38、另一张 16:43。必须显式标出来，否则用户会以为是一致快照。</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- ============ 6. stack ============ -->
+<h2 id="stack">技术选型：TS、Electron、SDK / ACP</h2>
+
+<figure>
+  <img src="assets/page2.svg" alt="OneWorkbench 分层：总入口外壳、运行时（插件 + agent）、数据源">
+  <figcaption>图 5：外壳、插件运行时、agent 运行时、数据源。agent 是插件之一，后端可替换。</figcaption>
+</figure>
+
+<h3>为什么是 TypeScript</h3>
+<ul>
+  <li><strong>全栈同语言</strong>：manifest（插件声明）→ UI → 后台任务调度 → MCP 客户端 → agent SDK，一个语言、一套类型。插件的 manifest 类型可以直接被 UI 和调度器共享，改字段就报错。</li>
+  <li><strong>生态对齐</strong>：React、Electron、MCP 的 TS SDK、pi 的 SDK、ACP 客户端都在 TS 里最成熟。</li>
+  <li><strong>扩展成本低</strong>：写一个插件 = 写一个 TS 模块，不需要新语言、新构建。</li>
+  <li><strong>边界</strong>：重计算 / 数据处理交给 Python CLI（通过进程调用），不需要为桌面壳引入第二种语言。</li>
+</ul>
+
+<h3>agent 后端：先定接口，再选实现</h3>
+<pre>
+interface AgentBackend {
+  prompt(text: string, ctx: ContextBundle): Promise&lt;void&gt;;
+  abort(): Promise&lt;void&gt;;
+  on(event: "delta" | "tool" | "done" | "error", cb): Unsubscribe;
+  session?: SessionHandle;   // 可读历史 / 分支时才提供
+}
+</pre>
+
+<table>
+  <thead><tr><th>实现</th><th>怎么接</th><th>取舍</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong><code>piSdkBackend</code></strong> <span class="tag">首选</span></td>
+      <td>直接 <code>createAgentSession()</code>，跑在 Electron 主进程或 <code>utilityProcess</code>（Node）里</td>
+      <td>进程内、类型直通、能直接读 session 与事件；不用自己写帧解析和请求对账。注意 SDK 模式不会自动加载内置扩展（MCP / codemode / tool_search 要显式注册），配置目录可用 <code>agentDir</code> 做隔离。</td>
+    </tr>
+    <tr>
+      <td><code>acpBackend</code></td>
+      <td>走 ACP（Agent Client Protocol）连外部 agent，如 Devin</td>
+      <td>能复用已有的外部 agent（我就是这么用 Devin 的）；能力取决于对方实现的 ACP 方法。</td>
+    </tr>
+    <tr>
+      <td><code>piRpcBackend</code></td>
+      <td>启动 <code>pi --mode rpc</code> 子进程，走 JSONL</td>
+      <td>进程隔离最彻底（agent 崩了不影响面板），但要自己处理分帧与请求对账。<strong>降级选项，不是首选。</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="highlight">之前把「子进程 RPC」当成默认方案是过度设计：桌面 App 的主进程本来就是 Node，<strong>SDK 直接把 agent 当库用</strong>更省事。<strong>把可替换性放在接口层（AgentBackend），而不是放在进程边界上。</strong></div>
+
+<h3>其它</h3>
+<table>
+  <thead><tr><th>选择</th><th>理由</th></tr></thead>
+  <tbody>
+    <tr><td>Electron</td><td>需要本机凭据、文件系统、常驻快捷键；主进程即 Node，可直接加载 agent SDK</td></tr>
+    <tr><td>MCP 优先</td><td>公司平台有 MCP 就接 MCP；没有就包一层 CLI 或薄 HTTP 客户端，统一成「参数 → 结果」</td></tr>
+    <tr><td>缓存 + 调度</td><td>每个数据源一份带时间戳的缓存；视图永不直接打外部接口</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- ============ 7. reuse ============ -->
+<h2 id="reuse">换一家公司</h2>
+
+<p>不动的：总入口外壳、插件运行时（Host / 调度 / 缓存 / 凭证）、agent 后端接口、一键 AI 的交互形态。</p>
+
+<table>
+  <thead><tr><th>换什么</th><th>例子</th></tr></thead>
+  <tbody>
+    <tr><td>数据源</td><td>Jira → Linear；GitLab → GitHub；内部的测试 / 发布平台替换</td></tr>
+    <tr><td>插件集</td><td>没有 PERM / EERP 就不装那两个；多一个「值班表」就加一个</td></tr>
+    <tr><td>意图模板</td><td>同一张 CI 卡，不同公司关心的诊断路径不同</td></tr>
+    <tr><td>凭证</td><td>各自 OAuth / token，一处配置、多插件引用</td></tr>
+    <tr><td>agent 规范</td><td>分支命名、发布流程、审批边界</td></tr>
+  </tbody>
+</table>
+
+<p>判定标准：<strong>换公司需要改运行时的一行代码，说明抽象漏了</strong>。</p>
+
+<hr>
+
+<!-- ============ 8. roadmap ============ -->
+<h2 id="roadmap">落地与未决</h2>
+
+<table>
+  <thead><tr><th>步骤</th><th>做什么</th><th>验收</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>一个插件 + 一张卡片的意图按钮（先硬编码）</td><td>连续 3 天不打开原系统</td></tr>
+    <tr><td>2</td><td>抽出 manifest，做第二个插件</td><td>不改第一个插件的代码</td></tr>
+    <tr><td>3</td><td>跳转对话 + 引用胶囊 + 出口按钮 + run 记录</td><td>点一次就能拿到可执行结论，且能回到原卡</td></tr>
+    <tr><td>4</td><td>配置中心（MCP / Token / 任务 / 关注项）</td><td>新增数据源不用改代码</td></tr>
+    <tr><td>5</td><td>第二个公司 profile</td><td>只写插件 + 填配置，核心零改动</td></tr>
+  </tbody>
+</table>
+
+<div class="highlight">顺序上最重要的取舍：<strong>先做「一键」这一件事，不要先做框架。</strong>插件的四要素（侧栏 / 任务 / 凭证 / 意图）应该在做第二、第三个插件时被逼出来。</div>
+
+<h3>仍然没想清楚的</h3>
+<table>
+  <thead><tr><th>问题</th><th>为什么难</th></tr></thead>
+  <tbody>
+    <tr><td>新会话 vs 并入当前会话</td><td>判定规则要明确，否则两个票的现场会混在一起</td></tr>
+    <tr><td>意图模板的格式</td><td>纯 prompt 模板 / 结构化 steps / 两者混合，直接影响可维护性</td></tr>
+    <tr><td>回写的权限边界</td><td>agent 能不能直接改票、开 PR、触发发布，还是一律要人点确认</td></tr>
+    <tr><td>后台任务归属</td><td>App 内定时器简单但关了不跑；要不要外置 cron</td></tr>
+    <tr><td>插件边界</td><td>一插件一页面 vs 一插件多页面（「Perm 与 Charles」像两件事被合并）</td></tr>
+  </tbody>
+</table>
+
+<div class="highlight accent">一句话收束：<strong>OneWorkbench 的价值不在看板本身，而在「看板上的每一格都长着一键」——把凑上下文的成本压到零，剩下的才轮到 AI 发挥。</strong></div>
+
+<p style="margin-top:14px;color:#5a7a6a;font-size:0.85em;">图源文件：<code>docs/use-llm/assets/one-workbench.drawio</code>（可用 draw.io 打开编辑，导出覆盖 <code>assets/page1–3.svg</code>）。上游愿景见 <a href="rebuild-workstyle-with-llm.html">用 LLM 重造工作方式</a>。</p>
+
+</main>
+</div>
+
+</body>
+</html>
