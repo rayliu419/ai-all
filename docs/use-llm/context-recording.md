@@ -3,7 +3,12 @@
 
 ## 核心主张
 - context 是有限的注意力预算，只放代码里看不出来的知识。
-- 约定分两层：general（repo 级，全局共享）+ per-task（复杂任务级，专属背景）。
+- 约定分三层：global（跨 repo 通用协议）+ general（repo 级，全局共享）+ per-task（复杂任务级，专属背景）。
+
+## global 层
+- `~/.pi/agent/AGENTS.md`：本机所有工作目录都加载。
+  - 放通用协议：分层定义、`docs-for-ai` 目录约定、读写时机、防噪规则。
+  - 好处：换 repo 不用重写协议；repo 级只写特化内容。
 
 ## general 层
 - AGENTS.md（repo 根）
@@ -14,7 +19,7 @@
 - 原则：从代码里能看出来的不要写。
 
 ## per-task 层
-- 目录：`tasks/<slug>/`（repo 根，与代码一起版本化）。
+- 目录：`docs-for-ai/<slug>/`（repo 根，与代码一起版本化）。
 - 判定阈值：跨多 session、多轮讨论、或实现周期 >1 天的任务才建目录。简单任务不建。
 - 结构
   - `index.md` 入口 + 索引（有哪些资料/脚本、何时跑）。
@@ -29,9 +34,9 @@
 
 ## recall：提示 + LLM 决策搜索
 - 项目级 memory 的读不靠 skill 的 description 触发（匹配不了"有没有相关历史"这种模糊触发）。
-- 做法：系统提示词给一句提示，让 LLM 自己决定何时去本地搜（例："tasks/ 记录了我们讨论过的问题，有时可以搜索一下背景，尤其 session 刚开始"）。
+- 做法：系统提示词给一句提示，让 LLM 自己决定何时去本地搜（例："docs-for-ai/ 记录了我们讨论过的问题，有时可以搜索一下背景，尤其 session 刚开始"）。
 - 检索：扫 index.md（一行一主题，便宜）→ 命中读 background.md（按需）。
-- 维护：index.md 一行一 task；tasks 少时手动维护，多了用脚本扫描 `tasks/` 重生成。
+- 维护：index.md 一行一 task；docs-for-ai 条目少时手动维护，多了用脚本扫描 `docs-for-ai/` 重生成。
 - 分工：skill = 程序性知识（怎么做，靠 description 触发）；memory = 背景/结论（提示 + 判断读，手动写）。
 
 ## 读写协议（写进 AGENTS.md）

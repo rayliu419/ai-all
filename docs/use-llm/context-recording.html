@@ -123,8 +123,9 @@
   <div class="toc-title">目录</div>
   <ol>
     <li><a href="#core">核心主张</a></li>
+    <li><a href="#global">Global 层：~/.pi/agent/AGENTS.md</a></li>
     <li><a href="#general">General 层：AGENTS.md + CONTEXT.md</a></li>
-    <li><a href="#task">Per-task 层：tasks/&lt;slug&gt;/</a></li>
+    <li><a href="#task">Per-task 层：docs-for-ai/&lt;slug&gt;/</a></li>
     <li><a href="#recall">Recall Skill：自动触发回忆</a></li>
     <li><a href="#files">文件职责</a></li>
     <li><a href="#update">读写协议</a></li>
@@ -147,17 +148,19 @@
 </div>
 
 <ul>
-  <li>约定分两层：<strong>general</strong>（repo 级，全局共享）+ <strong>per-task</strong>（复杂任务级，专属背景）。</li>
+  <li>约定分三层：<strong>global</strong>（跨 repo 通用协议）+ <strong>general</strong>（repo 级，全局共享）+ <strong>per-task</strong>（复杂任务级，专属背景）。</li>
   <li>读：可预测的位置，AI 知道去哪找、先读哪个。</li>
   <li>写：明确的触发条件 + 清单，AI 知道何时记、记到哪、怎么记。</li>
 </ul>
 
 <p>目录全貌：</p>
 <pre>
+~/.pi/agent/AGENTS.md    # 【全局】通用协议，所有工作目录生效
+
 repo/
-├── AGENTS.md            # 协议：怎么读 / 怎么更新 / 指向哪
+├── AGENTS.md            # 协议：怎么读 / 怎么更新 / 指向哪（只写 repo 特有）
 ├── CONTEXT.md           # 背景：项目 / 结构 / 约定 / 决策 / 坑
-├── tasks/
+├── docs-for-ai/
 │   └── &lt;slug&gt;/          # 复杂任务专属目录
 │       ├── index.md     # 入口 + 索引（有哪些资料 / 脚本 / 何时跑）
 │       ├── background.md# 原始需求 + 决策 log
@@ -165,6 +168,18 @@ repo/
 │       └── scripts/     # 确定性脚本（可选）
 └── ...                  # 你的正常代码
 </pre>
+
+<hr>
+
+<!-- ============ GLOBAL ============ -->
+<h2 id="global">Global 层：~/.pi/agent/AGENTS.md</h2>
+
+<div class="card">
+  <p>装了 pi 之后，<code>~/.pi/agent/AGENTS.md</code> 会对<strong>所有工作目录</strong>生效。</p>
+  <p>放通用协议：分层定义、<code>docs-for-ai</code> 目录结构、读写时机、防噪规则。</p>
+  <p>好处：换一个 repo / 一台机器，协议不用重写；repo 级 <code>AGENTS.md</code> 只写特化部分（如"本 repo 区分 docs-for-ai 与成稿笔记"）。</p>
+  <p>约束：repo 级只能<strong>细化</strong>全局协议，不能与它冲突。</p>
+</div>
 
 <hr>
 
@@ -190,7 +205,7 @@ repo/
 <hr>
 
 <!-- ============ TASK ============ -->
-<h2 id="task">Per-task 层：tasks/&lt;slug&gt;/</h2>
+<h2 id="task">Per-task 层：docs-for-ai/&lt;slug&gt;/</h2>
 
 <div class="card warm">
   <p><strong>判定阈值</strong>：跨多 session、有多轮讨论、或实现周期 &gt;1 天的任务才建目录。简单任务不建，别为一条命令建个目录。</p>
@@ -212,7 +227,7 @@ repo/
 ## 决策 log（append-only，不重写历史）
 ### 2026-09-20
 - 决定：general 层 = AGENTS.md(协议) + CONTEXT.md(背景，按需加载)。
-- 决定：per-task 目录用 tasks/&lt;slug&gt;/，3 文件 + scripts/。
+- 决定：per-task 目录用 docs-for-ai/&lt;slug&gt;/，3 文件 + scripts/。
 - 决定：更新协议 = 显式 + 触发词 + 每 ~5 轮清单，防噪只追加。
 </pre>
 
@@ -237,7 +252,7 @@ description: 回忆本 repo 的项目级 memory...（触发词 + 触发场景写
 
 ## 怎么读
 1. 先读 CONTEXT.md
-2. 匹配 task 后读 tasks/&lt;slug&gt;/index.md → background.md → status.md
+2. 匹配 task 后读 docs-for-ai/&lt;slug&gt;/index.md → background.md → status.md
 </pre>
 
 <div class="highlight">
@@ -245,7 +260,7 @@ description: 回忆本 repo 的项目级 memory...（触发词 + 触发场景写
 </div>
 
 <ul>
-  <li>维护：tasks 少（&lt;5）时手动更新 description；多了再用脚本扫描 <code>tasks/</code> 重生成。</li>
+  <li>维护：docs-for-ai 条目少（&lt;5）时手动更新 description；多了再用脚本扫描 <code>docs-for-ai/</code> 重生成。</li>
   <li>分工：skill = 自动触发路径（增强），AGENTS.md 读取协议 = 兜底。</li>
 </ul>
 

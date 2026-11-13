@@ -11,8 +11,9 @@
 
 - `docs/<topic>/<note>.md` + 同名 `.html`：每个主题一个子目录，一篇笔记一对文件。
 - `docs/index.html`：总索引（book-style，按章节列出各笔记）。
-- `AGENTS.md`：给 AI 的协议（怎么读/更新上下文）。
-- `tasks/<slug>/`：复杂任务的专属上下文目录。
+- `AGENTS.md`：本 repo 给 AI 的协议（通用协议在全局 `~/.pi/agent/AGENTS.md`）。
+- `docs-for-ai/<slug>/`：复杂任务的专属上下文目录（`index.md` / `background.md` / `status.md`）；原 `tasks/<slug>/` 已废弃。
+- `.claude/skills/recall-memory/`：触发项目级 memory 回忆的 skill。
 
 ## 关键约定
 
@@ -26,9 +27,12 @@
 ## 重要决策（带日期）
 
 - 用 GitHub Pages 发布（README 记录）。
+- 2026-11-13：任务上下文目录从 `tasks/<slug>/` 改为 `docs-for-ai/<slug>/`，并把协议提升到全局 `~/.pi/agent/AGENTS.md`。
 - （待补充：本 repo 的历史决策按需追加到这里。）
 
 ## 坑
 
 - `rebuild-workstyle-with-llm.html` 已存在但尚未加入 `docs/index.html`。
 - 每篇笔记的 md 与 html 需要手动保持一致；改 md 后需重新生成对应 html。
+- 图统一用 draw.io：源文件放 `docs/<topic>/assets/*.drawio`，导出 svg 放同目录，html 用 `<img>` 引用；不要手写 SVG。
+  - 导出：`/Applications/draw.io.app/Contents/MacOS/draw.io -x -f svg -p <页码，0 起> -b 12 -o pageN.svg x.drawio`
