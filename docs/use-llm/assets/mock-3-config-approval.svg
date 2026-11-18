@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="744" viewBox="0 0 1180 744" font-family="PingFang SC, Hiragino Sans GB, -apple-system, Segoe UI, sans-serif">
+  <defs>
+    <style>
+      .mono { font-family: "SF Mono", Menlo, ui-monospace, monospace; }
+      .t  { fill: #2d3a31; }
+      .mut{ fill: #6b8378; }
+      .dim{ fill: #93a89d; }
+      .num { fill: #fff; font-size: 10px; font-weight: 700; }
+      .legS { font-size: 10px; }
+      .cap { font-size: 9px; fill: #93a89d; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="744" fill="#eef4f0"/>
+
+  <!-- ===== settings page ===== -->
+  <rect x="20" y="20" width="740" height="520" rx="10" fill="#ffffff" stroke="#dbe7df"/>
+
+  <!-- nav -->
+  <rect x="20" y="20" width="188" height="520" rx="10" fill="#f8fbf9"/>
+  <line x1="208" y1="20" x2="208" y2="540" stroke="#eef4f0"/>
+  <text x="36" y="48" font-size="12" font-weight="600" class="t">设置</text>
+
+  <text x="36" y="80" font-size="11" class="mut">通用</text>
+  <text x="36" y="104" font-size="11" class="mut">模型</text>
+  <text x="36" y="128" font-size="11" class="mut">Agent loop</text>
+  <text x="36" y="152" font-size="11" class="mut">子代理</text>
+  <text x="36" y="176" font-size="11" class="mut">网络搜索</text>
+  <text x="36" y="200" font-size="11" class="mut">凭证</text>
+
+  <rect x="28" y="214" width="172" height="28" rx="6" fill="#e8f5ec"/>
+  <rect x="36" y="221" width="14" height="14" rx="3" fill="#2a6a3e" opacity=".7"/>
+  <text x="58" y="234" font-size="11" font-weight="600" class="t">开发任务</text>
+  <rect x="130" y="221" width="34" height="14" rx="7" fill="#fde9d2"/>
+  <text x="147" y="232" font-size="8" text-anchor="middle" fill="#b45309">插件</text>
+  <text x="36" y="258" font-size="8.5" class="dim">← 插件自带页面</text>
+
+  <!-- content -->
+  <text x="232" y="52" font-size="13.5" font-weight="600" class="t">开发任务</text>
+  <text x="232" y="70" font-size="9.5" class="dim">manifest 只声明「需要什么」，具体值由公司 profile 的 patch 绑定</text>
+
+  <text x="232" y="104" font-size="10.5" font-weight="600" class="t">数据源</text>
+  <rect x="232" y="114" width="500" height="24" fill="#f8fbf9"/>
+  <text x="242" y="130" font-size="9" class="dim">名字（manifest）</text>
+  <text x="350" y="130" font-size="9" class="dim">绑定（profile）</text>
+  <text x="600" y="130" font-size="9" class="dim">状态</text>
+
+  <rect x="232" y="138" width="500" height="26" fill="#ffffff"/>
+  <text x="242" y="155" font-size="10" class="mono" fill="#2d3a31">jira</text>
+  <text x="350" y="155" font-size="10" class="mono" fill="#2d3a31">mcp: jira</text>
+  <circle cx="606" cy="151" r="4" fill="#2a6a3e"/><text x="618" y="155" font-size="9.5" class="mut">已连</text>
+
+  <rect x="232" y="164" width="500" height="26" fill="#f8fbf9"/>
+  <text x="242" y="181" font-size="10" class="mono" fill="#2d3a31">gh</text>
+  <text x="350" y="181" font-size="10" class="mono" fill="#2d3a31">cli: gh</text>
+  <circle cx="606" cy="177" r="4" fill="#2a6a3e"/><text x="618" y="181" font-size="9.5" class="mut">已连</text>
+
+  <rect x="232" y="190" width="500" height="26" fill="#ffffff"/>
+  <text x="242" y="207" font-size="10" class="mono" fill="#2d3a31">couest</text>
+  <text x="350" y="207" font-size="10" class="mono" fill="#2d3a31">http: /api/v2</text>
+  <circle cx="606" cy="203" r="4" fill="#c2410c"/><text x="618" y="207" font-size="9.5" fill="#c2410c">403 · 凭证过期</text>
+
+  <text x="232" y="248" font-size="10.5" font-weight="600" class="t">凭证</text>
+  <rect x="232" y="258" width="500" height="32" rx="6" fill="#ffffff" stroke="#dbe7df"/>
+  <text x="242" y="278" font-size="10" class="mono" fill="#2d3a31">couest_token</text>
+  <text x="360" y="278" font-size="10" class="mono" fill="#93a89d">●●●●●●●●●●</text>
+  <rect x="646" y="265" width="76" height="18" rx="9" fill="#e8f5ec"/>
+  <text x="684" y="278" font-size="9" text-anchor="middle" fill="#2a6a3e">已配置</text>
+  <text x="242" y="302" font-size="8.5" class="cap">值不进表单响应、不进 prompt；插件只拿引用</text>
+
+  <text x="232" y="332" font-size="10.5" font-weight="600" class="t">后台任务</text>
+  <rect x="232" y="342" width="500" height="26" fill="#f8fbf9"/>
+  <text x="242" y="359" font-size="10" class="mono" fill="#2d3a31">importRegistrations</text>
+  <text x="430" y="359" font-size="9.5" class="mut">每 30s</text>
+  <circle cx="606" cy="355" r="4" fill="#2a6a3e"/><text x="618" y="359" font-size="9.5" class="mut">上次 3s</text>
+
+  <rect x="232" y="368" width="500" height="26" fill="#ffffff"/>
+  <text x="242" y="385" font-size="10" class="mono" fill="#2d3a31">refreshViewed</text>
+  <text x="430" y="385" font-size="9.5" class="mut">每 5m</text>
+  <circle cx="606" cy="381" r="4" fill="#cbd5d1"/><text x="618" y="385" font-size="9.5" class="dim">排队</text>
+
+  <rect x="232" y="408" width="240" height="52" rx="6" fill="#f4f9f5" stroke="#dbe7df" stroke-dasharray="3 3"/>
+  <text x="244" y="428" font-size="9.5" class="mut">任务规则由宿主统一管：App 开着才跑；</text>
+  <text x="244" y="444" font-size="9.5" class="mut">上次没跑完跳过；关插件即停。</text>
+
+  <text x="232" y="492" font-size="9" class="dim">这两行不是我们写的时间轮：注册到 ctx.jobs 就自动有运行记录与手动触发。</text>
+
+  <!-- ===== approval card ===== -->
+  <rect x="790" y="20" width="370" height="228" rx="10" fill="#ffffff" stroke="#f0b072" stroke-width="1.4"/>
+  <rect x="790" y="20" width="370" height="34" rx="10" fill="#fff7ed"/>
+  <text x="806" y="42" font-size="11" font-weight="600" fill="#b45309">agent 请求写操作</text>
+  <text x="1144" y="42" font-size="9" text-anchor="end" class="dim">审批策略</text>
+
+  <rect x="806" y="66" width="338" height="34" rx="6" fill="#f8fbf9"/>
+  <text x="818" y="80" font-size="10" class="mono" fill="#2d3a31">push feat/5129 → origin</text>
+  <text x="818" y="93" font-size="8.5" class="cap">2 commits · 变更 18 行</text>
+
+  <rect x="806" y="106" width="338" height="34" rx="6" fill="#f8fbf9"/>
+  <text x="818" y="120" font-size="10" class="mono" fill="#2d3a31">update PEPS-5129 status → 待验证</text>
+  <text x="818" y="133" font-size="8.5" class="cap">票状态回写 · 会通知 QA</text>
+
+  <rect x="806" y="146" width="338" height="30" rx="6" fill="#ffffff" stroke="#dbe7df"/>
+  <text x="818" y="165" font-size="9" class="mut">只读类操作（读日志 / 拉 diff）不弹窗，直接执行</text>
+
+  <rect x="806" y="186" width="98" height="28" rx="6" fill="#2a6a3e"/>
+  <text x="855" y="204" font-size="10.5" text-anchor="middle" fill="#ffffff">允许一次</text>
+  <rect x="912" y="186" width="98" height="28" rx="6" fill="#ffffff" stroke="#b8d4c2"/>
+  <text x="961" y="204" font-size="10.5" text-anchor="middle" fill="#2a6a3e">本会话总是</text>
+  <rect x="1018" y="186" width="66" height="28" rx="6" fill="#ffffff" stroke="#dbe7df"/>
+  <text x="1051" y="204" font-size="10.5" text-anchor="middle" class="mut">拒绝</text>
+
+  <!-- note -->
+  <rect x="790" y="272" width="370" height="112" rx="10" fill="#ffffff" stroke="#dbe7df"/>
+  <text x="806" y="294" font-size="10.5" font-weight="600" class="t">为什么这三屏要放一起看</text>
+  <text x="806" y="314" font-size="9.5" class="mut">配置中心 = 插件的「四要素」里三样：数据源、凭证、后台任务。</text>
+  <text x="806" y="332" font-size="9.5" class="mut">审批卡 = 第四样（意图允许的写操作）在运行时的落点。</text>
+  <text x="806" y="350" font-size="9.5" class="mut">它们都不是自研的：dsh 分别给了 settings / credentials / jobs / approval</text>
+  <text x="806" y="366" font-size="9.5" class="mut">四个 seam，插件只要声明。</text>
+
+  <!-- ===== annotation numbers ===== -->
+  <g>
+    <circle cx="222" cy="60" r="8" fill="#f59e0b"/><text x="222" y="63.5" text-anchor="middle" class="num">1</text>
+    <circle cx="186" cy="228" r="8" fill="#f59e0b"/><text x="186" y="231.5" text-anchor="middle" class="num">2</text>
+    <circle cx="224" cy="154" r="8" fill="#f59e0b"/><text x="224" y="157.5" text-anchor="middle" class="num">3</text>
+    <circle cx="224" cy="274" r="8" fill="#f59e0b"/><text x="224" y="277.5" text-anchor="middle" class="num">4</text>
+    <circle cx="224" cy="358" r="8" fill="#f59e0b"/><text x="224" y="361.5" text-anchor="middle" class="num">5</text>
+    <circle cx="782" cy="34" r="8" fill="#f59e0b"/><text x="782" y="37.5" text-anchor="middle" class="num">6</text>
+  </g>
+
+  <!-- ===== legend ===== -->
+  <line x1="24" y1="568" x2="1156" y2="568" stroke="#cddcd4"/>
+  <text x="24" y="590" font-size="10.5" font-weight="600" class="t">图注：插件的「四要素」在 dsh 里都有现成 seam，自研的部分只剩卡片与意图</text>
+
+  <g>
+    <text x="24" y="616" font-size="10.5"><tspan font-weight="700" fill="#b45309">1</tspan>  <tspan class="mono" font-size="10">settings.section</tspan>  + <tspan class="mono" font-size="10">settings.section.view</tspan></text>
+    <text x="40" y="632" class="legS mut">插件自带设置页；页面拿 form.state / form.mutate(ops, revision)，保存即写 profile patch</text>
+
+    <text x="24" y="656" font-size="10.5"><tspan font-weight="700" fill="#b45309">2</tspan>  <tspan class="mono" font-size="10">settings.section.icon</tspan>（ctx.slots.inject，同 id）</text>
+    <text x="40" y="672" class="legS mut">导航图标：注册的 id 与 section 相同才渲染，dispose 后回落默认图标</text>
+
+    <text x="24" y="696" font-size="10.5"><tspan font-weight="700" fill="#b45309">3</tspan>  数据源绑定 = <tspan class="mono" font-size="10">profile 的 cordis.patch.yml</tspan></text>
+    <text x="40" y="712" class="legS mut">manifest 只写「jira / gh / couest」这几个名字；MCP / CLI / HTTP 的绑定属于公司层</text>
+
+    <text x="604" y="616" font-size="10.5"><tspan font-weight="700" fill="#b45309">4</tspan>  凭证 = <tspan class="mono" font-size="10">Config schema + role('secret')</tspan></text>
+    <text x="620" y="632" class="legS mut">值不进表单响应、不进 prompt；凭证被多个插件共享时只存一份引用</text>
+
+    <text x="604" y="656" font-size="10.5"><tspan font-weight="700" fill="#b45309">5</tspan>  <tspan class="mono" font-size="10">ctx.jobs</tspan>  + <tspan class="mono" font-size="10">ui-jobs</tspan></text>
+    <text x="620" y="672" class="legS mut">后台任务的调度与展示都是现成的：插件只声明 every 和 run</text>
+
+    <text x="604" y="696" font-size="10.5"><tspan font-weight="700" fill="#b45309">6</tspan>  <tspan class="mono" font-size="10">conversation.approval.detail</tspan></text>
+    <text x="620" y="712" class="legS mut">审批卡在对话里：意图的 allowedWrites 决定什么时候弹</text>
+  </g>
+</svg>

@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="812" viewBox="0 0 1180 812" font-family="PingFang SC, Hiragino Sans GB, -apple-system, Segoe UI, sans-serif">
+  <defs>
+    <style>
+      .mono { font-family: "SF Mono", Menlo, ui-monospace, monospace; }
+      .t  { fill: #2d3a31; }
+      .mut{ fill: #6b8378; }
+      .dim{ fill: #93a89d; }
+      .chipTxt { font-size: 10px; }
+      .num { fill: #fff; font-size: 10px; font-weight: 700; }
+      .legT { font-size: 11px; }
+      .legS { font-size: 10px; }
+    </style>
+  </defs>
+
+  <!-- canvas -->
+  <rect x="0" y="0" width="1180" height="812" fill="#eef4f0"/>
+
+  <!-- ===== sidebar ===== -->
+  <rect x="0" y="0" width="212" height="600" fill="#ffffff"/>
+  <line x1="212" y1="0" x2="212" y2="600" stroke="#dbe7df"/>
+
+  <!-- brand -->
+  <circle cx="24" cy="28" r="7" fill="#2a6a3e"/>
+  <text x="40" y="33" font-size="12.5" font-weight="600" class="t">OneWorkbench</text>
+
+  <!-- new session -->
+  <rect x="12" y="52" width="188" height="28" rx="6" fill="#eef4f0" stroke="#cfe0d6"/>
+  <text x="106" y="70" font-size="11.5" text-anchor="middle" class="t">＋ 新会话</text>
+
+  <!-- host native session list -->
+  <text x="16" y="106" font-size="9.5" letter-spacing=".5" class="dim">工作区（宿主原生）</text>
+  <text x="20" y="128" font-size="11.5" class="mut">▤  Projects</text>
+  <text x="20" y="150" font-size="11.5" class="mut">▤  DeepSeekHarness</text>
+  <text x="20" y="172" font-size="11.5" class="mut">▤  未分组</text>
+
+  <!-- plugin panel list -->
+  <text x="16" y="208" font-size="9.5" letter-spacing=".5" class="dim">工作台插件</text>
+
+  <!-- selected row -->
+  <rect x="8" y="216" width="196" height="30" rx="6" fill="#e8f5ec"/>
+  <rect x="16" y="224" width="14" height="14" rx="3" fill="#2a6a3e" opacity=".75"/>
+  <text x="38" y="236" font-size="11.5" class="t">控制室</text>
+
+  <rect x="16" y="254" width="14" height="14" rx="3" fill="#7a9c88" opacity=".6"/>
+  <text x="38" y="266" font-size="11.5" class="t">我的待办</text>
+  <rect x="168" y="252" width="20" height="16" rx="8" fill="#fde9d2" stroke="#f0b072"/>
+  <text x="178" y="264" font-size="9.5" text-anchor="middle" fill="#b45309">5</text>
+
+  <rect x="16" y="284" width="14" height="14" rx="3" fill="#7a9c88" opacity=".6"/>
+  <text x="38" y="296" font-size="11.5" class="t">开发任务</text>
+  <rect x="150" y="282" width="38" height="16" rx="8" fill="#fde9d2" stroke="#f0b072"/>
+  <text x="169" y="294" font-size="9.5" text-anchor="middle" fill="#b45309">12 旧</text>
+
+  <rect x="16" y="314" width="14" height="14" rx="3" fill="#7a9c88" opacity=".6"/>
+  <text x="38" y="326" font-size="11.5" class="t">Perm 与 Charles</text>
+
+  <rect x="16" y="344" width="14" height="14" rx="3" fill="#7a9c88" opacity=".6"/>
+  <text x="38" y="356" font-size="11.5" class="t">Change history</text>
+
+  <rect x="16" y="374" width="14" height="14" rx="3" fill="#7a9c88" opacity=".6"/>
+  <text x="38" y="386" font-size="11.5" class="t">Session 详情</text>
+
+  <!-- settings -->
+  <line x1="12" y1="548" x2="200" y2="548" stroke="#e3ede7"/>
+  <text x="20" y="574" font-size="11.5" class="t">⚙  设置</text>
+
+  <!-- ===== main panel ===== -->
+  <rect x="212" y="0" width="968" height="600" fill="#f4f9f5"/>
+
+  <text x="236" y="40" font-size="15" font-weight="600" class="t">开发任务</text>
+  <text x="320" y="40" font-size="10.5" class="mut">PEPS 相关 · 上次同步 15:43</text>
+
+  <rect x="836" y="24" width="320" height="30" rx="8" fill="#ffffff" stroke="#cfe0d6"/>
+  <text x="850" y="43" font-size="11" class="dim">⌘K  问点什么，或换个面板…</text>
+
+  <!-- filters -->
+  <rect x="236" y="60" width="60" height="22" rx="11" fill="#e8f5ec" stroke="#b8d4c2"/>
+  <text x="266" y="75" font-size="10.5" text-anchor="middle" class="t">全部 12</text>
+  <rect x="304" y="60" width="72" height="22" rx="11" fill="#ffffff" stroke="#dbe7df"/>
+  <text x="340" y="75" font-size="10.5" text-anchor="middle" class="mut">需要我 5</text>
+  <rect x="384" y="60" width="72" height="22" rx="11" fill="#ffffff" stroke="#dbe7df"/>
+  <text x="420" y="75" font-size="10.5" text-anchor="middle" class="mut">旧数据 3</text>
+
+  <!-- ===== card 1 (active) ===== -->
+  <rect x="236" y="96" width="444" height="196" rx="10" fill="#ffffff" stroke="#2a6a3e" stroke-width="1.4"/>
+  <text x="252" y="126" font-size="12.5" font-weight="600" class="t">PEPS-5129　下单页 checkout.spec.ts 失败</text>
+
+  <rect x="252" y="136" width="54" height="17" rx="4" fill="#fde9d2"/>
+  <text x="279" y="148" font-size="9.5" text-anchor="middle" fill="#b45309">CI ✗ 失败</text>
+  <rect x="312" y="136" width="72" height="17" rx="4" fill="#eef4f0"/>
+  <text x="348" y="148" font-size="9.5" text-anchor="middle" class="mut">gh · #7976</text>
+  <rect x="390" y="136" width="96" height="17" rx="4" fill="#eef4f0"/>
+  <text x="438" y="148" font-size="9.5" text-anchor="middle" class="mut">15:43 · 旧数据 ⟳</text>
+
+  <!-- stage rail -->
+  <text x="252" y="178" font-size="9" class="dim">流水线</text>
+  <!-- 8 stages -->
+  <circle cx="252" cy="196" r="5" fill="#2a6a3e"/><text x="252" y="214" font-size="8" text-anchor="middle" class="dim">建票</text>
+  <circle cx="300" cy="196" r="5" fill="#2a6a3e"/><text x="300" y="214" font-size="8" text-anchor="middle" class="dim">PR</text>
+  <circle cx="348" cy="196" r="5" fill="#2a6a3e"/><text x="348" y="214" font-size="8" text-anchor="middle" class="dim">代码</text>
+  <circle cx="396" cy="196" r="5" fill="#c2410c"/><text x="396" y="214" font-size="8" text-anchor="middle" fill="#c2410c">CI</text>
+  <circle cx="444" cy="196" r="5" fill="#cbd5d1"/><text x="444" y="214" font-size="8" text-anchor="middle" class="dim">PERM</text>
+  <circle cx="492" cy="196" r="5" fill="#cbd5d1"/><text x="492" y="214" font-size="8" text-anchor="middle" class="dim">测试</text>
+  <circle cx="540" cy="196" r="5" fill="#cbd5d1"/><text x="540" y="214" font-size="8" text-anchor="middle" class="dim">EERP</text>
+  <circle cx="588" cy="196" r="5" fill="#cbd5d1"/><text x="588" y="214" font-size="8" text-anchor="middle" class="dim">发布</text>
+  <line x1="257" y1="196" x2="343" y2="196" stroke="#b8d4c2"/>
+  <line x1="353" y1="196" x2="391" y2="196" stroke="#b8d4c2"/>
+  <line x1="401" y1="196" x2="439" y2="196" stroke="#e3ded4"/>
+  <line x1="449" y1="196" x2="583" y2="196" stroke="#e3ded4"/>
+
+  <!-- intents -->
+  <rect x="252" y="236" width="112" height="28" rx="6" fill="#2a6a3e"/>
+  <text x="308" y="254" font-size="11" text-anchor="middle" fill="#ffffff">看看怎么修</text>
+  <rect x="372" y="236" width="112" height="28" rx="6" fill="#ffffff" stroke="#b8d4c2"/>
+  <text x="428" y="254" font-size="11" text-anchor="middle" fill="#2a6a3e">为什么没部署</text>
+  <rect x="492" y="236" width="88" height="28" rx="6" fill="#ffffff" stroke="#dbe7df"/>
+  <text x="536" y="254" font-size="11" text-anchor="middle" class="mut">准备发布</text>
+  <text x="598" y="254" font-size="9.5" class="dim">上次 1.8k tok</text>
+
+  <!-- ===== card 2 ===== -->
+  <rect x="712" y="96" width="444" height="196" rx="10" fill="#ffffff" stroke="#dbe7df"/>
+  <text x="728" y="126" font-size="12.5" font-weight="600" class="mut">PEPS-5133　购物车接口报 500</text>
+  <rect x="728" y="136" width="54" height="17" rx="4" fill="#eef4f0"/>
+  <text x="755" y="148" font-size="9.5" text-anchor="middle" class="mut">PR ✗</text>
+  <rect x="788" y="136" width="72" height="17" rx="4" fill="#eef4f0"/>
+  <text x="824" y="148" font-size="9.5" text-anchor="middle" class="mut">gh · 无</text>
+  <rect x="866" y="136" width="88" height="17" rx="4" fill="#eef4f0"/>
+  <text x="910" y="148" font-size="9.5" text-anchor="middle" class="mut">15:38 · 新鲜</text>
+  <circle cx="728" cy="196" r="5" fill="#2a6a3e"/><text x="728" y="214" font-size="8" text-anchor="middle" class="dim">建票</text>
+  <circle cx="776" cy="196" r="5" fill="#c2410c"/><text x="776" y="214" font-size="8" text-anchor="middle" fill="#c2410c">PR</text>
+  <circle cx="824" cy="196" r="5" fill="#cbd5d1"/><text x="824" y="214" font-size="8" text-anchor="middle" class="dim">代码</text>
+  <circle cx="872" cy="196" r="5" fill="#cbd5d1"/><text x="872" y="214" font-size="8" text-anchor="middle" class="dim">CI</text>
+  <circle cx="920" cy="196" r="5" fill="#cbd5d1"/><text x="920" y="214" font-size="8" text-anchor="middle" class="dim">PERM</text>
+  <circle cx="968" cy="196" r="5" fill="#cbd5d1"/><text x="968" y="214" font-size="8" text-anchor="middle" class="dim">测试</text>
+  <circle cx="1016" cy="196" r="5" fill="#cbd5d1"/><text x="1016" y="214" font-size="8" text-anchor="middle" class="dim">EERP</text>
+  <circle cx="1064" cy="196" r="5" fill="#cbd5d1"/><text x="1064" y="214" font-size="8" text-anchor="middle" class="dim">发布</text>
+  <rect x="728" y="236" width="112" height="28" rx="6" fill="#ffffff" stroke="#b8d4c2"/>
+  <text x="784" y="254" font-size="11" text-anchor="middle" fill="#2a6a3e">看看怎么开 PR</text>
+  <rect x="848" y="236" width="88" height="28" rx="6" fill="#ffffff" stroke="#dbe7df"/>
+  <text x="892" y="254" font-size="11" text-anchor="middle" class="mut">补验收用例</text>
+
+  <!-- ===== card 3 ===== -->
+  <rect x="236" y="308" width="444" height="196" rx="10" fill="#ffffff" stroke="#dbe7df"/>
+  <text x="252" y="338" font-size="12.5" font-weight="600" class="mut">PEPS-5150　优惠券规则灰度</text>
+  <rect x="252" y="348" width="66" height="17" rx="4" fill="#e8f5ec"/>
+  <text x="285" y="360" font-size="9.5" text-anchor="middle" fill="#2a6a3e">就绪 · 待发布</text>
+  <rect x="324" y="348" width="72" height="17" rx="4" fill="#eef4f0"/>
+  <text x="360" y="360" font-size="9.5" text-anchor="middle" class="mut">couest · 已审</text>
+  <rect x="402" y="348" width="96" height="17" rx="4" fill="#eef4f0"/>
+  <text x="450" y="360" font-size="9.5" text-anchor="middle" class="mut">15:41 · 新鲜</text>
+  <circle cx="252" cy="408" r="5" fill="#2a6a3e"/><text x="252" y="426" font-size="8" text-anchor="middle" class="dim">建票</text>
+  <circle cx="300" cy="408" r="5" fill="#2a6a3e"/><text x="300" y="426" font-size="8" text-anchor="middle" class="dim">PR</text>
+  <circle cx="348" cy="408" r="5" fill="#2a6a3e"/><text x="348" y="426" font-size="8" text-anchor="middle" class="dim">代码</text>
+  <circle cx="396" cy="408" r="5" fill="#2a6a3e"/><text x="396" y="426" font-size="8" text-anchor="middle" class="dim">CI</text>
+  <circle cx="444" cy="408" r="5" fill="#2a6a3e"/><text x="444" y="426" font-size="8" text-anchor="middle" class="dim">PERM</text>
+  <circle cx="492" cy="408" r="5" fill="#2a6a3e"/><text x="492" y="426" font-size="8" text-anchor="middle" class="dim">测试</text>
+  <circle cx="540" cy="408" r="5" fill="#2a6a3e"/><text x="540" y="426" font-size="8" text-anchor="middle" class="dim">EERP</text>
+  <circle cx="588" cy="408" r="5" fill="#2563eb"/><text x="588" y="426" font-size="8" text-anchor="middle" fill="#2563eb">发布</text>
+  <rect x="252" y="448" width="88" height="28" rx="6" fill="#2a6a3e"/>
+  <text x="296" y="466" font-size="11" text-anchor="middle" fill="#ffffff">准备发布</text>
+  <rect x="348" y="448" width="88" height="28" rx="6" fill="#ffffff" stroke="#dbe7df"/>
+  <text x="392" y="466" font-size="11" text-anchor="middle" class="mut">检查单</text>
+
+  <!-- ===== card 4 ===== -->
+  <rect x="712" y="308" width="444" height="196" rx="10" fill="#ffffff" stroke="#dbe7df"/>
+  <text x="728" y="338" font-size="12.5" font-weight="600" class="mut">PEPS-5151　导出报表超时</text>
+  <rect x="728" y="348" width="66" height="17" rx="4" fill="#eef4f0"/>
+  <text x="761" y="360" font-size="9.5" text-anchor="middle" class="mut">建票中</text>
+  <rect x="800" y="348" width="88" height="17" rx="4" fill="#eef4f0"/>
+  <text x="844" y="360" font-size="9.5" text-anchor="middle" class="mut">19:02 · 新鲜</text>
+  <circle cx="728" cy="408" r="5" fill="#2a6a3e"/><text x="728" y="426" font-size="8" text-anchor="middle" class="dim">建票</text>
+  <circle cx="776" cy="408" r="5" fill="#cbd5d1"/><text x="776" y="426" font-size="8" text-anchor="middle" class="dim">PR</text>
+  <circle cx="824" cy="408" r="5" fill="#cbd5d1"/><text x="824" y="426" font-size="8" text-anchor="middle" class="dim">代码</text>
+  <circle cx="872" cy="408" r="5" fill="#cbd5d1"/><text x="872" y="426" font-size="8" text-anchor="middle" class="dim">CI</text>
+  <circle cx="920" cy="408" r="5" fill="#cbd5d1"/><text x="920" y="426" font-size="8" text-anchor="middle" class="dim">PERM</text>
+  <circle cx="968" cy="408" r="5" fill="#cbd5d1"/><text x="968" y="426" font-size="8" text-anchor="middle" class="dim">测试</text>
+  <circle cx="1016" cy="408" r="5" fill="#cbd5d1"/><text x="1016" y="426" font-size="8" text-anchor="middle" class="dim">EERP</text>
+  <circle cx="1064" cy="408" r="5" fill="#cbd5d1"/><text x="1064" y="426" font-size="8" text-anchor="middle" class="dim">发布</text>
+  <rect x="728" y="448" width="112" height="28" rx="6" fill="#ffffff" stroke="#dbe7df"/>
+  <text x="784" y="466" font-size="11" text-anchor="middle" class="mut">先别管它</text>
+
+  <!-- hint -->
+  <text x="236" y="546" font-size="10" class="dim">卡片不是"列表的美化版"：每张卡固定五元信息（状态 / 结论 / 来源 / 时间戳 / 旧数据标记），并挂 2–4 个意图。</text>
+  <text x="236" y="566" font-size="10" class="dim">数据来自各插件的后台任务缓存，视图永不直连外部接口。</text>
+
+  <!-- ===== annotation numbers ===== -->
+  <g>
+    <circle cx="196" cy="28" r="8" fill="#f59e0b"/><text x="196" y="31.5" text-anchor="middle" class="num">1</text>
+    <circle cx="222" cy="40" r="8" fill="#f59e0b"/><text x="222" y="43.5" text-anchor="middle" class="num">2</text>
+    <circle cx="196" cy="236" r="8" fill="#f59e0b"/><text x="196" y="239.5" text-anchor="middle" class="num">3</text>
+    <circle cx="196" cy="296" r="8" fill="#f59e0b"/><text x="196" y="299.5" text-anchor="middle" class="num">4</text>
+    <circle cx="196" cy="574" r="8" fill="#f59e0b"/><text x="196" y="577.5" text-anchor="middle" class="num">5</text>
+    <circle cx="224" cy="250" r="8" fill="#f59e0b"/><text x="224" y="253.5" text-anchor="middle" class="num">6</text>
+    <circle cx="224" cy="145" r="8" fill="#f59e0b"/><text x="224" y="148.5" text-anchor="middle" class="num">7</text>
+    <circle cx="224" cy="207" r="8" fill="#f59e0b"/><text x="224" y="210.5" text-anchor="middle" class="num">8</text>
+  </g>
+
+  <!-- ===== legend ===== -->
+  <line x1="24" y1="612" x2="1156" y2="612" stroke="#cddcd4"/>
+  <text x="24" y="634" font-size="10.5" font-weight="600" class="t">图注：橙色编号对应 dsh 的扩展位（括号内是注册位置）</text>
+
+  <g class="legT">
+    <text x="24" y="660" font-size="10.5"><tspan font-weight="700" fill="#b45309">1</tspan>  <tspan class="mono" font-size="10px">sidebar.brand.mark / .name</tspan></text>
+    <text x="40" y="676" class="legS mut">公司 logo 与名字（single，唯一允许占的 single）</text>
+
+    <text x="24" y="700" font-size="10.5"><tspan font-weight="700" fill="#b45309">2</tspan>  <tspan class="mono" font-size="10px">main</tspan>  keyed / root</text>
+    <text x="40" y="716" class="legS mut">面板主体：main[key=dev-tasks]，id 必须与侧栏一致</text>
+
+    <text x="24" y="740" font-size="10.5"><tspan font-weight="700" fill="#b45309">3</tspan>  <tspan class="mono" font-size="10px">sidebar.panellist</tspan>  list</text>
+    <text x="40" y="756" class="legS mut">插件入口：id / label / order；角标用下一个槽位</text>
+
+    <text x="24" y="780" font-size="10.5"><tspan font-weight="700" fill="#b45309">4</tspan>  <tspan class="mono" font-size="10px">sidebar.panellist.trailing</tspan></text>
+    <text x="40" y="796" class="legS mut">行尾角标：待处理数 / 旧数据（非交互，收 wide + active）</text>
+
+    <text x="604" y="660" font-size="10.5"><tspan font-weight="700" fill="#b45309">5</tspan>  <tspan class="mono" font-size="10px">sidebar.settings</tspan></text>
+    <text x="620" y="676" class="legS mut">底部设置入口 → 配置中心（settings.section）</text>
+
+    <text x="604" y="700" font-size="10.5"><tspan font-weight="700" fill="#b45309">6</tspan>  意图按钮 = <tspan class="mono" font-size="10px">IntentSpec</tspan></text>
+    <text x="620" y="716" class="legS mut">同一份数据双注册：ctx.tools（agent 调）+ host route（人点）</text>
+
+    <text x="604" y="740" font-size="10.5"><tspan font-weight="700" fill="#b45309">7</tspan>  五元信息 = run 投影</text>
+    <text x="620" y="756" class="legS mut">one/run-* durable 事件 → projection → 卡片字段</text>
+
+    <text x="604" y="780" font-size="10.5"><tspan font-weight="700" fill="#b45309">8</tspan>  流水线 = 8 系统聚合</text>
+    <text x="620" y="796" class="legS mut">跨插件只读视图；实体对齐规则放 profile，不进 manifest</text>
+  </g>
+</svg>

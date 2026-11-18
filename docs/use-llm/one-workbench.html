@@ -159,6 +159,7 @@
     <li><a href="#plugin">插件：让一键有地方可挂</a></li>
     <li><a href="#ticket">票：把 8 个系统拼成一条流水线</a></li>
     <li><a href="#stack">技术选型：TS、Electron、SDK / ACP</a></li>
+    <li><a href="#kernel">备选内核：dsh（DeepSeek Harness）</a></li>
     <li><a href="#reuse">换一家公司</a></li>
     <li><a href="#roadmap">落地与未决</a></li>
   </ol>
@@ -402,6 +403,8 @@ export default definePlugin({
   <li><strong>边界</strong>：重计算 / 数据处理交给 Python CLI（通过进程调用），不需要为桌面壳引入第二种语言。</li>
 </ul>
 
+<p style="color:#5a7a6a;">内核备选 <code>dsh</code>（DeepSeek Harness）把插件下沉到内核层，见下一节。</p>
+
 <h3>agent 后端：先定接口，再选实现</h3>
 <pre>
 interface AgentBackend {
@@ -447,7 +450,123 @@ interface AgentBackend {
 
 <hr>
 
-<!-- ============ 7. reuse ============ -->
+<!-- ============ 7. kernel ============ -->
+<h2 id="kernel">备选内核：dsh（DeepSeek Harness）</h2>
+
+<blockquote><code>pi</code> 不是唯一选项。<code>deepseek-ai/deepseek-harness</code>（<code>dsh</code>，MIT / TypeScript，2026-08 开源）把「插件」下沉到了内核层：口号是「万物皆插件」，底座是 Cordis，模型适配器、工具注册表、session log、<strong>连 agent loop 本身</strong>都是插件。没有特权内核——扩展方式是「在旁边装一个插件」，不是「打补丁」。</blockquote>
+
+<h3>差别不在扩展点数量，而在「加」还是「换」</h3>
+<table>
+  <thead><tr><th>维度</th><th>pi coding agent</th><th>dsh</th></tr></thead>
+  <tbody>
+    <tr><td>扩展语义</td><td>固定内核 + 加法注册表：往 loop / log / 工具流水线 / TUI 上挂东西</td><td>无特权内核的插件树：核心那几块自己也是插件</td></tr>
+    <tr><td>抽象单位</td><td>hook / registration</td><td><strong>seam 三角</strong>：Service Definition + Provider + Consumer，加一个能力要设计三样</td></tr>
+    <tr><td>组合与分层</td><td>settings 合并（项目覆盖 agent 目录）+ <code>agentDir</code> 换目录做隔离</td><td><code>profile → bundle → cordis.patch.yml → --patch</code> 有序图层，按 row id 整行替换；<code>--dump-config</code> 打出来的任何一行都能 patch</td></tr>
+    <tr><td>隔离粒度</td><td>目录级</td><td>profile 级 + <strong>per-session</strong>（agent preset + <code>isolate</code> realm）</td></tr>
+    <tr><td>撤销语义</td><td><code>pi.on()</code> 可退订，但<strong>工具不可注销</strong>（只能用 <code>exposure: "hidden"</code> 撤回）</td><td>注册即 effect，插件卸载自动回卷</td></tr>
+    <tr><td>UI 归属</td><td><code>ctx.ui</code> 只能长在 pi 的 TUI 布局里；要换壳就走 RPC、自己拥有全部 UI</td><td>UI 也是插件：slot 注册、新开 View target、占 shell overlay seat</td></tr>
+    <tr><td>记录 / 真源</td><td>JSONL 会话树（有版本迁移），存储只有 <code>sessionDir</code></td><td>durable session log 是唯一真源（「model-visible means logged」），持久化与投影都可替换</td></tr>
+  </tbody>
+</table>
+
+<h3>四层可扩展性</h3>
+<table>
+  <thead><tr><th>层</th><th>扩展什么</th><th>pi</th><th>dsh</th></tr></thead>
+  <tbody>
+    <tr><td>L0 加能力</td><td>tool / command / UI 挂件 / MCP / provider</td><td>✅（工具暴露设计更细：exposure 五档 + <code>prepareLoadout</code>）</td><td>✅</td></tr>
+    <tr><td>L1 换实现</td><td>存储、fs、shell、sandbox、PTY、LSP、subagent</td><td>❌ 这几块不在扩展点表上</td><td>✅ 换一个 provider 就换掉整条链</td></tr>
+    <tr><td>L2 换骨架</td><td>agent loop、prompt 组装、session 格式、进程 / UI 形态</td><td>⚠️ 只能走 RPC 重写 UI，等于退出扩展机制</td><td>✅ 官方自己就用一套插件树产出 <code>web</code> / <code>headless</code> / <code>sdk</code> / <code>sdk-minimal</code> / <code>acp</code> + Electron 桌面</td></tr>
+    <tr><td>L3 长生态</td><td>分发 / 市场 / 能力包 / 按 profile 售卖</td><td>packages（npm / git）</td><td>bundle 分发格式 + 插件市场 + <code>dsh.profile</code> / <code>dsh.bundle</code></td></tr>
+  </tbody>
+</table>
+
+<div class="highlight"><strong>L2 是分水岭</strong>，而 dsh 在 L2 的证据是它自己 dogfood 出来的：一个内核 → 五种 profile → Web / 桌面 / TUI / 手机 / ACP 接入外部 agent。</div>
+
+<h3>UI 也是插件（扩展单位是槽位和视图，不是控件）</h3>
+<table>
+  <thead><tr><th>层</th><th>机制</th><th>能干什么</th></tr></thead>
+  <tbody>
+    <tr><td>槽位</td><td><code>ctx.slots.register({ name: 'sidebar.right', inject }, Component)</code> + 父级 <code>renderSlot(...)</code></td><td>往 <code>sidebar.*</code>、<code>tool.call.toolview</code>、<code>settings.section</code>、<code>plugins.detail.*</code> 塞组件；父组件用 <code>children</code> 声明子槽，插件能注进<strong>别人的页面</strong></td></tr>
+    <tr><td>页面</td><td><code>package.json</code> 里 <code>dsh: { client: {...} }</code> + 导出 <code>./client</code>，由 client module system 按需下发</td><td>整页（看板 / 工作台 / 编辑器）就是一个插件；它的半身绑在 Loader row 上，<strong>row 关掉，页面和它注册的 slot 一起消失</strong></td></tr>
+    <tr><td>视图目标</td><td><code>ConversationNodeDefinition</code> + 自定义 <code>View Definition</code></td><td>不是改控件，是在 Chat / Trajectory 旁边<strong>新开一种呈现方式</strong></td></tr>
+    <tr><td>配置界面</td><td><code>Config</code> schema + <code>Volatile</code>；自定义页拿 <code>form.state</code> / <code>form.mutate</code></td><td>改配置 = 写 profile patch，下次启动还原；凭证走 <code>role('secret')</code></td></tr>
+  </tbody>
+</table>
+
+<p>代价是约定强：新增一种卡片，得先定义<strong>可回放的 durable 事件族</strong>（稳定 <code>(kind, id)</code>，按 <code>seq</code> 重放能确定性重建），再做 <code>SessionEventMap</code> declaration merge，然后写 Node Definition 和 renderer。好处是这张卡片活在 session log 里——可回放、可 fork、可迁移。</p>
+
+<h3>映射到 OneWorkbench</h3>
+<table>
+  <thead><tr><th>本方案的机制</th><th>dsh 里长在哪</th></tr></thead>
+  <tbody>
+    <tr><td>一键的上下文包（实体 / 现场 / 意图 + 新鲜度）</td><td><code>agent.inject()</code> 落进下一个被接纳的 request；<code>agent/pre-step</code> 可改可拒</td></tr>
+    <tr><td>跳进对话 + 引用胶囊</td><td>注册 <code>ConversationNodeDefinition</code> + 自定义 renderer，从 <code>session/event</code> 渲染</td></tr>
+    <tr><td>run 记录（<code>run_id / feature_id / intent / skill+version / steps / cost</code>）</td><td>定义 <code>run/start</code> <code>run/step</code> <code>run/end</code> 三个 durable 事件 → 记录本身就是会话历史；要落公司库就实现 <code>SessionPersistence</code> 或注册 projection</td></tr>
+    <tr><td>卡片 = 一条记录 + 五个元信息</td><td>一个 Node Definition 把 run 事件折叠成「票卡片」；状态 / 结论 / 来源 / 时间戳 / 旧数据标记都是事件字段</td></tr>
+    <tr><td>看板</td><td>一个第三方 <strong>View target</strong>，与 Chat 并列，从同一份 session log 渲染成网格</td></tr>
+    <tr><td>插件 manifest（侧栏 / 后台任务 / 凭证 / 意图）</td><td>profile + bundle（<code>dsh.profile</code> / <code>dsh.bundle</code>）+ <code>ctx.jobs</code> + settings card + <code>ctx.commands</code></td></tr>
+    <tr><td>意图按钮人点、agent 也能自己调</td><td><code>ctx.commands</code>（不经模型的指令）与 <code>ctx.tools</code>（模型侧）是同一份能力</td></tr>
+    <tr><td>换一家公司</td><td>一个 profile + 一层 patch；<code>dsh --profile &lt;name&gt; --dump-config</code> 能看到整棵树</td></tr>
+    <tr><td>审批 / 回写权限</td><td><code>ctx.sandbox</code> + approval policy seam</td></tr>
+  </tbody>
+</table>
+
+<div class="highlight">一句话：<strong>在 dsh 里「看板」和「对话」不是两个系统，是同一份 durable log 的两个视图。</strong>这比「appendEntry 塞 JSONL + 另建 db + 自己渲染」结构上干净。</div>
+
+<h3>界面原型（橙色编号 = 动手时要注册的槽位）</h3>
+
+<p>三张图不是「更好看的线框」：图注就是注册清单——编号点在界面上哪个位置，那个位置就是要挂的 slot。</p>
+
+<figure>
+  <img src="assets/mock-1-workbench.svg" alt="工作台主窗口：侧栏插件入口、行尾角标、看板面板、卡片意图按钮，每处带槽位编号">
+  <figcaption>图 6：主窗口。侧栏是 <code>sidebar.panellist</code>，角标是 <code>sidebar.panellist.trailing</code>，主体是 <code>main[key=dev-tasks]</code>；五元信息来自 run 投影，意图按钮是 <code>IntentSpec</code> 双注册。</figcaption>
+</figure>
+
+<figure>
+  <img src="assets/mock-2-run-to-chat.svg" alt="一键后跳到对话：引用胶囊、视图页签、带阶段进度的 run 卡片、出口按钮、Session 详情">
+  <figcaption>图 7：一键之后到的对话页。胶囊是 <code>conversation.session.header.actions</code>，页签是 <code>conversation.view</code>，run 卡片是 <code>chat.node</code> 里的 <code>one-run</code>，出口按钮在 <code>chat.turnTail</code>，工具卡是 <code>tool.call.toolview</code>。</figcaption>
+</figure>
+
+<figure>
+  <img src="assets/mock-3-config-approval.svg" alt="配置中心：插件自带设置页、数据源绑定、凭证、后台任务，右侧是写操作审批卡片">
+  <figcaption>图 8：配置与审批。插件页是 <code>settings.section</code>；数据源绑定属于 profile 的 patch，<strong>不进 manifest</strong>；凭证走 <code>role('secret')</code>；任务进 <code>ctx.jobs</code>；写操作审批卡是 <code>conversation.approval.detail</code>。</figcaption>
+</figure>
+
+<p style="color:#5a7a6a;font-size:0.85em;">三张图源文件：<code>assets/mock-1-workbench.svg</code> / <code>mock-2-run-to-chat.svg</code> / <code>mock-3-config-approval.svg</code>（手写矢量，可直接导入 draw.io 或 Figma 编辑）。</p>
+
+<h3>现成例子（都已在跑）</h3>
+<table>
+  <thead><tr><th>项目</th><th>是什么</th><th>值得抄的点</th></tr></thead>
+  <tbody>
+    <tr><td><code>Aisland-SJL/dsh-worktable</code></td><td>侧栏 app drawer + 可停靠分屏工作区 + 控制室卡片网格</td><td>控制室是<strong>纯事件镜像</strong>（读宿主 session 快照，不走模型）；分屏引擎自建后塞进 shell overlay seat；能把 <code>dsh-travelatlas</code> 当 pane 嵌进来</td></tr>
+    <tr><td><code>ScarecrowFu/dsh-laofu-workbench</code></td><td>「工作台内核 + 场景能力包」的可动态装卸工作台，公开包 + 私有会员包</td><td><strong>和我们同构</strong>：拆成内核（DSH Profile / 浏览器壳 / 包 SDK / 桌面打包 / 上游升级）+ 业务包；用 <code>UPSTREAM.lock.json</code> 锁上游版本</td></tr>
+    <tr><td><code>AKS1st/dock</code></td><td>VSCode 式 workbench shell，暴露 <code>ctx.workbench</code> 供别人挂 panel / view / command</td><td>插件 manifest 的社区级抽象</td></tr>
+    <tr><td><code>virgoC0der/dsh-plugins</code> / <code>JianwuYang/dsh-ui-kanban</code></td><td>PR + Jira + Calendar + 本地 git 的工作看板；Jira / GitLab 变成 agent 可操作的看板</td><td>我们的「票流水线」已经有人拆着做</td></tr>
+    <tr><td><code>anywhere-labs/dsh-desktop</code> / <code>dsh-Go</code> / <code>dsh-TUI</code></td><td>桌面壳 / 手机端 / 终端</td><td>证明换壳不用动内核</td></tr>
+  </tbody>
+</table>
+
+<h3>三条边界（「无限扩展」的尽头）</h3>
+<ol>
+  <li><strong>接口有一半是别人定的</strong>：挂在已有 seam 上就被那个 interface 约束；想加内核不认识的能力，得自己开 seam（定义 + 实现 + 消费三件全写）。</li>
+  <li><strong>模型侧是硬瓶颈，这层 pi 更强</strong>：插件再多，到模型面前只有 tool schema + prompt 预算；<code>exposure</code> 五档、<code>prepareLoadout</code>、<code>reachesTools</code>、codemode / tool_search 这些抗工具过载的设计 pi 做得更细。</li>
+  <li><strong>换壳仍有尽头</strong>：overlay seat 能塞自建引擎，但原生窗口 / 系统级集成最终会变成 fork 上游（laofu 就是 fork + 私有快照），到那一步又回到「自己拥有整个应用」。</li>
+</ol>
+
+<p>风险面：dsh 是 <strong>developer preview</strong>，README 明写会有 breaking changes，社区插件普遍钉死具体 rc 版本。所以「扩展性上限」和「钉版本成本」是同一枚硬币。</p>
+
+<h3>判据：改的是「内容」还是「结构」</h3>
+<ul>
+  <li><strong>内容层</strong>（加数据源、加意图模板、加卡片）→ pi 足够，且更稳（稳定版，契约写得细）。</li>
+  <li><strong>结构层</strong>（多公司 profile、能力包热装卸、换存储 / 沙箱 / loop、少写 UI）→ dsh 的结构天生对着这个。</li>
+  <li>需要「run 记录落公司库 + 看板 + 对话同源」→ 这条把天平推向 dsh。</li>
+</ul>
+
+<div class="highlight accent">下一步不是选型投票，而是<strong>同需求 A/B</strong>：拿「一张 PEPS-5129 卡片 + 一个意图 + 一条 run 记录」在两个内核上各写一遍，记三件事——上手时间、代码行数、要绕的地方。</div>
+
+<hr>
+
+<!-- ============ 8. reuse ============ -->
 <h2 id="reuse">换一家公司</h2>
 
 <p>不动的：总入口外壳、插件运行时（Host / 调度 / 缓存 / 凭证）、agent 后端接口、一键 AI 的交互形态。</p>
@@ -467,7 +586,7 @@ interface AgentBackend {
 
 <hr>
 
-<!-- ============ 8. roadmap ============ -->
+<!-- ============ 9. roadmap ============ -->
 <h2 id="roadmap">落地与未决</h2>
 
 <table>
@@ -492,12 +611,13 @@ interface AgentBackend {
     <tr><td>回写的权限边界</td><td>agent 能不能直接改票、开 PR、触发发布，还是一律要人点确认</td></tr>
     <tr><td>后台任务归属</td><td>App 内定时器简单但关了不跑；要不要外置 cron</td></tr>
     <tr><td>插件边界</td><td>一插件一页面 vs 一插件多页面（「Perm 与 Charles」像两件事被合并）</td></tr>
+    <tr><td>内核选型</td><td>pi SDK（稳）vs dsh（结构上限高）——等同需求 A/B 的结果</td></tr>
   </tbody>
 </table>
 
 <div class="highlight accent">一句话收束：<strong>OneWorkbench 的价值不在看板本身，而在「看板上的每一格都长着一键」——把凑上下文的成本压到零，剩下的才轮到 AI 发挥。</strong></div>
 
-<p style="margin-top:14px;color:#5a7a6a;font-size:0.85em;">图源文件：<code>docs/use-llm/assets/one-workbench.drawio</code>（可用 draw.io 打开编辑，导出覆盖 <code>assets/page1–3.svg</code>）。上游愿景见 <a href="rebuild-workstyle-with-llm.html">用 LLM 重造工作方式</a>。</p>
+<p style="margin-top:14px;color:#5a7a6a;font-size:0.85em;">图源文件：<code>docs/use-llm/assets/one-workbench.drawio</code>（可用 draw.io 打开编辑，导出覆盖 <code>assets/page1–3.svg</code>）；界面原型源文件：<code>assets/mock-1-workbench.svg</code>、<code>mock-2-run-to-chat.svg</code>、<code>mock-3-config-approval.svg</code>。上游愿景见 <a href="rebuild-workstyle-with-llm.html">用 LLM 重造工作方式</a>。</p>
 
 </main>
 </div>
