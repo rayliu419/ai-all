@@ -69,3 +69,35 @@
 - 图：新增两页 drawio（`总入口布局`、`一键跳对话`），替换掉手写 ASCII 线框；现有 5 页：
   page1 一键AI数据流 / page2 架构 / page3 票流水线 / page4 总入口布局 / page5 一键跳对话。
 - 教训：ASCII 线框不再用于 UI 示意（用户明确要求），统一走 drawio。
+
+### 2026-11-18（v4：dsh 作为第二内核候选，写进成稿）
+
+- 触发：用户提出"可以基于 **DeepSeek Harness（dsh）** 为核心做定制 workbench"，要求找现实例子。
+- 事实核实（GitHub API + 仓库文档，非传闻）：
+  - `deepseek-ai/deepseek-harness`：MIT / TypeScript / 2026-08 开源 / developer preview；底座 Cordis（"万物皆插件"）；**无特权内核**，模型适配器、tool registry、session log、agent loop 都是插件。
+  - 组合模型：`profile → bundle → cordis.patch.yml → --patch` 有序图层，按 row id 整行替换；`dsh --profile web --dump-config` 可看整棵树；base 开 config-only HMR。
+  - 模板 profile：`web` / `headless` / `sdk` / `sdk-minimal` / `acp`；自带 Electron 桌面（`apps/desktop`，独占 `profiles/desktop`）。
+  - seam 三角（Definition + Provider + Consumer）：fs / subprocess / sandbox / terminals / subagent / persistence 都可换。
+  - UI 即插件：`ctx.slots.register` + 父级 `renderSlot` + `children` 子槽；`package.json` 的 `dsh.client` + `./client` 由 client module system 按 Loader row 下发（row 关→页面及其 slot 一起消失）；可自定义 `View Definition` / `ConversationNodeDefinition`；配置页由 `Config`(schemastery + Volatile) 生成，凭证 `role('secret')`。
+  - 持久化是唯一真源："model-visible means logged"；`SessionPersistence` / `sessionProjections` 可换；session 格式版本化 + 迁移链。
+- 生态实例（均为真实仓库，`dsh-plugin` topic）：
+  - `Aisland-SJL/dsh-worktable`（MIT，883★）：侧栏 app drawer + 可停靠分屏 + 控制室卡片网格；控制室 = 宿主 session 快照的**纯事件镜像**（不走模型）；分屏引擎自建塞 shell overlay seat；能嵌 `dsh-travelatlas` 当 pane。截图 `docs/assets/shot-{1,2,3}`。
+  - `ScarecrowFu/dsh-laofu-workbench`：**与本方案同构**——内核（DSH Profile / 浏览器壳 / 包 SDK / 桌面打包 / 上游升级）+ 可动态装卸的「场景能力包」+ 私有会员包（`editions.json`）；`UPSTREAM.lock.json` 锁上游版本；PolyForm Noncommercial。
+  - `AKS1st/dock`（VSCode 式 shell，暴露 `ctx.workbench`）、`virgoC0der/dsh-plugins`（PR+Jira+Calendar 看板）、`JianwuYang/dsh-ui-kanban`、`romainrg/dsh-system-monitor`、`suifei/dsh-ai-team`（任务+验收+ledger，装在独立 profile）。
+  - 壳替换证据：`anywhere-labs/dsh-desktop`、`dataelement/dsh-desktop`、`ccch1mneyyy/dsh-Go`（Android）、`dsh-TUI`。
+- 结论（写进成稿 `docs/use-llm/one-workbench.md` 新章节「备选内核：dsh」+ html）：
+  - 判据不是"扩展点数量"，而是**改的是内容层还是结构层**；四层空间 L0 加能力 / L1 换实现 / L2 换骨架 / L3 长生态，**L2 是分水岭**，dsh 的 L2 由官方 dogfood（一个内核 → 五种 profile）坐实。
+  - 我们三条硬需求的落点已经清楚：run 记录 → durable 事件族 + projection/SessionPersistence；卡片 → Node Definition；看板 → 第三方 View target；换公司 → profile + patch；"关掉插件一起消失" → effect 自动回卷。
+  - 关键洞察：**dsh 里"看板"和"对话"是同一份 durable log 的两个视图**，比 v3 的"appendEntry + 另建 db + 自渲染"结构干净。
+  - 三个边界：seam 接口由别人定；模型侧工具暴露 pi 更强（exposure 五档 / prepareLoadout / reachesTools）；换壳尽头是 fork 上游。
+  - 风险同一枚硬币：preview 破坏性变更 + 社区插件钉死 rc 版本 → 若押 dsh，必须自建 `UPSTREAM.lock` + 快照发布纪律。
+- 未定：内核选型不投票，先做**同需求 A/B**（一张 PEPS-5129 卡片 + 一个意图 + 一条 run 记录，两个内核各写一遍；记上手时间 / 代码行数 / 要绕的点）。已写入 `status.md` 下一步。
+
+### 2026-11-18（原型图：三张「按槽位标注」的 mockup）
+
+- 新增 `docs/use-llm/assets/mock-1-workbench.svg` / `mock-2-run-to-chat.svg` / `mock-3-config-approval.svg`，写进成稿（md 为 `![...]`，html 为 `<figure>`，图 6–8）。
+  - 图 6 主窗口：`sidebar.brand.*` / `main[key=dev-tasks]` / `sidebar.panellist` / `.trailing` / `sidebar.settings` / IntentSpec（双注册）/ run 投影 / 8 阶段聚合。
+  - 图 7 一键后的对话：引用胶囊（`conversation.session.header.actions`）/ `conversation.view` / `conversation.chat.node` 的 `one-run` / `conversation.chat.turnTail` / `tool.call.toolview` / `conversation.session.panel.section` / `conversation.input.right`。
+  - 图 8 配置与审批：`settings.section` + `settings.section.icon` / 数据源绑定属 profile patch / `Config`+`role('secret')` / `ctx.jobs` / `conversation.approval.detail`。
+- **画法决定（修正旧约定）**：此前记录"UI 示意统一走 drawio"。这次改用手写矢量 SVG，理由：mockup 需要精确的编号标注 + 可读小字 + 不依赖 GUI，且 SVG 可直接导入 draw.io / Figma 编辑。**旧约定继续约束架构图（page1–5 仍由 one-workbench.drawio 导出），UI mockup 走手写 SVG。**
+- 校验方式（可复用）：`xml.etree` 验 XML → Chrome headless `--screenshot --window-size=<w>,<h>` 出图 → 人眼查溢出/遮挡。已修三类问题：文字超出卡片、编号压住文字、编号落在卡片边上。
