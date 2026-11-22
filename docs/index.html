@@ -3,266 +3,217 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>学习笔记索引</title>
+<title>学习笔记</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: #f5faf6;
-    color: #2d3a31;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
-    font-size: 13px;
-    line-height: 1.45;
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 24px 24px 40px;
-  }
+/* 目次式索引。结构都承载信息：发丝线 = 章节边界，分钟数 = 可比较的数据列，灰字 = 这篇讲什么。
+   唯一强调色 印泥红 #A83E1E 只用于印章、外链标记、链接 hover 下划线。 */
+:root {
+  --paper: #F7FAF7;
+  --ink:   #17251C;
+  --ink-2: #4A5C50;
+  --ink-3: #63756A;
+  --rule:  #C9D6CC;
+  --seal:  #A83E1E;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", sans-serif;
+  --serif: "Songti SC", "Source Han Serif SC", "Noto Serif CJK SC", Georgia, serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--sans); font-size: 15px; line-height: 1.6;
+  padding: 4rem 2rem 6rem;
+}
+.page { max-width: 58rem; margin: 0 auto; }
 
-  /* Header */
-  header {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  header h1 {
-    font-size: 1.3em;
-    color: #1a3a24;
-    margin-bottom: 4px;
-  }
-  header p {
-    color: #5a7a6a;
-    font-size: 0.8em;
-  }
-  header .count {
-    margin-top: 2px;
-    font-size: 0.75em;
-    color: #8bbaa0;
-  }
+/* ---------- 卷首 ---------- */
+.folio {
+  display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 2.5rem;
+  padding-bottom: 1.5rem; border-bottom: 1px solid var(--rule);
+}
+.folio h1 {
+  font-family: var(--serif); font-size: clamp(2.1rem, 4.5vw, 3rem);
+  font-weight: 600; letter-spacing: .04em; line-height: 1.15;
+}
+.folio .scope { margin-top: .7rem; color: var(--ink-2); font-size: .92rem; max-width: 34rem; }
+.folio .scope b { font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink); }
+.folio .scope .dash { padding: 0 .45rem; color: var(--ink-3); }
+.seal { display: block; width: 3.2rem; height: 3.2rem; transform: rotate(-2deg); }
 
-  hr {
-    border: none;
-    border-top: 1px solid #c3dbcc;
-    margin: 16px 0;
-  }
+/* ---------- 目次 ---------- */
+.toc { margin-top: .4rem; }
+.chapter {
+  display: grid; grid-template-columns: 11rem 1fr; column-gap: 2.75rem;
+  align-items: baseline;
+  border-top: 1px solid var(--rule); padding: 1.5rem 0 1.8rem;
+}
+.chapter:first-child { border-top: none; }
+.chapter-title {
+  font-family: var(--serif); font-size: 1.4rem; font-weight: 600;
+  line-height: 1.35; text-align: right; letter-spacing: .02em;
+}
+.chapter-title .meta {
+  display: block; margin-top: .3rem;
+  font-family: var(--sans); font-size: .74rem; font-weight: 400;
+  color: var(--ink-3); letter-spacing: .02em; font-variant-numeric: tabular-nums;
+}
+.notes { list-style: none; }
+.notes a {
+  display: grid; grid-template-columns: 1fr auto; column-gap: 1.5rem;
+  align-items: baseline; padding: .34rem 0 .46rem;
+  color: var(--ink); text-decoration: none;
+}
+.notes .t { line-height: 1.4; }
+.notes .m {
+  font-size: .76rem; color: var(--ink-3);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.notes .d {
+  grid-column: 1 / -1; margin-top: .08rem;
+  font-size: .8rem; line-height: 1.55; color: var(--ink-3);
+  max-width: 56ch; text-wrap: pretty;
+}
+.notes .ext .m { color: var(--seal); }
+.notes a:hover { text-decoration: underline; text-decoration-color: var(--seal);
+  text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--seal); outline-offset: 3px; }
 
-  /* Two-column book-style TOC */
-  .toc-grid {
-    column-count: 2;
-    column-gap: 28px;
-  }
+footer {
+  margin-top: 2.4rem; padding-top: 1.2rem; border-top: 1px solid var(--rule);
+  color: var(--ink-3); font-size: .78rem;
+}
 
-  /* Chapter section */
-  .chapter {
-    break-inside: avoid;
-    margin-bottom: 18px;
-  }
-  .chapter-title {
-    font-size: 0.92em;
-    font-weight: 600;
-    color: #1a3a24;
-    padding: 2px 0 3px;
-    border-bottom: 1px solid #c3dbcc;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .chapter-title .count {
-    font-size: 0.7em;
-    font-weight: 400;
-    color: #8bbaa0;
-  }
-
-  /* File list */
-  .file-list {
-    list-style: none;
-    padding: 0;
-  }
-  .file-list li {
-    margin: 0;
-  }
-  .file-list a {
-    display: block;
-    padding: 1.5px 0 1.5px 6px;
-    color: #1f4a2e;
-    text-decoration: none;
-    font-size: 0.84em;
-    line-height: 1.55;
-    border-radius: 3px;
-    transition: background 0.1s;
-  }
-  .file-list a:hover {
-    background: #e0efe4;
-  }
-  .file-list a .num {
-    display: inline-block;
-    width: 18px;
-    color: #8bbaa0;
-    font-size: 0.8em;
-  }
-
-  footer {
-    text-align: center;
-    color: #8bbaa0;
-    font-size: 0.75em;
-    margin-top: 24px;
-    padding-top: 14px;
-    border-top: 1px solid #e0efe4;
-  }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+@media (max-width: 46rem) {
+  body { padding: 2.5rem 1.25rem 4rem; }
+  .folio { grid-template-columns: 1fr; gap: 1.5rem; }
+  .folio .scope { font-size: .86rem; }
+  .folio .scope .dash { display: none; }
+  .seal { display: none; }
+  .chapter { grid-template-columns: 1fr; row-gap: .8rem; }
+  .chapter-title { text-align: left; font-size: 1.2rem; }
+  .chapter-title .meta { display: inline; margin-left: .6rem; }
+  .notes .d { max-width: none; }
+}
 </style>
 </head>
 <body>
+<div class="page">
 
-<header>
-  <h1>📚 学习笔记索引</h1>
-  <p>AI · Agent · LLM 技术学习笔记</p>
-  <div class="count">共 46 篇笔记，9 个章节</div>
+<header class="folio">
+  <div>
+    <h1>学习笔记</h1>
+    <p class="scope">AI · Agent · LLM · 数学 · 系统设计
+      <span class="dash">—</span>
+      <b>46</b> 篇 · <b>9</b> 章 · 共 <b>535</b> 分钟</p>
+  </div>
+  <svg class="seal" viewBox="0 0 64 64" role="img" aria-label="记">
+    <rect width="64" height="64" fill="#A83E1E"/>
+    <rect x="5" y="5" width="54" height="54" fill="none" stroke="#F7FAF7" stroke-width="1.5"/>
+    <text x="32" y="47" text-anchor="middle" font-size="34"
+          font-family="Songti SC, Source Han Serif SC, serif" fill="#F7FAF7">记</text>
+  </svg>
 </header>
 
-<hr>
+<nav class="toc" aria-label="目录">
+  <section class="chapter" id="使用-llm-实践">
+    <h2 class="chapter-title">使用 LLM 实践<span class="meta">8 篇</span></h2>
+    <ul class="notes">
+      <li><a href="use-llm/basis.html"><span class="t">LLM 使用基础</span><span class="m">5 分钟</span><span class="d">MCP / skills / tools / RAG 等能力面逐个拆，讲怎么让模型接上外部数据源。</span></a></li>
+      <li><a href="use-llm/harness.html"><span class="t">Harness Engineering 经验</span><span class="m">21 分钟</span><span class="d">把概率模型做成稳定工程：任务支架、单 Agent vs 多 Agent、防错误传播。</span></a></li>
+      <li><a href="use-llm/worktree.html"><span class="t">使用 AI 时的 Worktree 实践</span><span class="m">3 分钟</span><span class="d">AI 场景下 worktree 从可选变必需：独立工作区、并行、避免上下文互相污染。</span></a></li>
+      <li><a href="use-llm/context-recording.html"><span class="t">在 Repo 里记录上下文</span><span class="m">5 分钟</span><span class="d">global / general / per-task 三层记录，让 AI 可预测地读和更新 repo 背景。</span></a></li>
+      <li><a href="use-llm/best-practices.html"><span class="t">使用 LLM 的 Best Practice</span><span class="m">6 分钟</span><span class="d">skill 质量比提示词更影响输出；进新领域三步：打通 → 说明 → 积累。</span></a></li>
+      <li><a href="use-llm/rebuild-workstyle-with-llm.html"><span class="t">用 LLM 重造工作方式</span><span class="m">1 分钟</span><span class="d">让 AI 大批量造 CLI 工具，再把它们聚合成一个日常入口。</span></a></li>
+      <li><a href="use-llm/one-workbench.html"><span class="t">OneWorkbench：桌面总入口 + 一键 AI</span><span class="m">21 分钟</span><span class="d">把随手一点变成一段上下文齐备、按 skill 执行、且留下记录的对话。</span></a></li>
+      <li><a href="use-llm/vibe-coding.html"><span class="t">Vibe Coding：用 AI 造系统的六步骨架</span><span class="m">5 分钟</span><span class="d">写实现前先把 mockup / schema / 流程 / 命名 / 目录 / 分层六个形状迭代定死。</span></a></li>
+    </ul>
+  </section>
+  <section class="chapter" id="llm-基础">
+    <h2 class="chapter-title">LLM 基础<span class="meta">6 篇</span></h2>
+    <ul class="notes">
+      <li><a href="llm-basis/how2ai-course.html"><span class="t">MIT-MAS-S60 How2AI 课程笔记</span><span class="m">20 分钟</span><span class="d">按数据模态反推网络结构该长什么样：AI 的上限由数据与问题理解决定。</span></a></li>
+      <li><a href="llm-basis/llm-serving.html"><span class="t">LLM Serving 架构笔记</span><span class="m">5 分钟</span><span class="d">预训练要吞吐、Serving 要延迟；KV cache 是理解推理成本的那个关键点。</span></a></li>
+      <li><a href="llm-basis/pre-training.html"><span class="t">预训练 Pre-Training 笔记</span><span class="m">26 分钟</span><span class="d">神经网络 → 反向传播 → Attention → 事实究竟怎么存在权重里。</span></a></li>
+      <li><a href="llm-basis/post-training.html"><span class="t">后训练 Post-Training 笔记</span><span class="m">21 分钟</span><span class="d">SFT 解决能不能做、RLHF 解决做得好不好；另讲 LoRA、量化、遗忘防护。</span></a></li>
+      <li><a href="llm-basis/milestone-paper/paper.html"><span class="t">里程碑论文阅读笔记</span><span class="m">4 分钟</span><span class="d">Transformer / GPT-3 / InstructGPT / Scaling Law 四篇各贡献了什么。</span></a></li>
+      <li><a href="llm-basis/ml-basis.html"><span class="t">ML 基础</span><span class="m">19 分钟</span><span class="d">评估指标、偏差方差、L1/L2、剪枝的速查表，当作查表用。</span></a></li>
+    </ul>
+  </section>
+  <section class="chapter" id="数学">
+    <h2 class="chapter-title">数学<span class="meta">7 篇</span></h2>
+    <ul class="notes">
+      <li><a href="math/linear-algebra.html"><span class="t">线性代数（几何视角）</span><span class="m">25 分钟</span><span class="d">从「为什么发明它」讲到行列式、秩、对偶性，走 3B1B 的几何直觉路线。</span></a></li>
+      <li><a href="math/linear-ml.html"><span class="t">线性代数与机器学习</span><span class="m">5 分钟</span><span class="d">权重矩阵 = 空间变换，激活函数 = 折空间，用几何解释深度网络为什么能分开数据。</span></a></li>
+      <li><a href="math/calculus.html"><span class="t">微积分基础</span><span class="m">5 分钟</span><span class="d">只取导数与梯度：导数是最佳恒定近似，链式法则与方向导数的直观解释。</span></a></li>
+      <li><a href="math/mit-linear-algebra/four-subspace.html"><span class="t">四个基本子空间（MIT 18.06）</span><span class="m">2 分钟</span><span class="d">MIT 18.06 该重点看哪几章，以及四个子空间在 ML 里对应什么。</span></a></li>
+      <li><a href="math/mit-linear-algebra/matrix-multiply.html"><span class="t">矩阵乘法（MIT 18.06）</span><span class="m">4 分钟</span><span class="d">C = AB 的四种视角：看元素、按列、按行、列乘行。</span></a></li>
+      <li><a href="math/mit-linear-algebra/matrix-decomposition.html"><span class="t">A 的 LU 分解（MIT 18.06）</span><span class="m">2 分钟</span><span class="d">为什么光会消元不够：同一个 A 反复解不同 b 时，分解一次就一劳永逸。</span></a></li>
+      <li><a href="math/mit-linear-algebra/system-of-equations.html"><span class="t">方程组的几何解释（MIT 18.06）</span><span class="m">3 分钟</span><span class="d">row picture vs column picture，并用列视角判断方程组何时无解。</span></a></li>
+    </ul>
+  </section>
+  <section class="chapter" id="general-agent">
+    <h2 class="chapter-title">General Agent<span class="meta">8 篇</span></h2>
+    <ul class="notes">
+      <li><a href="general-agent/agent-overview.html"><span class="t">Agent 全景概览</span><span class="m">11 分钟</span><span class="d">按类型（Coding / 工作流 / OS 级）、框架、工程师素养三个维度梳理全景。</span></a></li>
+      <li><a href="llm-basis/basemodel-to-agent.html"><span class="t">Base Model → Agent</span><span class="m">5 分钟</span><span class="d">预训练 → SFT → 对齐 → 工具 → 记忆规划的完整链路，回答「为何 post-training 能造出 Agent」。</span></a></li>
+      <li><a href="general-agent/interview.html"><span class="t">Agent 核心技术面试题</span><span class="m">19 分钟</span><span class="d">ReAct 的局限、CoT 与 Planning 之别、鲁棒多步规划、ToT / LATS 等面试硬题。</span></a></li>
+      <li><a href="general-agent/mcp.html"><span class="t">MCP Tool 开发笔记</span><span class="m">1 分钟</span><span class="d">从零写一个 MCP tool，并接到 OpenCode 上跑通的最小流程。</span></a></li>
+      <li><a href="general-agent/memory-compare.html"><span class="t">Agent Memory 方案对比</span><span class="m">10 分钟</span><span class="d">为什么需要 memory、主流设计模式横评，以及动态 memory 与 KV cache 的冲突。</span></a></li>
+      <li><a href="general-agent/rag.html"><span class="t">RAG 检索增强生成</span><span class="m">8 分钟</span><span class="d">召回 → 排序 → 注入的流程，以及 RAG 用的 embedding 与 LLM 的 embedding 差在哪。</span></a></li>
+      <li><a href="general-agent/use-case.html"><span class="t">Agent 应用场景实践</span><span class="m">4 分钟</span><span class="d">从「告警」到「分析 Agent」的转变、Prompt vs Program，Q&amp;A 与 code-review 两类实战经验。</span></a></li>
+      <li><a href="general-agent/agent-development.html"><span class="t">Agent 开发读书笔记</span><span class="m">29 分钟</span><span class="d">编排模式、上下文工程、KV cache 友好的上下文设计、系统提示词与 skills 的一本书笔记。</span></a></li>
+    </ul>
+  </section>
+  <section class="chapter" id="coding-agent">
+    <h2 class="chapter-title">Coding Agent<span class="meta">3 篇 · 2 外部</span></h2>
+    <ul class="notes">
+      <li><a href="coding-agent/coding-agent-infra.html"><span class="t">Coding Agent 底层基础设施</span><span class="m">3 分钟</span><span class="d">git worktree 是并行 agent 的核心隔离原语，以及它盖不住的那些隔离维度。</span></a></li>
+      <li><a href="coding-agent/use-and-debug.html"><span class="t">Claude Code 使用与调试</span><span class="m">3 分钟</span><span class="d">读 .claude 下的转录 + hooks + node server，看 agent 到底做了什么；附 Langfuse 集成。</span></a></li>
+      <li><a href="coding-agent/build-coding-agent.html"><span class="t">如何构建一个 Coding Agent</span><span class="m">4 分钟</span><span class="d">四层拆解：代码后训练、工具与环境、代码检索、专用交互协议。</span></a></li>
+      <li><a class="ext" href="https://rayliu419.github.io/learn-claude-code/" target="_blank" rel="noopener"><span class="t">Claude Code 学习笔记</span><span class="m">↗</span></a></li>
+      <li><a class="ext" href="https://rayliu419.github.io/pi/" target="_blank" rel="noopener"><span class="t">Pi 学习笔记</span><span class="m">↗</span></a></li>
+    </ul>
+  </section>
+  <section class="chapter" id="搜索推荐算法">
+    <h2 class="chapter-title">搜索推荐算法<span class="meta">1 篇</span></h2>
+    <ul class="notes">
+      <li><a href="search-algorithm/word-seg-jieba-dag.html"><span class="t">分词传统方法：jieba DAG 分词</span><span class="m">2 分钟</span><span class="d">前缀词典 + DAG + 动态规划找最优切分，词典覆盖不到的交给 HMM。</span></a></li>
+    </ul>
+  </section>
+  <section class="chapter" id="系统设计">
+    <h2 class="chapter-title">系统设计<span class="meta">11 篇</span></h2>
+    <ul class="notes">
+      <li><a href="system-design/design-pattern.html"><span class="t">常用设计模式</span><span class="m">12 分钟</span><span class="d">AWS 组件与经典模式的对应表：Streams→Outbox、SQS+DLQ、SNS fan-out、Saga、CAS。</span></a></li>
+      <li><a href="system-design/high-availability.html"><span class="t">高可用设计模式</span><span class="m">14 分钟</span><span class="d">多 AZ、选主、健康检查、熔断、舱壁、退避重试、限流、优雅降级的一整套模式。</span></a></li>
+      <li><a href="system-design/traffic-management.html"><span class="t">流量治理</span><span class="m">1 分钟</span><span class="d">熔断 / 隔离 / 重试 / 降级 / 超时 / 限流六件套，各治什么、典型实现是什么。</span></a></li>
+      <li><a href="system-design/disaster-recovery.html"><span class="t">容灾设计</span><span class="m">18 分钟</span><span class="d">HA 与 DR 的界线、RTO/RPO 指标、AZ 级与 Region 级容灾的设计思路。</span></a></li>
+      <li><a href="system-design/geo-replication.html"><span class="t">Geo Replication</span><span class="m">31 分钟</span><span class="d">单向 / 双向 / P2P 三种复制模式，附复制回环控制、冲突解决与 CRDT。</span></a></li>
+      <li><a href="system-design/DB-switch.html"><span class="t">DB 切换</span><span class="m">18 分钟</span><span class="d">MySQL / Redis / ES 的 switchover 与 failover，GTID、写冲突与复制方式的取舍。</span></a></li>
+      <li><a href="system-design/microservices-read-query.html"><span class="t">微服务 Read Query 处理</span><span class="m">12 分钟</span><span class="d">跨服务 join 的三种解法：API Composer、CQRS、物化视图，各自代价。</span></a></li>
+      <li><a href="system-design/production-readiness-review.html"><span class="t">Production Readiness Review</span><span class="m">33 分钟</span><span class="d">上线前检查清单：SLI/SLO、冗余、容灾、过载控制、故障与变更管理、可运维性。</span></a></li>
+      <li><a href="system-design/caching-and-messaging.html"><span class="t">缓存与消息队列选型</span><span class="m">13 分钟</span><span class="d">缓存四层位置与读写模式、Redis vs Memcached、队列投递语义与容量估算。</span></a></li>
+      <li><a href="system-design/data-store-selection.html"><span class="t">数据存储选型</span><span class="m">23 分钟</span><span class="d">从 access pattern 反推该选什么库，关系 / NoSQL / NewSQL / OLAP / 向量库对比。</span></a></li>
+      <li><a href="system-design/data-processing-and-olap.html"><span class="t">数据处理与 OLAP</span><span class="m">12 分钟</span><span class="d">批流与 Lambda/Kappa、OLTP vs OLAP、数仓与列存、ETL 的定位。</span></a></li>
+    </ul>
+  </section>
+  <section class="chapter" id="系统经验">
+    <h2 class="chapter-title">系统经验<span class="meta">1 篇</span></h2>
+    <ul class="notes">
+      <li><a href="system-experience/grafana-practice.html"><span class="t">Grafana 实战笔记</span><span class="m">22 分钟</span><span class="d">模板变量与级联、告警状态机的两个易漏参数、PromQL 三例，配真实 landing 告警案例。</span></a></li>
+    </ul>
+  </section>
+  <section class="chapter" id="前端系统">
+    <h2 class="chapter-title">前端系统<span class="meta">1 篇</span></h2>
+    <ul class="notes">
+      <li><a href="frontend-system/use-case.html"><span class="t">浏览器存储机制</span><span class="m">19 分钟</span><span class="d">同源策略分别如何作用于 Cookie / Web Storage / IndexedDB，以及第三方内容的边界。</span></a></li>
+    </ul>
+  </section>
+</nav>
 
-<div class="toc-grid">
-
-<!-- ============ USE LLM ============ -->
-<div class="chapter">
-  <div class="chapter-title">
-    🔧 使用 LLM 实践
-    <span class="count">8 篇</span>
-  </div>
-  <ul class="file-list">
-    <li><a href="use-llm/basis.html"><span class="num">1.</span> LLM 使用基础</a></li>
-    <li><a href="use-llm/harness.html"><span class="num">2.</span> Harness Engineering 经验</a></li>
-    <li><a href="use-llm/worktree.html"><span class="num">3.</span> 使用 AI 时的 Worktree 实践</a></li>
-    <li><a href="use-llm/context-recording.html"><span class="num">4.</span> 在 Repo 里记录上下文</a></li>
-    <li><a href="use-llm/best-practices.html"><span class="num">5.</span> 使用 LLM 的 Best Practice</a></li>
-    <li><a href="use-llm/rebuild-workstyle-with-llm.html"><span class="num">6.</span> 用 LLM 重造工作方式</a></li>
-    <li><a href="use-llm/one-workbench.html"><span class="num">7.</span> OneWorkbench：桌面总入口 + 一键 AI</a></li>
-    <li><a href="use-llm/vibe-coding.html"><span class="num">8.</span> Vibe Coding：用 AI 造系统的六步骨架</a></li>
-  </ul>
+<footer>整理笔记 · 持续更新中 · 分钟数按正文 350 字/分估算</footer>
 </div>
-
-<!-- ============ LLM BASIS ============ -->
-<div class="chapter">
-  <div class="chapter-title">
-    🧠 LLM 基础
-    <span class="count">6 篇</span>
-  </div>
-  <ul class="file-list">
-    <li><a href="llm-basis/how2ai-course.html"><span class="num">1.</span> MIT-MAS-S60 How2AI 课程笔记</a></li>
-    <li><a href="llm-basis/llm-serving.html"><span class="num">2.</span> LLM Serving 架构笔记</a></li>
-    <li><a href="llm-basis/pre-training.html"><span class="num">3.</span> 预训练 Pre-Training 笔记</a></li>
-    <li><a href="llm-basis/post-training.html"><span class="num">4.</span> 后训练 Post-Training 笔记</a></li>
-    <li><a href="llm-basis/milestone-paper/paper.html"><span class="num">5.</span> 里程碑论文阅读笔记</a></li>
-    <li><a href="llm-basis/ml-basis.html"><span class="num">6.</span> ML 基础</a></li>
-  </ul>
-</div>
-
-<!-- ============ MATH ============ -->
-<div class="chapter">
-  <div class="chapter-title">
-    📐 数学基础
-    <span class="count">7 篇</span>
-  </div>
-  <ul class="file-list">
-    <li><a href="math/linear-algebra.html"><span class="num">1.</span> 线性代数（几何视角）</a></li>
-    <li><a href="math/linear-ml.html"><span class="num">2.</span> 线性代数与机器学习</a></li>
-    <li><a href="math/calculus.html"><span class="num">3.</span> 微积分基础</a></li>
-    <li><a href="math/mit-linear-algebra/four-subspace.html"><span class="num">4.</span> 四个基本子空间（MIT 18.06）</a></li>
-    <li><a href="math/mit-linear-algebra/matrix-multiply.html"><span class="num">5.</span> 矩阵乘法（MIT 18.06）</a></li>
-    <li><a href="math/mit-linear-algebra/matrix-decomposition.html"><span class="num">6.</span> A 的 LU 分解（MIT 18.06）</a></li>
-    <li><a href="math/mit-linear-algebra/system-of-equations.html"><span class="num">7.</span> 方程组的几何解释（MIT 18.06）</a></li>
-  </ul>
-</div>
-
-<!-- ============ GENERAL AGENT ============ -->
-<div class="chapter">
-  <div class="chapter-title">
-    🤖 General Agent
-    <span class="count">8 篇</span>
-  </div>
-  <ul class="file-list">
-    <li><a href="general-agent/agent-overview.html"><span class="num">1.</span> Agent 全景概览</a></li>
-    <li><a href="llm-basis/basemodel-to-agent.html"><span class="num">2.</span> Base Model → Agent</a></li>
-    <li><a href="general-agent/interview.html"><span class="num">3.</span> Agent 核心技术面试题</a></li>
-    <li><a href="general-agent/mcp.html"><span class="num">4.</span> MCP Tool 开发笔记</a></li>
-    <li><a href="general-agent/memory-compare.html"><span class="num">5.</span> Agent Memory 方案对比</a></li>
-    <li><a href="general-agent/rag.html"><span class="num">6.</span> RAG 检索增强生成</a></li>
-    <li><a href="general-agent/use-case.html"><span class="num">7.</span> Agent 应用场景实践</a></li>
-    <li><a href="general-agent/agent-development.html"><span class="num">8.</span> Agent 开发读书笔记</a></li>
-  </ul>
-</div>
-
-<!-- ============ CODING AGENT ============ -->
-<div class="chapter">
-  <div class="chapter-title">
-    🖥️ Coding Agent
-    <span class="count">3 篇</span>
-  </div>
-  <ul class="file-list">
-    <li><a href="coding-agent/coding-agent-infra.html"><span class="num">1.</span> Coding Agent 底层基础设施</a></li>
-    <li><a href="coding-agent/use-and-debug.html"><span class="num">2.</span> Claude Code 使用与调试</a></li>
-    <li><a href="coding-agent/build-coding-agent.html"><span class="num">3.</span> 如何构建一个 Coding Agent</a></li>
-    <li><a href="https://rayliu419.github.io/learn-claude-code/" target="_blank"><span class="num">↗</span> Claude Code 学习笔记 (外部)</a></li>
-    <li><a href="https://rayliu419.github.io/pi/" target="_blank"><span class="num">↗</span> Pi 学习笔记 (外部)</a></li>
-  </ul>
-</div>
-
-<!-- ============ SEARCH ALGORITHM ============ -->
-<div class="chapter">
-  <div class="chapter-title">
-    🔍 搜索推荐算法
-    <span class="count">1 篇</span>
-  </div>
-  <ul class="file-list">
-    <li><a href="search-algorithm/word-seg-jieba-dag.html"><span class="num">1.</span> 分词传统方法：jieba DAG 分词</a></li>
-  </ul>
-</div>
-
-<!-- ============ SYSTEM DESIGN ============ -->
-<div class="chapter">
-  <div class="chapter-title">
-    🏗️ 系统设计
-    <span class="count">11 篇</span>
-  </div>
-  <ul class="file-list">
-    <li><a href="system-design/design-pattern.html"><span class="num">1.</span> 常用设计模式</a></li>
-    <li><a href="system-design/high-availability.html"><span class="num">2.</span> 高可用设计模式</a></li>
-    <li><a href="system-design/traffic-management.html"><span class="num">3.</span> 流量治理</a></li>
-    <li><a href="system-design/disaster-recovery.html"><span class="num">4.</span> 容灾设计</a></li>
-    <li><a href="system-design/geo-replication.html"><span class="num">5.</span> Geo Replication</a></li>
-    <li><a href="system-design/DB-switch.html"><span class="num">6.</span> DB 切换</a></li>
-    <li><a href="system-design/microservices-read-query.html"><span class="num">7.</span> 微服务 Read Query 处理</a></li>
-    <li><a href="system-design/production-readiness-review.html"><span class="num">8.</span> Production Readiness Review</a></li>
-    <li><a href="system-design/caching-and-messaging.html"><span class="num">9.</span> 缓存与消息队列选型</a></li>
-    <li><a href="system-design/data-store-selection.html"><span class="num">10.</span> 数据存储选型</a></li>
-    <li><a href="system-design/data-processing-and-olap.html"><span class="num">11.</span> 数据处理与 OLAP</a></li>
-  </ul>
-</div>
-
-<!-- ============ SYSTEM EXPERIENCE ============ -->
-<div class="chapter">
-  <div class="chapter-title">
-    📊 系统经验
-    <span class="count">1 篇</span>
-  </div>
-  <ul class="file-list">
-    <li><a href="system-experience/grafana-practice.html"><span class="num">1.</span> Grafana 实战笔记</a></li>
-  </ul>
-</div>
-<!-- ============ FRONTEND SYSTEM ============ -->
-<div class="chapter">
-  <div class="chapter-title">
-    <span class="num">8.</span> 🎨 前端系统
-    <span class="count">1 篇</span>
-  </div>
-  <ul class="file-list">
-    <li><a href="frontend-system/use-case.html"><span class="num">1.</span> 浏览器存储机制</a></li>
-  </ul>
-</div>
-
-</div><!-- /.toc-grid -->
-
-<footer>
-  整理笔记 · 持续更新中
-</footer>
-
 </body>
 </html>
